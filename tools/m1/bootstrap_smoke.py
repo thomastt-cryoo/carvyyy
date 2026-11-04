@@ -168,6 +168,12 @@ def main() -> None:
 
         manifest["components"][0].update(sha256=sha(original), size_bytes=len(original))
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        bad_pin = command(work / "bad-pin")
+        bad_pin[bad_pin.index("--manifest-sha256") + 1] = "0" * 64
+        check(
+            "modified/untrusted manifest is rejected",
+            subprocess.run(bad_pin, check=False).returncode != 0,
+        )
         server.shutdown()
         server.server_close()
         process = subprocess.Popen(command(resumed_root, install_only=False))
@@ -197,6 +203,10 @@ def main() -> None:
                 subprocess.run(["pkill", "-TERM", "-P", str(process.pid)], check=False)
                 process.terminate()
             process.wait(timeout=10)
+        installed_exe = resumed_root / "versions/m1-proof" / exe.name
+        with installed_exe.open("ab") as changed:
+            changed.write(b"corrupt")
+        check("corrupt installed executable is rejected before launch", run(resumed_root) != 0)
         launcher_zip = work / f"launcher-{manifest['platform']}.zip"
         with zipfile.ZipFile(launcher_zip, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
             archive.write(exe, exe.name)

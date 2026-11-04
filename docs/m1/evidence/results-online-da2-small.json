@@ -534,5 +534,7 @@
       "output_format": "stl"
     }
   },
-  "backend_peak_working_set_bytes": 5361664
+  "backend_peak_working_set_bytes": 5361664,
+  "memory_measurement_valid": false,
+  "memory_note": "Original sampler measured the Windows venv launcher stub only. Discard backend_peak_working_set_bytes; corrected runs sample the whole process tree."
 }

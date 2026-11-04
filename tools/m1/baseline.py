@@ -7,8 +7,8 @@ Use --offline after models are cached; --models da2-large for a separate model r
 from __future__ import annotations
 
 import argparse
-import ctypes
 import hashlib
+import io
 import json
 import os
 import platform
@@ -21,6 +21,7 @@ from pathlib import Path
 
 import httpx
 import numpy as np
+import psutil
 import trimesh
 from PIL import Image, ImageDraw
 
@@ -30,40 +31,13 @@ DATA = ROOT / "data/m1"
 
 
 def peak_memory(pid: int) -> int | None:
-    if sys.platform != "win32":
-        return None
-
-    class Counters(ctypes.Structure):
-        _fields_ = [("cb", ctypes.c_ulong), ("PageFaultCount", ctypes.c_ulong)] + [
-            (name, ctypes.c_size_t)
-            for name in [
-                "PeakWorkingSetSize",
-                "WorkingSetSize",
-                "QuotaPeakPagedPoolUsage",
-                "QuotaPagedPoolUsage",
-                "QuotaPeakNonPagedPoolUsage",
-                "QuotaNonPagedPoolUsage",
-                "PagefileUsage",
-                "PeakPagefileUsage",
-            ]
-        ]
-
-    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-    kernel.OpenProcess.restype = ctypes.c_void_p
-    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
-    handle = kernel.OpenProcess(0x410, False, pid)
-    if not handle:
-        return None
     try:
-        counters = Counters()
-        counters.cb = ctypes.sizeof(counters)
-        psapi = ctypes.WinDLL("psapi")
-        psapi.GetProcessMemoryInfo.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_ulong]
-        if psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
-            return counters.PeakWorkingSetSize
-    finally:
-        kernel.CloseHandle(handle)
-    return None
+        parent = psutil.Process(pid)
+        # Windows venv python.exe starts a separate interpreter. Include the entire
+        # child tree, including an isolated DA3 worker, rather than measuring the stub.
+        return sum(p.memory_info().rss for p in [parent, *parent.children(recursive=True)])
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
+        return None
 
 
 def wait_status(client: httpx.Client, path: str, timeout: float = 1200) -> dict:
@@ -104,6 +78,10 @@ def main() -> None:
     parser.add_argument("--cases", default="portrait,pet,ornament,object,complex")
     parser.add_argument("--large-exports", action="store_true")
     parser.add_argument("--port", type=int, default=8095)
+    parser.add_argument("--run-name", default="")
+    parser.add_argument(
+        "--fresh", action="store_true", help="Change one input pixel to bypass depth cache"
+    )
     args = parser.parse_args()
     # Fail before touching any service already running on the machine.
     with socket.socket() as probe:
@@ -122,7 +100,10 @@ def main() -> None:
     )
     if args.offline:
         env.update(HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1")
+        env["PYTHONPATH"] = str(ROOT / "tools/m1/offline_guard")
     label = ("offline" if args.offline else "online") + "-" + args.models.replace(",", "-")
+    if args.run_name:
+        label += "-" + args.run_name
     log = (DATA / f"server-{label}.log").open("w", encoding="utf-8")
     server = subprocess.Popen(
         [
@@ -148,6 +129,7 @@ def main() -> None:
         "server_pid": server.pid,
         "cases": [],
         "failures": [],
+        "memory_method": "sampled sum of RSS for backend process tree every 0.2 seconds",
     }
     stop = threading.Event()
     peaks = []
@@ -176,11 +158,24 @@ def main() -> None:
         for model in args.models.split(","):
             for name in args.cases.split(","):
                 result = {"case": name, "model": model}
-                out = EVIDENCE / f"{name}-{model}"
+                suffix = "-offline" if args.offline else ""
+                suffix += ("-" + args.run_name) if args.run_name else ""
+                out = EVIDENCE / f"{name}-{model}{suffix}"
                 out.mkdir(exist_ok=True)
                 try:
                     started = time.perf_counter()
                     photo = (EVIDENCE / f"inputs/{name}.png").read_bytes()
+                    cached_before_upload = set(
+                        (ROOT / "data/cache").glob(f"*/raw_depth_{model}_*.npy")
+                    )
+                    if args.fresh:
+                        image = Image.open(io.BytesIO(photo)).convert("RGB")
+                        pixel = image.getpixel((0, 0))
+                        image.putpixel((0, 0), ((pixel[0] + 1) % 256, pixel[1], pixel[2]))
+                        encoded = io.BytesIO()
+                        image.save(encoded, format="PNG")
+                        photo = encoded.getvalue()
+                        result["fresh_input_sha256"] = hashlib.sha256(photo).hexdigest()
                     created = checked(
                         client.post(
                             "/api/sessions", files={"image": (f"{name}.png", photo, "image/png")}
@@ -188,6 +183,12 @@ def main() -> None:
                     ).json()
                     result["upload_s"] = time.perf_counter() - started
                     sid = result["session_id"] = created["session_id"]
+                    image_hash = json.loads((ROOT / f"data/sessions/{sid}/meta.json").read_text())[
+                        "image_hash"
+                    ]
+                    result["depth_cache_hit"] = any(
+                        path.parent.name == image_hash for path in cached_before_upload
+                    )
                     status = wait_status(client, f"/api/sessions/{sid}/status")
                     params = checked(client.get(f"/api/sessions/{sid}/params")).json()
                     if params["depth_model"] != model:
@@ -292,7 +293,7 @@ def main() -> None:
                     report["failures"].append({"case": name, "model": model, "error": str(exc)})
                     print(json.dumps(report["failures"][-1]), flush=True)
                 report["cases"].append(result)
-                report["backend_peak_working_set_bytes"] = max(peaks, default=0)
+                report["backend_sampled_peak_rss_bytes"] = max(peaks, default=0)
                 (EVIDENCE / f"results-{label}.json").write_text(
                     json.dumps(report, indent=2) + "\n", encoding="utf-8"
                 )

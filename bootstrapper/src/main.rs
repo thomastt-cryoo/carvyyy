@@ -216,6 +216,44 @@ fn extract(archive: &Path, dest: &Path, limit: u64) -> Result<()> {
     Ok(())
 }
 
+fn verify_installed(manifest: &Manifest, installed: &Path, cache: &Path) -> Result<()> {
+    // The local completion marker is not a trust root. Revalidate installed bytes
+    // against the archives authenticated by the pinned manifest before execution.
+    for item in &manifest.components {
+        let archive = cache.join(format!("{}.zip", item.sha256));
+        if archive.metadata()?.len() != item.size_bytes || sha_file(&archive)? != item.sha256 {
+            return Err("cached component failed verification".into());
+        }
+        let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
+        for index in 0..zip.len() {
+            let mut entry = zip.by_index(index)?;
+            if entry.is_dir() {
+                continue;
+            }
+            let relative = entry.enclosed_name().ok_or("unsafe archive member")?;
+            let path = installed.join(relative);
+            if fs::symlink_metadata(&path)?.file_type().is_symlink()
+                || path.metadata()?.len() != entry.size()
+            {
+                return Err("installed component is missing, replaced or corrupt".into());
+            }
+            let mut expected = Sha256::new();
+            let mut buffer = [0u8; 65536];
+            loop {
+                let count = entry.read(&mut buffer)?;
+                if count == 0 {
+                    break;
+                }
+                expected.update(&buffer[..count]);
+            }
+            if sha_file(&path)? != format!("{:x}", expected.finalize()) {
+                return Err("installed component SHA-256 mismatch; not executed".into());
+            }
+        }
+    }
+    Ok(())
+}
+
 fn open_browser(url: &str) -> Result<()> {
     #[cfg(windows)]
     let mut command = Command::new("explorer.exe");
@@ -307,6 +345,8 @@ fn run(
         fs::create_dir_all(installed.parent().ok_or("no version parent")?)?;
         fs::rename(staging, &installed)?;
     }
+    stage(state, "Verifying installed components");
+    verify_installed(&manifest, &installed, &cache)?;
     if install_only {
         stage(state, "Verified installation ready");
         return Ok(());
