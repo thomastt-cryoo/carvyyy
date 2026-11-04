@@ -1,0 +1,53 @@
+name: M1 platform verification
+on:
+  push:
+    branches: [codex/m1-foundation]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - name: Install locked CPU environment
+        run: uv sync --frozen --extra cpu
+      - name: Fast regression suite
+        run: uv run --no-sync pytest -q --junitxml=fast-tests.xml
+      - name: Genuine CPU model smoke (downloads model once)
+        env:
+          P2R_DEVICE: cpu
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          OMP_NUM_THREADS: '4'
+        run: uv run --no-sync pytest -q -m slow tests/test_depth_smoke.py::test_da2_small_real_inference --junitxml=real-small.xml
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native bootstrap build
+        working-directory: bootstrapper
+        run: cargo build --release --locked
+      - name: Native unit tests
+        working-directory: bootstrapper
+        run: cargo test --locked
+      - name: Windows executable proof
+        if: runner.os == 'Windows'
+        run: uv run --no-sync python -m tools.m1.bootstrap_smoke --exe bootstrapper/target/release/relief-bootstrap.exe --output data/m1/bootstrap-proof
+      - name: macOS executable proof
+        if: runner.os == 'macOS'
+        run: uv run --no-sync python -m tools.m1.bootstrap_smoke --exe bootstrapper/target/release/relief-bootstrap --output data/m1/bootstrap-proof
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m1-${{ matrix.os }}
+          path: |
+            fast-tests.xml
+            real-small.xml
+            data/m1/bootstrap-proof/results.json
+            data/m1/bootstrap-proof/launcher-*.zip
+          if-no-files-found: warn

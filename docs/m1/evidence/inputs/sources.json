@@ -1,0 +1,42 @@
+[
+  {
+    "id": "portrait",
+    "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.19.3/skimage/data/astronaut.png",
+    "credit": "NASA / Eileen Collins; public domain",
+    "kind": "photograph",
+    "file": "portrait.png",
+    "sha256": "74d3ec6cca600b36965c09e909769cea633b52668a183f36ad32f45187784441"
+  },
+  {
+    "id": "pet",
+    "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.19.3/skimage/data/chelsea.png",
+    "credit": "Stefan van der Walt; CC0",
+    "kind": "photograph",
+    "file": "pet.png",
+    "sha256": "617403922b8bfe24d06d800cd9da0ea73363b22577bdcf04aa465087caf39d07"
+  },
+  {
+    "id": "object",
+    "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.19.3/skimage/data/coffee.png",
+    "credit": "Rachel Michetti; CC0",
+    "kind": "photograph",
+    "file": "object.png",
+    "sha256": "bc7c679e93a04b35aef5c5d644f0293d6aac8df7ccbba06f1d5bdddc0285050b"
+  },
+  {
+    "id": "complex",
+    "url": "https://raw.githubusercontent.com/scikit-image/scikit-image/v0.19.3/skimage/data/rocket.jpg",
+    "credit": "SpaceX / DSCOVR launch; public domain",
+    "kind": "photograph",
+    "file": "complex.png",
+    "sha256": "bff8e5689368fe318bd12f4c38fff5c07ac55ecbcf7099f73b95653c2a5b441f"
+  },
+  {
+    "id": "ornament",
+    "credit": "Project-generated procedural medallion",
+    "kind": "synthetic shaded fixture",
+    "url": null,
+    "file": "ornament.png",
+    "sha256": "9116f03d90d1d2b251c869687f7c6f9197bba4270663e3f9b682bff3d84029ab"
+  }
+]

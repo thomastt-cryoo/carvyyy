@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Photo Relief Studio — Setup proof</title>
+<style>
+body{font:16px system-ui,sans-serif;color:#222;background:#fff;margin:10vh auto;padding:24px;max-width:620px}
+h1{font-size:26px;font-weight:600}p{line-height:1.6}progress{width:100%;height:12px}small{color:#666}a{color:inherit}
+</style>
+<h1>Photo Relief Studio</h1><p id="stage">Preparing local setup…</p>
+<progress id="progress"></progress><p id="bytes"></p><p id="error" role="alert"></p>
+<p><small>M1 engineering proof. Initial setup needs internet; installed components run locally.</small></p>
+<script>
+const poll = setInterval(async () => {
+  try {
+    const s = await (await fetch('/status', {cache:'no-store'})).json();
+    document.getElementById('stage').textContent = s.stage;
+    const progress = document.getElementById('progress');
+    if (s.total) { progress.max = s.total; progress.value = s.downloaded; }
+    document.getElementById('bytes').textContent = s.total ? `${s.downloaded.toLocaleString()} / ${s.total.toLocaleString()} bytes` : '';
+    document.getElementById('error').textContent = s.error || '';
+    if(s.app_url) { clearInterval(poll); location.replace(s.app_url); }
+  } catch { document.getElementById('stage').textContent = 'Setup is no longer running. Reopen the launcher to retry.'; }
+}, 250);
+</script></html>

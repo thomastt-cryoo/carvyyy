@@ -12,14 +12,18 @@ dependencies = [
 # Same mutually-exclusive torch split as the main project: the GPU image / dev box use
 # --extra cu128, a CPU install uses --extra cpu. torch 2.9.1 exists in both indexes.
 [project.optional-dependencies]
-cpu = ["torch==2.9.1", "torchvision==0.24.1"]
+cpu = ["torch==2.9.1", "torchvision==0.24.1+cpu"]
 cu128 = ["torch==2.9.1", "torchvision==0.24.1"]
 
 [tool.uv]
 package = false
 conflicts = [[{ extra = "cpu" }, { extra = "cu128" }]]
-# Only lock for the platforms we actually run on (Windows dev box, Linux container).
-environments = ["sys_platform == 'win32'", "sys_platform == 'linux'"]
+# M1: constrain to supported CPython x64 worker targets, and avoid the unrelated
+# Windows ARM torchvision local build selected by the original lock.
+environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64' and platform_python_implementation == 'CPython'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'",
+]
 
 [tool.uv.sources]
 torch = [
