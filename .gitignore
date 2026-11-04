@@ -8,3 +8,7 @@ __pycache__/
 *.egg-info/
 tests/fixtures/*.png
 tests/fixtures/*.jpg
+
+# M1 local environments and large generated exports (small evidence is versioned).
+bootstrapper/target/
+dist/

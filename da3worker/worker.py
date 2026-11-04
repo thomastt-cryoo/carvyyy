@@ -1,5 +1,9 @@
 """DA3 inference worker — runs inside the isolated da3worker venv, one image per call.
 
+Photo Relief Studio M1 modification (2026-11-05): keep CPU inference in float32.
+The pinned vendor API otherwise selects CUDA-oriented float16 autocast on CPU;
+the real sphere smoke test aborted natively on the Windows baseline machine.
+
 Protocol (consumed by app.depth.DA3Backend):
     python worker.py <in_image> <out_npy> [--device cuda|cpu] [--model <hf_repo>]
 
@@ -42,7 +46,15 @@ def main() -> int:
         width, height = img.width, img.height
         arr = np.asarray(img)
 
-    model = DepthAnything3.from_pretrained(args.model).to(device)
+    class CPUFloat32DepthAnything3(DepthAnything3):
+        def forward(self, *inputs, **kwargs):
+            # Keep the original model and preprocessing/output pipeline. Only the
+            # precision policy changes; CUDA retains the vendor implementation.
+            with torch.inference_mode(), torch.autocast(device_type="cpu", enabled=False):
+                return self.model(*inputs, **kwargs)
+
+    model_type = CPUFloat32DepthAnything3 if device == "cpu" else DepthAnything3
+    model = model_type.from_pretrained(args.model).to(device)
     with torch.inference_mode():
         pred = model.inference([arr])
 

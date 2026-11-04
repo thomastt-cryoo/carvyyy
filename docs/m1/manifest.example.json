@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "version": "1.0.0-example-not-installable",
+  "platform": "windows-x86_64",
+  "components": [
+    {
+      "id": "runtime-app-cpu-example",
+      "url": "https://downloads.example.invalid/releases/1.0.0/windows-x86_64/runtime-app.zip",
+      "size_bytes": 1,
+      "unpacked_limit_bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "da2-small-snapshot-example",
+      "url": "https://downloads.example.invalid/models/da2-small/pinned-revision.zip",
+      "size_bytes": 1,
+      "unpacked_limit_bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "executable": "runtime/python.exe",
+  "arguments": ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "{port}"]
+}

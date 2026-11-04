@@ -1,0 +1,540 @@
+{
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.16 (main, Oct 26 2026, 14:10:56) [MSC v.1944 64 bit (AMD64)]",
+  "offline": false,
+  "threads": 4,
+  "server_pid": 14468,
+  "cases": [
+    {
+      "case": "portrait",
+      "model": "da2-small",
+      "upload_s": 0.21113549999972747,
+      "session_id": "c6bfee18028f4f3bb6c037763bc024aa",
+      "inference_or_cache_s": 41.265,
+      "params": {
+        "model_width_mm": 150.0,
+        "relief_height_mm": 8.0,
+        "base_thickness_mm": 3.0,
+        "border_frame_mm": 0.0,
+        "depth_model": "da2-small",
+        "invert_depth": false,
+        "gamma": 1.2,
+        "depth_floor": 0.0,
+        "depth_ceiling": 1.0,
+        "flatten_background": false,
+        "background_threshold": 0.15,
+        "smoothing": 2.5,
+        "edge_preserve": true,
+        "detail_blend": 0.12,
+        "edge_taper_mm": 0.0,
+        "resolution": 1024,
+        "decimate_ratio": 0.0,
+        "output_format": "stl"
+      },
+      "depth_shape": [
+        512,
+        512
+      ],
+      "depth_range": [
+        0.0,
+        1.0
+      ],
+      "heightmap.png_s": 0.28869420000046375,
+      "shaded.png_s": 0.3875194000011106,
+      "preview_3d_s": 0.24948050000057265,
+      "settings_update_changes_preview": true,
+      "settings_preserve_depth_cache": true,
+      "exports": [
+        {
+          "resolution": 512,
+          "format": "stl",
+          "export_s_including_poll": 1.5426598000012746,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 528374,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              150.0,
+              10.997380256652832
+            ]
+          ],
+          "bytes": 26418784
+        },
+        {
+          "resolution": 512,
+          "format": "obj",
+          "export_s_including_poll": 2.6838728000002448,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 528374,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              150.0,
+              10.99738026
+            ]
+          ],
+          "bytes": 21417856
+        },
+        {
+          "resolution": 1024,
+          "format": "stl",
+          "export_s_including_poll": 3.3800783999995474,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 2105334,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              150.0,
+              10.997411727905273
+            ]
+          ],
+          "bytes": 105266784
+        },
+        {
+          "resolution": 2048,
+          "format": "stl",
+          "export_s_including_poll": 21.741709700001593,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 8404982,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              150.0,
+              10.998359680175781
+            ]
+          ],
+          "bytes": 420249184
+        }
+      ]
+    },
+    {
+      "case": "pet",
+      "model": "da2-small",
+      "upload_s": 0.24560159999964526,
+      "session_id": "82756ef3118542a9b610f08f3f00e7ef",
+      "inference_or_cache_s": 2.891,
+      "params": {
+        "model_width_mm": 150.0,
+        "relief_height_mm": 8.0,
+        "base_thickness_mm": 3.0,
+        "border_frame_mm": 0.0,
+        "depth_model": "da2-small",
+        "invert_depth": false,
+        "gamma": 1.2,
+        "depth_floor": 0.0,
+        "depth_ceiling": 1.0,
+        "flatten_background": false,
+        "background_threshold": 0.15,
+        "smoothing": 2.5,
+        "edge_preserve": true,
+        "detail_blend": 0.12,
+        "edge_taper_mm": 0.0,
+        "resolution": 1024,
+        "decimate_ratio": 0.0,
+        "output_format": "stl"
+      },
+      "depth_shape": [
+        300,
+        451
+      ],
+      "depth_range": [
+        0.0,
+        1.0
+      ],
+      "heightmap.png_s": 0.2741619000007631,
+      "shaded.png_s": 0.23701530000107596,
+      "preview_3d_s": 0.19672440000067581,
+      "settings_update_changes_preview": true,
+      "settings_preserve_depth_cache": true,
+      "exports": [
+        {
+          "resolution": 512,
+          "format": "stl",
+          "export_s_including_poll": 1.0455688000001828,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 352586,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              99.90234375,
+              10.967307090759277
+            ]
+          ],
+          "bytes": 17629384
+        },
+        {
+          "resolution": 512,
+          "format": "obj",
+          "export_s_including_poll": 1.7868938999999955,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 352586,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              99.90234375,
+              10.96730709
+            ]
+          ],
+          "bytes": 14006895
+        }
+      ]
+    },
+    {
+      "case": "ornament",
+      "model": "da2-small",
+      "upload_s": 0.05289020000054734,
+      "session_id": "dbab0a6ef96b4a22aff99d325721e2b2",
+      "inference_or_cache_s": 3.437,
+      "params": {
+        "model_width_mm": 150.0,
+        "relief_height_mm": 8.0,
+        "base_thickness_mm": 3.0,
+        "border_frame_mm": 0.0,
+        "depth_model": "da2-small",
+        "invert_depth": false,
+        "gamma": 1.2,
+        "depth_floor": 0.0,
+        "depth_ceiling": 1.0,
+        "flatten_background": false,
+        "background_threshold": 0.15,
+        "smoothing": 2.5,
+        "edge_preserve": true,
+        "detail_blend": 0.12,
+        "edge_taper_mm": 0.0,
+        "resolution": 1024,
+        "decimate_ratio": 0.0,
+        "output_format": "stl"
+      },
+      "depth_shape": [
+        512,
+        512
+      ],
+      "depth_range": [
+        0.0,
+        1.0
+      ],
+      "heightmap.png_s": 0.31927489999907266,
+      "shaded.png_s": 0.38442009999926086,
+      "preview_3d_s": 0.36174660000142467,
+      "settings_update_changes_preview": true,
+      "settings_preserve_depth_cache": true,
+      "exports": [
+        {
+          "resolution": 512,
+          "format": "stl",
+          "export_s_including_poll": 1.8047291999992012,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 528374,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              150.0,
+              10.891777038574219
+            ]
+          ],
+          "bytes": 26418784
+        },
+        {
+          "resolution": 512,
+          "format": "obj",
+          "export_s_including_poll": 3.5037652000009984,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 528374,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              150.0,
+              10.89177704
+            ]
+          ],
+          "bytes": 21403873
+        }
+      ]
+    },
+    {
+      "case": "object",
+      "model": "da2-small",
+      "upload_s": 0.9707984999986365,
+      "session_id": "78ce718ea8f14f0cb842f03da5071089",
+      "inference_or_cache_s": 38.047,
+      "params": {
+        "model_width_mm": 150.0,
+        "relief_height_mm": 8.0,
+        "base_thickness_mm": 3.0,
+        "border_frame_mm": 0.0,
+        "depth_model": "da2-small",
+        "invert_depth": false,
+        "gamma": 1.2,
+        "depth_floor": 0.0,
+        "depth_ceiling": 1.0,
+        "flatten_background": false,
+        "background_threshold": 0.15,
+        "smoothing": 2.5,
+        "edge_preserve": true,
+        "detail_blend": 0.12,
+        "edge_taper_mm": 0.0,
+        "resolution": 1024,
+        "decimate_ratio": 0.0,
+        "output_format": "stl"
+      },
+      "depth_shape": [
+        400,
+        600
+      ],
+      "depth_range": [
+        0.0,
+        1.0
+      ],
+      "heightmap.png_s": 1.2424229000007472,
+      "shaded.png_s": 1.6105001999985689,
+      "preview_3d_s": 0.7022484000008262,
+      "settings_update_changes_preview": true,
+      "settings_preserve_depth_cache": true,
+      "exports": [
+        {
+          "resolution": 512,
+          "format": "stl",
+          "export_s_including_poll": 5.6847039999993285,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 352586,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              99.90234375,
+              10.93617057800293
+            ]
+          ],
+          "bytes": 17629384
+        },
+        {
+          "resolution": 512,
+          "format": "obj",
+          "export_s_including_poll": 7.930882500000735,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 352586,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              99.90234375,
+              10.93617105
+            ]
+          ],
+          "bytes": 13999726
+        }
+      ]
+    },
+    {
+      "case": "complex",
+      "model": "da2-small",
+      "upload_s": 0.15214390000073763,
+      "session_id": "e4f3b496fbf14cff8f6a4a6f7542bfe8",
+      "inference_or_cache_s": 2.297,
+      "params": {
+        "model_width_mm": 150.0,
+        "relief_height_mm": 8.0,
+        "base_thickness_mm": 3.0,
+        "border_frame_mm": 0.0,
+        "depth_model": "da2-small",
+        "invert_depth": false,
+        "gamma": 1.2,
+        "depth_floor": 0.0,
+        "depth_ceiling": 1.0,
+        "flatten_background": false,
+        "background_threshold": 0.15,
+        "smoothing": 2.5,
+        "edge_preserve": true,
+        "detail_blend": 0.12,
+        "edge_taper_mm": 0.0,
+        "resolution": 1024,
+        "decimate_ratio": 0.0,
+        "output_format": "stl"
+      },
+      "depth_shape": [
+        427,
+        640
+      ],
+      "depth_range": [
+        0.0,
+        1.0
+      ],
+      "heightmap.png_s": 0.36274219999904744,
+      "shaded.png_s": 0.4523226000001159,
+      "preview_3d_s": 0.41325119999964954,
+      "settings_update_changes_preview": true,
+      "settings_preserve_depth_cache": true,
+      "exports": [
+        {
+          "resolution": 512,
+          "format": "stl",
+          "export_s_including_poll": 1.291804200000115,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 353614,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              100.1953125,
+              10.469741821289062
+            ]
+          ],
+          "bytes": 17680784
+        },
+        {
+          "resolution": 512,
+          "format": "obj",
+          "export_s_including_poll": 3.6536479000005784,
+          "watertight": true,
+          "winding_consistent": true,
+          "positive_volume": true,
+          "faces": 353614,
+          "bounds_mm": [
+            [
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              150.0,
+              100.1953125,
+              10.4697423
+            ]
+          ],
+          "bytes": 14037978
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "health": {
+    "status": "ok",
+    "device": "cpu",
+    "cuda_available": false,
+    "mps_available": false,
+    "torch_version": "2.9.1+cpu",
+    "model_loaded": false,
+    "active_model": null
+  },
+  "main_page_bytes": 4286,
+  "models": {
+    "models": [
+      {
+        "model_id": "da3mono-large",
+        "role": "Geometric fidelity (direct depth). Best true-to-life proportions.",
+        "license": "Apache-2.0",
+        "available": true
+      },
+      {
+        "model_id": "da2-large",
+        "role": "Artistic bas-relief look (exaggerated near-field).",
+        "license": "CC-BY-NC-4.0",
+        "available": true
+      },
+      {
+        "model_id": "da2-small",
+        "role": "Fast, CPU-safe fallback (only Apache-licensed option).",
+        "license": "Apache-2.0",
+        "available": true
+      }
+    ],
+    "default_model": "da2-small",
+    "default_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    }
+  },
+  "backend_peak_working_set_bytes": 5361664,
+  "memory_measurement_valid": false,
+  "memory_note": "Original sampler measured the Windows venv launcher stub only. Discard backend_peak_working_set_bytes; corrected runs sample the whole process tree."
+}

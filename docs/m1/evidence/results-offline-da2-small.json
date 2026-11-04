@@ -1,0 +1,78 @@
+{
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.16 (main, Oct 26 2026, 14:10:56) [MSC v.1944 64 bit (AMD64)]",
+  "offline": true,
+  "threads": 4,
+  "server_pid": 27048,
+  "cases": [
+    {
+      "case": "portrait",
+      "model": "da2-small",
+      "error": "name 'io' is not defined"
+    }
+  ],
+  "failures": [
+    {
+      "case": "portrait",
+      "model": "da2-small",
+      "error": "name 'io' is not defined"
+    }
+  ],
+  "health": {
+    "status": "ok",
+    "device": "cpu",
+    "cuda_available": false,
+    "mps_available": false,
+    "torch_version": "2.9.1+cpu",
+    "model_loaded": false,
+    "active_model": null
+  },
+  "main_page_bytes": 4286,
+  "models": {
+    "models": [
+      {
+        "model_id": "da3mono-large",
+        "role": "Geometric fidelity (direct depth). Best true-to-life proportions.",
+        "license": "Apache-2.0",
+        "available": true
+      },
+      {
+        "model_id": "da2-large",
+        "role": "Artistic bas-relief look (exaggerated near-field).",
+        "license": "CC-BY-NC-4.0",
+        "available": true
+      },
+      {
+        "model_id": "da2-small",
+        "role": "Fast, CPU-safe fallback (only Apache-licensed option).",
+        "license": "Apache-2.0",
+        "available": true
+      }
+    ],
+    "default_model": "da2-small",
+    "default_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    }
+  },
+  "backend_peak_working_set_bytes": 5365760,
+  "acceptance_evidence": false,
+  "superseded_by": "results-offline-da2-small-verified.json",
+  "note": "Early harness run failed on a missing import before inference. Retained as transparent exploratory history, not accepted evidence."
+}

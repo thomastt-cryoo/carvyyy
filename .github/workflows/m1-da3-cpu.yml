@@ -1,0 +1,28 @@
+name: M1 optional DA3 CPU verification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  da3-cpu:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      P2R_DEVICE: cpu
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: uv sync --frozen --extra cpu
+      - run: uv sync --project da3worker --frozen --extra cpu
+      - name: Genuine worker round trip and near/far orientation
+        run: uv run --no-sync pytest -q -m slow tests/test_depth_smoke.py::test_da3mono_real_inference_subject_nearer --junitxml=real-da3.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m1-da3-cpu
+          path: real-da3.xml
