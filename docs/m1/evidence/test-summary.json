@@ -1,0 +1,67 @@
+{
+  "fast-baseline": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "102",
+    "time": "90.756"
+  },
+  "real-small": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "1",
+    "time": "109.774"
+  },
+  "final-fast": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "2",
+    "tests": "117",
+    "time": "81.833"
+  },
+  "added-geometry": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "2",
+    "tests": "15",
+    "time": "10.189"
+  },
+  "real-da3": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "1",
+    "skipped": "0",
+    "tests": "1",
+    "time": "308.366"
+  },
+  "real-da3-threads4": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "1",
+    "skipped": "0",
+    "tests": "1",
+    "time": "82.834"
+  },
+  "real-da3-float32": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "1",
+    "time": "104.663"
+  },
+  "coverage": {
+    "modules": [
+      "app.heightmap",
+      "app.meshing"
+    ],
+    "statement_percent": 100,
+    "branch_percent": 100,
+    "separate_coverage_run": true
+  }
+}

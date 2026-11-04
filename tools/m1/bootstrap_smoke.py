@@ -59,11 +59,13 @@ def main() -> None:
                 self.send_header("Content-Range", f"bytes {offset}-{len(data) - 1}/{len(data)}")
             self.end_headers()
             try:
+                # Leave time for the external status observer even on a busy laptop.
+                time.sleep(0.25)
                 end = min(len(data), offset + 262144) if controls["interrupt"] else len(data)
                 for index in range(offset, end, 16384):
                     self.wfile.write(data[index : min(index + 16384, end)])
                     self.wfile.flush()
-                    time.sleep(0.004)
+                    time.sleep(0.02)
                 if controls["interrupt"]:
                     self.connection.shutdown(socket.SHUT_RDWR)
                     self.connection.close()
@@ -219,7 +221,19 @@ def main() -> None:
         check("launcher ZIP below preferred 19 MB", launcher_zip.stat().st_size < 19_000_000)
     finally:
         (work / "results.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(results, indent=2))
+    print(
+        json.dumps(
+            {
+                "checks_passed": sum(c["passed"] for c in results["checks"]),
+                "checks_total": len(results["checks"]),
+                "progress_samples": len(results["progress_samples"]),
+                "executable_bytes": results["executable_bytes"],
+                "compressed_launcher_bytes": results["compressed_launcher_bytes"],
+                "results": str(work / "results.json"),
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

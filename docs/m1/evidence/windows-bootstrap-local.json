@@ -1,0 +1,2290 @@
+{
+  "platform": "Windows-11-10.0.26300-SP0",
+  "checks": [
+    {
+      "name": "interrupted download fails closed",
+      "passed": true
+    },
+    {
+      "name": "interrupted bytes preserved",
+      "passed": true
+    },
+    {
+      "name": "retry completes verified installation",
+      "passed": true
+    },
+    {
+      "name": "HTTP Range was used",
+      "passed": true
+    },
+    {
+      "name": "genuine byte progress observed",
+      "passed": true
+    },
+    {
+      "name": "server ignoring Range safely restarts",
+      "passed": true
+    },
+    {
+      "name": "corrupt component is rejected",
+      "passed": true
+    },
+    {
+      "name": "corrupt component never installed",
+      "passed": true
+    },
+    {
+      "name": "archive traversal is rejected",
+      "passed": true
+    },
+    {
+      "name": "archive did not write outside staging",
+      "passed": true
+    },
+    {
+      "name": "modified/untrusted manifest is rejected",
+      "passed": true
+    },
+    {
+      "name": "offline relaunch starts downloaded native backend",
+      "passed": true
+    },
+    {
+      "name": "corrupt installed executable is rejected before launch",
+      "passed": true
+    },
+    {
+      "name": "launcher ZIP below preferred 19 MB",
+      "passed": true
+    }
+  ],
+  "progress_samples": [
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 16384,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 49152,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 65536,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 98304,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 131072,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 147456,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 180224,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 212992,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 229376,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 851968,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 868352,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 901120,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 933888,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 950272,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 983040,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1015808,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1032192,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1064960,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1097728,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1114112,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1146880,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1163264,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1196032,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1228800,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1245184,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1277952,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1310720,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1327104,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1359872,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1392640,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1409024,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1441792,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1474560,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1490944,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1523712,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1556480,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1572864,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1605632,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1638400,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1671168,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1687552,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1720320,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1753088,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1769472,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1802240,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1835008,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1851392,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1884160,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1916928,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1933312,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1966080,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1982464,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2015232,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2064384,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2080768,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2113536,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2146304,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2162688,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2195456,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2228224,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2260992,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2277376,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2310144,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2326528,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2359296,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2392064,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2424832,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2457600,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2490368,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2506752,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2539520,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2555904,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2588672,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2621440,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2637824,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2670592,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2703360,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2719744,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2752512,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2785280,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2801664,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2834432,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2883584,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2916352,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2949120,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2981888,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2998272,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3031040,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3063808,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3080192,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3112960,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3129344,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 32768,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 65536,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 98304,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 114688,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 147456,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 180224,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 196608,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 229376,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 262144,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 278528,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 311296,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 344064,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 360448,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 393216,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 425984,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 442368,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 475136,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 507904,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 524288,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 557056,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 589824,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 622592,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 655360,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 671744,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 704512,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 737280,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 770048,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 786432,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 819200,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 851968,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 868352,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 917504,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 933888,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 966656,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 999424,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1015808,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1048576,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1081344,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1097728,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1130496,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1163264,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1179648,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1212416,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1245184,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1261568,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1294336,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1310720,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1343488,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1376256,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1392640,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1425408,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1458176,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1474560,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1507328,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1540096,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1572864,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1589248,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1622016,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1654784,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1671168,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1703936,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1736704,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1753088,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1785856,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1818624,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1851392,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1884160,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1900544,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1933312,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1982464,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2015232,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2031616,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2064384,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2097152,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2113536,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2146304,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2195456,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2211840,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2244608,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2277376,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2293760,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2326528,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2342912,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2375680,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2408448,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2424832,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2457600,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2473984,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2506752,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2539520,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2555904,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2588672,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2621440,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2637824,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2670592,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2686976,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2719744,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2752512,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2768896,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2801664,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2850816,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2883584,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2899968,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2932736,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2949120,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2981888,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3014656,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3031040,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3063808,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3112960,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3129344,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 32768,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 65536,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 81920,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 114688,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 147456,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 163840,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 196608,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 229376,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 245760,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 278528,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 311296,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 327680,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 360448,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 393216,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 409600,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 442368,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 458752,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 491520,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 524288,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 540672,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 573440,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 606208,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 622592,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 655360,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 688128,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 704512,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 737280,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 770048,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 786432,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 819200,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 835584,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 868352,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 901120,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 917504,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 950272,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 983040,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 999424,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1032192,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1064960,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1081344,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1114112,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1130496,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1163264,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1196032,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1212416,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1261568,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1294336,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1310720,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1343488,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1376256,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1409024,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1441792,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1458176,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1490944,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1523712,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1540096,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1572864,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1605632,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1622016,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1654784,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1671168,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1720320,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1753088,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1785856,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1802240,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1835008,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1851392,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1900544,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1933312,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1949696,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1982464,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 1998848,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2048000,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2080768,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2097152,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2129920,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2162688,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2179072,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2211840,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2228224,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2260992,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2293760,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2310144,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2342912,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2359296,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2392064,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2424832,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2441216,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2473984,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2506752,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2523136,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2555904,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2572288,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2605056,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2637824,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2654208,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2686976,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2703360,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2736128,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2768896,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2785280,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2818048,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2850816,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2867200,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2899968,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2916352,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2949120,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 2981888,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3014656,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3031040,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3063808,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3096576,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3112960,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    },
+    {
+      "stage": "Downloading native-demo",
+      "downloaded": 3145728,
+      "total": 3149695,
+      "app_url": null,
+      "error": null
+    }
+  ],
+  "offline_health": {
+    "status": "ok",
+    "demo": true
+  },
+  "offline_url": "http://127.0.0.1:51776/",
+  "executable_bytes": 2176000,
+  "compressed_launcher_bytes": 1149120,
+  "launcher_sha256": "740338befbe88687a300fbc6430e588c14b6668d66b3b8a89cc3d873679415ee"
+}

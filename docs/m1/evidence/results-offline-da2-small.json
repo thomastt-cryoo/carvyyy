@@ -71,5 +71,8 @@
       "output_format": "stl"
     }
   },
-  "backend_peak_working_set_bytes": 5365760
+  "backend_peak_working_set_bytes": 5365760,
+  "acceptance_evidence": false,
+  "superseded_by": "results-offline-da2-small-verified.json",
+  "note": "Early harness run failed on a missing import before inference. Retained as transparent exploratory history, not accepted evidence."
 }

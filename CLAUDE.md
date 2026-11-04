@@ -1,3 +1,12 @@
+# Photo Relief Studio M1 extension (2026-11-05)
+
+The original working notes below describe upstream Photo2Relief milestones, not
+the new Photo Relief Studio M1–M7 schedule. Preserve this historical record.
+New work is documented in `docs/m1/REPORT.md`, `FEATURE_INVENTORY.md` and
+`ARCHITECTURE.md`. The user's commercial-product brief supersedes upstream's
+personal/noncommercial assumption. M1 preserves all application features and core
+geometry; no redesign or production installer has been implemented.
+
 # CLAUDE.md — Photo2Relief
 
 Working notes and conventions for Claude Code. **`SPEC.md` is the source of truth** for architecture, API contract, parameters, and milestone acceptance criteria. If this file and SPEC.md conflict, SPEC.md wins; if reality and SPEC.md conflict, update the Decisions Log below and note it here.

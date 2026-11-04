@@ -1,5 +1,11 @@
 # Photo2Relief
 
+> Photo Relief Studio M1 work preserves this upstream application. See
+> [the M1 report](docs/m1/REPORT.md), [feature checklist](docs/m1/FEATURE_INVENTORY.md)
+> and [architecture decision](docs/m1/ARCHITECTURE.md). M1 changes dated 2026-11-05;
+> upstream provenance is recorded in the report. The customer installer and redesign
+> are later milestones.
+
 Turn a single 2D photograph into a CNC-machinable 2.5D relief mesh. Locally hosted, Docker-based web app: upload a photo, tune the relief interactively with live 2D/3D previews, export a watertight binary STL (or OBJ) in millimeters, and import it straight into Autodesk Fusion for CAM.
 
 Under the hood: monocular depth estimation (Depth Anything family) → heightmap shaping → grid-triangulated solid mesh. No cloud, no accounts, no paid licenses. See `SPEC.md` for the full design; `CLAUDE.md` for build conventions and status.
@@ -136,4 +142,4 @@ Layout: `app/` (FastAPI backend — `depth.py` model adapters, `heightmap.py` pu
 
 ## Licenses
 
-Application code: MIT (or your preference — set before publishing). Third-party: FastAPI/three.js/trimesh et al. are MIT/BSD/Apache. Model weights carry their own licenses per the table above and are downloaded at runtime, not distributed with this repo.
+Application code: **Apache-2.0**, as specified by the preserved `LICENSE` file (M1 correction to the original README's MIT statement). Third-party: FastAPI/three.js/trimesh et al. have their own licenses. Model weights carry separate licenses per the table above; V2 Large's noncommercial restriction must be resolved before commercial distribution. See the M1 architecture audit.
