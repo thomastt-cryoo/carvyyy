@@ -136,6 +136,25 @@ different depth allocation across subject and helmet; it still does not establis
 premium facial detail. These are relative-depth models, not reliable recovery of
 true object dimensions from one photograph.
 
+Surface comparisons were also generated from each subject's original, genuinely
+inferred depth array: default settings, no smoothing, smoothing 5, no fine detail
+and fine detail 0.7. On the portrait and cat, turning fine detail off removes most
+eye/fur texture; increasing it adds recognizability but also brightness-derived
+grooves and noise. Extra smoothing softens depth boundaries and whisker ridges,
+but does not remove later-added luminance texture. It cannot recover the medallion
+petals that the depth model missed. The cup's spoon and wood grain, and the
+rocket scene's lattice, become much harsher at high detail blend. These are
+visual observations, not a premium-quality score.
+
+![Surface settings compared using genuine portrait depth](evidence/portrait-surface-comparison.jpg)
+
+Other surface comparisons: [cat](evidence/pet-surface-comparison.jpg),
+[ornament](evidence/ornament-surface-comparison.jpg),
+[cup](evidence/object-surface-comparison.jpg),
+[complex scene](evidence/complex-surface-comparison.jpg). Reproduce them with
+`uv run --no-sync python -m tools.m1.compare_surface`; no new inference or fake
+depth is used for these setting-only comparisons.
+
 Actual 3D browser evidence:
 
 ![Working application with shaded relief and interactive mesh](evidence/browser-portrait-desktop.jpg)

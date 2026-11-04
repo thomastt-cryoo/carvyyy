@@ -58,6 +58,7 @@ uv run --no-sync python -m tools.m1.baseline --large-exports
 uv run --no-sync python -m tools.m1.baseline --offline --fresh --cases portrait --run-name verified
 uv run --no-sync python -m tools.m1.baseline --models da2-large --cases portrait --run-name cpu-large
 uv run --no-sync python -m tools.m1.baseline --models da3mono-large --cases portrait --run-name cpu-da3
+uv run --no-sync python -m tools.m1.compare_surface
 ```
 
 The runner starts the real server, uploads through HTTP, waits for real inference,

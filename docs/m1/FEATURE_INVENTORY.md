@@ -24,7 +24,7 @@ never presented as proof of AI inference. Model-specific evidence is in REPORT.m
 | Model registry and license hints | `/api/models`, dropdown, per-model descriptions | E/U |
 | Depth Anything V2 Small | HF Transformers adapter; disparity -> near=1 | E on five fixtures; offline fresh inference; CPU smoke on Win/Mac |
 | Depth Anything V2 Large | Same adapter; CC-BY-NC-4.0 weights | Preserved; see model-specific results in report |
-| Depth Anything 3 Mono Large | Isolated Python 3.12 worker, direct depth flipped -> near=1 | Windows worker installation repaired; see report for runs and failure |
+| Depth Anything 3 Mono Large | Isolated Python 3.12 worker, direct depth flipped -> near=1 | E, real CPU sphere and portrait/export after installation and precision fixes; GPU/Mac L |
 | CPU/CUDA/MPS selection | Auto CUDA > MPS > CPU; explicit unavailable accelerator errors | CPU E; precedence/error U; accelerators L |
 | Device defaults | CPU Small, CUDA DA3, MPS V2 Large | U/S; Mac default licensing issue documented |
 | One resident model | Locked lazy backend; unload and accelerator cache release | U/S; accelerator memory behavior L |
