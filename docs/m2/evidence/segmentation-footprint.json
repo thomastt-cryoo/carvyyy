@@ -1,0 +1,21 @@
+{
+  "packages": {
+    "onnxruntime": {
+      "version": "1.31.1",
+      "installed_bytes": 43661342
+    },
+    "flatbuffers": {
+      "version": "25.12.19",
+      "installed_bytes": 88178
+    },
+    "protobuf": {
+      "version": "7.36.2",
+      "installed_bytes": 1711545
+    }
+  },
+  "model_bytes": 4574861,
+  "model_sha256": "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "ram_bytes": 14752673792,
+  "cpu_logical": 8
+}

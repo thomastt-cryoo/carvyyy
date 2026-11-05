@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "revision": 10,
+  "depth_source": "ai",
+  "imported": null,
+  "imports": [],
+  "mask_enabled": true,
+  "mask_feather_mm": 0.8,
+  "mask_transition_mm": 4.0,
+  "sculpt_strength": 0.45,
+  "texture_guard": 0.8,
+  "depth_undo": true,
+  "depth_redo": false,
+  "depth_operations": 3,
+  "mask_undo": true,
+  "mask_redo": false,
+  "mask_operations": 4,
+  "depth_orientation": "white is nearer / higher relief (before optional inversion)"
+}

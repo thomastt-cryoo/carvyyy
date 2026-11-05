@@ -1,0 +1,24 @@
+{
+  "all-tests": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "160",
+      "time": "67.286",
+      "timestamp": "2026-11-05T05:21:12.864569+04:00"
+    }
+  ],
+  "real-editing": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1",
+      "time": "66.742",
+      "timestamp": "2026-11-05T05:13:00.695763+04:00"
+    }
+  ]
+}

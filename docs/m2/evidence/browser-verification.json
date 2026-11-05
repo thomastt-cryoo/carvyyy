@@ -1,0 +1,24 @@
+{
+  "checked_on": "2026-11-05",
+  "url": "http://127.0.0.1:8097/?session=4fafdd9d7563486083e68801e427a63f",
+  "actions_exercised": [
+    "photo upload",
+    "automatic U2NETP isolation",
+    "rectangle isolation",
+    "keep/remove brush",
+    "raise/lower/smooth/flatten brush",
+    "undo/redo/reset",
+    "16-bit PNG import and download",
+    "AI/imported source switch",
+    "reload persistence",
+    "original 2D/3D comparison on five subjects",
+    "2048 memory refusal before meshing",
+    "512 STL download",
+    "55 percent simplified OBJ download",
+    "desktop and 702px narrow layout"
+  ],
+  "console_errors": [],
+  "narrow_layout_horizontal_overflow": false,
+  "download_png_bit_depth": 16,
+  "download_png_grayscale_type": 0
+}

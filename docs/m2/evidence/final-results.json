@@ -1,0 +1,827 @@
+[
+  {
+    "case": "portrait",
+    "session_id": "4fafdd9d7563486083e68801e427a63f",
+    "original_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "u2netp": {
+      "method": "U2NETP local salient-object segmentation",
+      "foreground_fraction": 0.5497443675994873,
+      "note": "Inspect the mask. Thin structures, clipped subjects and multiple objects may need keep/remove corrections."
+    },
+    "segmentation_timing": {
+      "wall_s": 0.7684786000027088,
+      "baseline_rss_mb": 374.17578125,
+      "peak_rss_mb": 567.59375,
+      "settled_rss_mb": 368.0
+    },
+    "manual_corrections": [],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 1.6291043999954127,
+          "baseline_rss_mb": 373.84375,
+          "peak_rss_mb": 530.0703125,
+          "settled_rss_mb": 503.87109375
+        },
+        "triangles": 528374,
+        "bytes": 26418784,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            150.0,
+            10.992037773132324
+          ]
+        ],
+        "volume_mm3": 106574.02812674952,
+        "sha256": "6be4569ef955d49c40f005773b16a468287a565a34b86af45ba558a70ed7fa32",
+        "plan": {
+          "grid": {
+            "rows": 512,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 150.0,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 150.0
+          },
+          "triangles": 528374,
+          "output_triangles_estimate": 528374,
+          "output_bytes_estimate": 26418784,
+          "memory_bytes_estimate": 320728864,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 2.2435011000052327,
+          "baseline_rss_mb": 503.87109375,
+          "peak_rss_mb": 693.8671875,
+          "settled_rss_mb": 583.609375
+        },
+        "triangles": 528374,
+        "bytes": 21416900,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            150.0,
+            10.99203777
+          ]
+        ],
+        "volume_mm3": 106574.02799756323,
+        "sha256": "2d49cfff711123749eb64532553ff2a8344b79725085f874c0cc7c6ad0a0f9ab",
+        "plan": {
+          "grid": {
+            "rows": 512,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 150.0,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 150.0
+          },
+          "triangles": 528374,
+          "output_triangles_estimate": 528374,
+          "output_bytes_estimate": 63405080,
+          "memory_bytes_estimate": 320728864,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      }
+    ],
+    "before_heightmap_timing": {
+      "wall_s": 0.2031118000013521,
+      "baseline_rss_mb": 359.4609375,
+      "peak_rss_mb": 365.48046875,
+      "settled_rss_mb": 359.5546875
+    },
+    "before_shaded_timing": {
+      "wall_s": 0.2992690000028233,
+      "baseline_rss_mb": 359.5546875,
+      "peak_rss_mb": 403.609375,
+      "settled_rss_mb": 360.19140625
+    },
+    "before_glb_timing": {
+      "wall_s": 0.21723870000278112,
+      "baseline_rss_mb": 360.19140625,
+      "peak_rss_mb": 371.4765625,
+      "settled_rss_mb": 369.953125
+    },
+    "after_heightmap_timing": {
+      "wall_s": 0.34227829999872483,
+      "baseline_rss_mb": 369.953125,
+      "peak_rss_mb": 378.98828125,
+      "settled_rss_mb": 369.95703125
+    },
+    "after_shaded_timing": {
+      "wall_s": 0.38559060000261525,
+      "baseline_rss_mb": 369.95703125,
+      "peak_rss_mb": 413.984375,
+      "settled_rss_mb": 370.125
+    },
+    "after_glb_timing": {
+      "wall_s": 0.4130502999978489,
+      "baseline_rss_mb": 370.125,
+      "peak_rss_mb": 380.16015625,
+      "settled_rss_mb": 373.78515625
+    },
+    "ai_sha_unchanged": true
+  },
+  {
+    "case": "pet",
+    "session_id": "cd0386d1f90b4454b78f98e5acfbd536",
+    "original_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "u2netp": {
+      "method": "U2NETP local salient-object segmentation",
+      "foreground_fraction": 0.665869951248169,
+      "note": "Inspect the mask. Thin structures, clipped subjects and multiple objects may need keep/remove corrections."
+    },
+    "segmentation_timing": {
+      "wall_s": 0.8068467999983113,
+      "baseline_rss_mb": 583.61328125,
+      "peak_rss_mb": 775.4609375,
+      "settled_rss_mb": 578.15625
+    },
+    "manual_corrections": [],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 0.8389871000035782,
+          "baseline_rss_mb": 368.35546875,
+          "peak_rss_mb": 488.5546875,
+          "settled_rss_mb": 461.6484375
+        },
+        "triangles": 352586,
+        "bytes": 17629384,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            99.77826690673828,
+            10.934853553771973
+          ]
+        ],
+        "volume_mm3": 99417.61865101689,
+        "sha256": "36bf5a81ccc4b929fd5f0848c067cd7bb2b385b2ccf222b817515d44b8cf2ff9",
+        "plan": {
+          "grid": {
+            "rows": 341,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 99.77827050997783,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 99.77827050997783
+          },
+          "triangles": 352586,
+          "output_triangles_estimate": 352586,
+          "output_bytes_estimate": 17629384,
+          "memory_bytes_estimate": 236350624,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 1.4877212999999756,
+          "baseline_rss_mb": 461.6484375,
+          "peak_rss_mb": 586.51953125,
+          "settled_rss_mb": 515.1015625
+        },
+        "triangles": 352586,
+        "bytes": 14004781,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            99.77827051,
+            10.93485355
+          ]
+        ],
+        "volume_mm3": 99417.62238228715,
+        "sha256": "2ba322abfb0b1a7f450492925c10e161c13ac0e1bbcbb15973b033749796b949",
+        "plan": {
+          "grid": {
+            "rows": 341,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 99.77827050997783,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 99.77827050997783
+          },
+          "triangles": 352586,
+          "output_triangles_estimate": 352586,
+          "output_bytes_estimate": 42310520,
+          "memory_bytes_estimate": 236350624,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      }
+    ],
+    "before_heightmap_timing": {
+      "wall_s": 0.09206499999709195,
+      "baseline_rss_mb": 581.19921875,
+      "peak_rss_mb": 584.43359375,
+      "settled_rss_mb": 581.84765625
+    },
+    "before_shaded_timing": {
+      "wall_s": 0.144436599999608,
+      "baseline_rss_mb": 581.84765625,
+      "peak_rss_mb": 608.57421875,
+      "settled_rss_mb": 582.30859375
+    },
+    "before_glb_timing": {
+      "wall_s": 0.055803900002501905,
+      "baseline_rss_mb": 582.30859375,
+      "peak_rss_mb": 585.875,
+      "settled_rss_mb": 585.875
+    },
+    "after_heightmap_timing": {
+      "wall_s": 0.11411669999506557,
+      "baseline_rss_mb": 585.875,
+      "peak_rss_mb": 590.75,
+      "settled_rss_mb": 585.87890625
+    },
+    "after_shaded_timing": {
+      "wall_s": 0.20182889999705367,
+      "baseline_rss_mb": 585.87890625,
+      "peak_rss_mb": 585.87890625,
+      "settled_rss_mb": 365.1328125
+    },
+    "after_glb_timing": {
+      "wall_s": 0.12054689999786206,
+      "baseline_rss_mb": 365.1328125,
+      "peak_rss_mb": 366.171875,
+      "settled_rss_mb": 368.19921875
+    },
+    "ai_sha_unchanged": true
+  },
+  {
+    "case": "ornament",
+    "session_id": "26fcb0bb86024c41983cf8f8ee881c88",
+    "original_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "u2netp": {
+      "method": "U2NETP local salient-object segmentation",
+      "foreground_fraction": 0.5812442898750305,
+      "note": "Inspect the mask. Thin structures, clipped subjects and multiple objects may need keep/remove corrections."
+    },
+    "segmentation_timing": {
+      "wall_s": 0.9510755000010249,
+      "baseline_rss_mb": 515.1015625,
+      "peak_rss_mb": 714.1640625,
+      "settled_rss_mb": 508.75
+    },
+    "manual_corrections": [],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 1.56101050000143,
+          "baseline_rss_mb": 366.140625,
+          "peak_rss_mb": 546.6796875,
+          "settled_rss_mb": 505.359375
+        },
+        "triangles": 528374,
+        "bytes": 26418784,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            150.0,
+            8.966901779174805
+          ]
+        ],
+        "volume_mm3": 94954.11132535955,
+        "sha256": "e694dec90a21bdcf98bcf4d51471a1ec33ab3ac11a3c2e6417c1aed80fdaca79",
+        "plan": {
+          "grid": {
+            "rows": 512,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 150.0,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 150.0
+          },
+          "triangles": 528374,
+          "output_triangles_estimate": 528374,
+          "output_bytes_estimate": 26418784,
+          "memory_bytes_estimate": 320728864,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 3.0729806999952416,
+          "baseline_rss_mb": 505.359375,
+          "peak_rss_mb": 694.16015625,
+          "settled_rss_mb": 584.16015625
+        },
+        "triangles": 528374,
+        "bytes": 21400823,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            150.0,
+            8.9669013
+          ]
+        ],
+        "volume_mm3": 94954.11159884582,
+        "sha256": "09bc88498bef03cab60ca1cf8d61abf222af54ab8a7f6cb5feb64cd2431c7235",
+        "plan": {
+          "grid": {
+            "rows": 512,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 150.0,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 150.0
+          },
+          "triangles": 528374,
+          "output_triangles_estimate": 528374,
+          "output_bytes_estimate": 63405080,
+          "memory_bytes_estimate": 320728864,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      }
+    ],
+    "before_heightmap_timing": {
+      "wall_s": 0.22525589999713702,
+      "baseline_rss_mb": 361.0859375,
+      "peak_rss_mb": 367.2109375,
+      "settled_rss_mb": 361.1796875
+    },
+    "before_shaded_timing": {
+      "wall_s": 0.3140711999949417,
+      "baseline_rss_mb": 361.1796875,
+      "peak_rss_mb": 401.25,
+      "settled_rss_mb": 361.36328125
+    },
+    "before_glb_timing": {
+      "wall_s": 0.2119818000064697,
+      "baseline_rss_mb": 361.36328125,
+      "peak_rss_mb": 370.8515625,
+      "settled_rss_mb": 370.1875
+    },
+    "after_heightmap_timing": {
+      "wall_s": 0.3361341000054381,
+      "baseline_rss_mb": 370.1875,
+      "peak_rss_mb": 380.98046875,
+      "settled_rss_mb": 370.19140625
+    },
+    "after_shaded_timing": {
+      "wall_s": 0.41377900000225054,
+      "baseline_rss_mb": 370.19140625,
+      "peak_rss_mb": 414.21875,
+      "settled_rss_mb": 370.19140625
+    },
+    "after_glb_timing": {
+      "wall_s": 0.36804989999654936,
+      "baseline_rss_mb": 370.19140625,
+      "peak_rss_mb": 378.22265625,
+      "settled_rss_mb": 374.4140625
+    },
+    "ai_sha_unchanged": true
+  },
+  {
+    "case": "object",
+    "session_id": "061a46a1c83b4b0e8db51302f6917b63",
+    "original_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "u2netp": {
+      "method": "U2NETP local salient-object segmentation",
+      "foreground_fraction": 0.4760398864746094,
+      "note": "Inspect the mask. Thin structures, clipped subjects and multiple objects may need keep/remove corrections."
+    },
+    "segmentation_timing": {
+      "wall_s": 1.0489689000023645,
+      "baseline_rss_mb": 584.3125,
+      "peak_rss_mb": 777.296875,
+      "settled_rss_mb": 579.69921875
+    },
+    "manual_corrections": [],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 1.2327652000021772,
+          "baseline_rss_mb": 369.21484375,
+          "peak_rss_mb": 485.0703125,
+          "settled_rss_mb": 454.375
+        },
+        "triangles": 353614,
+        "bytes": 17680784,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            100.0,
+            10.911357879638672
+          ]
+        ],
+        "volume_mm3": 78217.49477994467,
+        "sha256": "144bcbcaa6f7397d0b263553039096950f9ef096bcfb9b444f7cac30a5ab09b2",
+        "plan": {
+          "grid": {
+            "rows": 342,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 100.0,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 100.0
+          },
+          "triangles": 353614,
+          "output_triangles_estimate": 353614,
+          "output_bytes_estimate": 17680784,
+          "memory_bytes_estimate": 236844064,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 1.6666070999999647,
+          "baseline_rss_mb": 454.375,
+          "peak_rss_mb": 588.8828125,
+          "settled_rss_mb": 505.05859375
+        },
+        "triangles": 353614,
+        "bytes": 14043457,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            100.0,
+            10.91135836
+          ]
+        ],
+        "volume_mm3": 78217.49467450296,
+        "sha256": "ef8ceb87f2e8b025f1dafb4885d887ddcf46ac1fe6bef176e94a6ebc82e53496",
+        "plan": {
+          "grid": {
+            "rows": 342,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 100.0,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 100.0
+          },
+          "triangles": 353614,
+          "output_triangles_estimate": 353614,
+          "output_bytes_estimate": 42433880,
+          "memory_bytes_estimate": 236844064,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      }
+    ],
+    "before_heightmap_timing": {
+      "wall_s": 0.27183519999380223,
+      "baseline_rss_mb": 576.0234375,
+      "peak_rss_mb": 583.04296875,
+      "settled_rss_mb": 580.44921875
+    },
+    "before_shaded_timing": {
+      "wall_s": 0.30462610000540735,
+      "baseline_rss_mb": 580.44921875,
+      "peak_rss_mb": 608.578125,
+      "settled_rss_mb": 580.79296875
+    },
+    "before_glb_timing": {
+      "wall_s": 0.23561310000513913,
+      "baseline_rss_mb": 580.79296875,
+      "peak_rss_mb": 587.9296875,
+      "settled_rss_mb": 588.28515625
+    },
+    "after_heightmap_timing": {
+      "wall_s": 0.37061829999584006,
+      "baseline_rss_mb": 588.28515625,
+      "peak_rss_mb": 588.28515625,
+      "settled_rss_mb": 357.4453125
+    },
+    "after_shaded_timing": {
+      "wall_s": 0.4041254000039771,
+      "baseline_rss_mb": 357.4453125,
+      "peak_rss_mb": 386.55859375,
+      "settled_rss_mb": 358.6328125
+    },
+    "after_glb_timing": {
+      "wall_s": 0.4074068999980227,
+      "baseline_rss_mb": 358.6328125,
+      "peak_rss_mb": 367.9453125,
+      "settled_rss_mb": 365.80859375
+    },
+    "ai_sha_unchanged": true
+  },
+  {
+    "case": "complex",
+    "session_id": "8fef4beea9c4406e8f1ad0210839a024",
+    "original_params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "u2netp": {
+      "method": "U2NETP local salient-object segmentation",
+      "foreground_fraction": 0.02385001629590988,
+      "note": "Inspect the mask. Thin structures, clipped subjects and multiple objects may need keep/remove corrections."
+    },
+    "segmentation_timing": {
+      "wall_s": 0.9567234000060125,
+      "baseline_rss_mb": 505.3359375,
+      "peak_rss_mb": 560.48046875,
+      "settled_rss_mb": 359.93359375
+    },
+    "manual_corrections": [],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 1.6725028000000748,
+          "baseline_rss_mb": 366.65625,
+          "peak_rss_mb": 496.3671875,
+          "settled_rss_mb": 460.60546875
+        },
+        "triangles": 353614,
+        "bytes": 17680784,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            100.078125,
+            6.686943531036377
+          ]
+        ],
+        "volume_mm3": 45480.5731477765,
+        "sha256": "542d6b281180c9fbf433d59e9abd36e6c817babec1e32f414502bc26b53c9389",
+        "plan": {
+          "grid": {
+            "rows": 342,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 100.078125,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 100.078125
+          },
+          "triangles": 353614,
+          "output_triangles_estimate": 353614,
+          "output_bytes_estimate": 17680784,
+          "memory_bytes_estimate": 236844064,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 1.768402399997285,
+          "baseline_rss_mb": 460.60546875,
+          "peak_rss_mb": 585.28515625,
+          "settled_rss_mb": 513.21875
+        },
+        "triangles": 353614,
+        "bytes": 14037783,
+        "watertight": true,
+        "winding_consistent": true,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            100.078125,
+            6.68694353
+          ]
+        ],
+        "volume_mm3": 45480.573183265114,
+        "sha256": "233f75071181dc2f62de20b49f03589b1429840526947ed99eeffb9af54bf9ec",
+        "plan": {
+          "grid": {
+            "rows": 342,
+            "columns": 512,
+            "image_width_mm": 150.0,
+            "image_height_mm": 100.078125,
+            "frame_mm": 0.0,
+            "width_mm": 150.0,
+            "height_mm": 100.078125
+          },
+          "triangles": 353614,
+          "output_triangles_estimate": 353614,
+          "output_bytes_estimate": 42433880,
+          "memory_bytes_estimate": 236844064,
+          "memory_budget_bytes": 1610612736,
+          "allowed": true,
+          "message": "Ready to export. Estimates are conservative; other applications also use memory."
+        }
+      }
+    ],
+    "before_heightmap_timing": {
+      "wall_s": 0.18811189999541966,
+      "baseline_rss_mb": 364.44140625,
+      "peak_rss_mb": 370.69921875,
+      "settled_rss_mb": 364.48828125
+    },
+    "before_shaded_timing": {
+      "wall_s": 0.21178599999984726,
+      "baseline_rss_mb": 364.48828125,
+      "peak_rss_mb": 391.2421875,
+      "settled_rss_mb": 364.703125
+    },
+    "before_glb_timing": {
+      "wall_s": 0.19126310000137892,
+      "baseline_rss_mb": 364.703125,
+      "peak_rss_mb": 370.9453125,
+      "settled_rss_mb": 368.7109375
+    },
+    "after_heightmap_timing": {
+      "wall_s": 0.2377732000022661,
+      "baseline_rss_mb": 368.7109375,
+      "peak_rss_mb": 377.0546875,
+      "settled_rss_mb": 368.7109375
+    },
+    "after_shaded_timing": {
+      "wall_s": 0.4029350000055274,
+      "baseline_rss_mb": 368.7109375,
+      "peak_rss_mb": 398.12890625,
+      "settled_rss_mb": 368.71875
+    },
+    "after_glb_timing": {
+      "wall_s": 0.3666806000037468,
+      "baseline_rss_mb": 368.71875,
+      "peak_rss_mb": 377.0625,
+      "settled_rss_mb": 372.77734375
+    },
+    "ai_sha_unchanged": true
+  }
+]
