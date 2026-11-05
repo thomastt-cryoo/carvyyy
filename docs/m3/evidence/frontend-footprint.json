@@ -2,7 +2,7 @@
   "frontend_files": [
     {
       "file": "index.html",
-      "bytes": 29443
+      "bytes": 29450
     },
     {
       "file": "workspace.css",
@@ -10,15 +10,15 @@
     },
     {
       "file": "workspace.js",
-      "bytes": 57128
+      "bytes": 58674
     },
     {
       "file": "core.js",
-      "bytes": 6683
+      "bytes": 6780
     },
     {
       "file": "viewer.js",
-      "bytes": 4827
+      "bytes": 4849
     },
     {
       "file": "painting.js",
@@ -33,7 +33,7 @@
       "bytes": 268
     }
   ],
-  "uncompressed_new_frontend_bytes": 137394,
+  "uncompressed_new_frontend_bytes": 139066,
   "runtime_npm_dependencies": 0,
   "fonts": "system fonts only",
   "vendor": "existing three.js and OrbitControls/GLTFLoader"

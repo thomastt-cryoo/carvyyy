@@ -1,0 +1,40 @@
+{
+  "expected": {
+    "model_width_mm": 160.125,
+    "relief_height_mm": 9.25,
+    "base_thickness_mm": 4.5,
+    "border_frame_mm": 2.5,
+    "edge_taper_mm": 2.25,
+    "smoothing": 1.6,
+    "detail_blend": 0.09,
+    "gamma": 1.35,
+    "depth_floor": 0.03,
+    "depth_ceiling": 0.94,
+    "background_threshold": 0.78,
+    "invert_depth": true,
+    "flatten_background": true,
+    "edge_preserve": false,
+    "depth_model": "da2-small"
+  },
+  "saved": {
+    "model_width_mm": 160.125,
+    "relief_height_mm": 9.25,
+    "base_thickness_mm": 4.5,
+    "border_frame_mm": 2.5,
+    "depth_model": "da2-small",
+    "invert_depth": true,
+    "gamma": 1.35,
+    "depth_floor": 0.03,
+    "depth_ceiling": 0.94,
+    "flatten_background": true,
+    "background_threshold": 0.78,
+    "smoothing": 1.6,
+    "edge_preserve": false,
+    "detail_blend": 0.09,
+    "edge_taper_mm": 2.25,
+    "resolution": 1024,
+    "decimate_ratio": 0.0,
+    "output_format": "stl"
+  },
+  "all_expected_exact": true
+}

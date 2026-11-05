@@ -8,8 +8,8 @@
 > and production customer installer remain later milestones.
 
 > M3's redesigned dark workspace is implemented on `codex/m3-modern-workspace`.
-> The [M3 report](docs/m3/REPORT.md) records passing numerical tests and remaining
-> browser acceptance. A final M3 pass has not yet been declared.
+> The [M3 report](docs/m3/REPORT.md) records completed browser acceptance, local
+> regression results and the remaining production/quality limits.
 
 Turn a single 2D photograph into a CNC-machinable 2.5D relief mesh. Locally hosted, Docker-based web app: upload a photo, tune the relief interactively with live 2D/3D previews, export a watertight binary STL (or OBJ) in millimeters, and import it straight into Autodesk Fusion for CAM.
 

@@ -27,3 +27,20 @@ Export disabled; fixed/tested. Final browser retest and remaining dialog/workflo
 are pending. The owner screenshots show Local browser use On despite the tool's
 disabled message. No restriction bypass attempted. Keep M3 awaiting acceptance;
 do not claim a full pass or begin M4. Full pending checklist is in REPORT.md.
+
+## Final acceptance — 2026-11-05
+
+The owner restarted the desktop app; browser authorization recovered without a
+network policy change. Completed 31 recorded browser checks and all eight final
+size/theme captures. Actual STL/OBJ/PNG16/NPY downloads, imports, aspect/orientation
+checks, all brushes, isolation methods, histories/checkpoints, projects/deletion/
+restore/metadata repair and local-only CSP operation were exercised. Original AI
+arrays remained byte-identical. Native drag/drop and right-button pan were not
+separately automated; browser heap telemetry was unavailable.
+
+Fixed findings: readable image-validation recovery; cache-versioned changed JS;
+missing-model import action and accurate source status; corrected rejected imports
+clear only their own validation failure (new regression); pending preview feedback;
+stop rendering when clearing a project. Final fast suite: 181 passed, four slow
+deselected. Frontend: eight passed. Fresh genuine tiger smoke: one passed, 77.102 s.
+Final report and evidence replace earlier pending acceptance status. No M4 work.

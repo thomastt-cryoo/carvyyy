@@ -149,6 +149,7 @@ export function createViewer(element) {
       }
     },
     clear() {
+      active = false;
       serial++;
       dispose();
     },

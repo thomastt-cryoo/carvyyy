@@ -1,90 +1,74 @@
 [
   {
-    "canvas": {
-      "height": 918,
-      "width": 1370
-    },
+    "width": 1920,
     "height": 1080,
-    "qualityVisible": true,
+    "theme": "dark",
     "scrollWidth": 1920,
-    "theme": "dark",
-    "width": 1920
+    "bodyScrollWidth": 1920,
+    "canvas": true,
+    "screenshot": "workspace-dark-1920.jpg"
   },
   {
-    "canvas": {
-      "height": 738,
-      "width": 920
-    },
+    "width": 1440,
     "height": 900,
-    "qualityVisible": true,
+    "theme": "dark",
     "scrollWidth": 1440,
-    "theme": "dark",
-    "width": 1440
+    "bodyScrollWidth": 1440,
+    "canvas": true,
+    "screenshot": "workspace-dark-1440.jpg"
   },
   {
-    "canvas": {
-      "height": 606,
-      "width": 846.4000244140625
-    },
+    "width": 1366,
     "height": 768,
-    "qualityVisible": false,
+    "theme": "dark",
     "scrollWidth": 1366,
-    "theme": "dark",
-    "width": 1366
+    "bodyScrollWidth": 1366,
+    "canvas": true,
+    "screenshot": "workspace-dark-1366.jpg"
   },
   {
-    "canvas": {
-      "height": 606,
-      "width": 676
-    },
+    "width": 1024,
     "height": 768,
-    "qualityVisible": false,
-    "scrollWidth": 1024,
     "theme": "dark",
-    "width": 1024
+    "scrollWidth": 1024,
+    "bodyScrollWidth": 1024,
+    "canvas": true,
+    "screenshot": "workspace-dark-1024.jpg"
   },
   {
-    "canvas": {
-      "height": 918,
-      "width": 1370
-    },
+    "width": 1920,
     "height": 1080,
-    "qualityVisible": true,
+    "theme": "light",
     "scrollWidth": 1920,
-    "theme": "light",
-    "width": 1920
+    "bodyScrollWidth": 1920,
+    "canvas": true,
+    "screenshot": "workspace-light-1920.jpg"
   },
   {
-    "canvas": {
-      "height": 738,
-      "width": 920
-    },
+    "width": 1440,
     "height": 900,
-    "qualityVisible": true,
+    "theme": "light",
     "scrollWidth": 1440,
-    "theme": "light",
-    "width": 1440
+    "bodyScrollWidth": 1440,
+    "canvas": true,
+    "screenshot": "workspace-light-1440.jpg"
   },
   {
-    "canvas": {
-      "height": 606,
-      "width": 846.4000244140625
-    },
+    "width": 1366,
     "height": 768,
-    "qualityVisible": false,
+    "theme": "light",
     "scrollWidth": 1366,
-    "theme": "light",
-    "width": 1366
+    "bodyScrollWidth": 1366,
+    "canvas": true,
+    "screenshot": "workspace-light-1366.jpg"
   },
   {
-    "canvas": {
-      "height": 606,
-      "width": 676
-    },
+    "width": 1024,
     "height": 768,
-    "qualityVisible": false,
-    "scrollWidth": 1024,
     "theme": "light",
-    "width": 1024
+    "scrollWidth": 1024,
+    "bodyScrollWidth": 1024,
+    "canvas": true,
+    "screenshot": "workspace-light-1024.jpg"
   }
 ]

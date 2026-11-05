@@ -96,6 +96,28 @@ test("queued writes finish in order and a failed write prevents silent project-s
   queue.clearError();
   await queue.flush();
 });
+test("correcting a rejected import clears only that failure and preserves unrelated failed writes", async () => {
+  const queue = serialQueue();
+  const rejectedInput = new Error("aspect ratio differs");
+  await assert.rejects(
+    queue.run(async () => {
+      throw rejectedInput;
+    }),
+  );
+  assert.equal(queue.clearError(rejectedInput), true);
+  await queue.run(async () => "corrected import saved");
+  await queue.flush();
+
+  const failedWrite = new Error("settings could not be saved");
+  await assert.rejects(
+    queue.run(async () => {
+      throw failedWrite;
+    }),
+  );
+  assert.equal(queue.clearError(rejectedInput), false);
+  await assert.rejects(queue.flush(), (error) => error === failedWrite);
+});
+
 test("reselecting an active model keeps previews ready; imported sources survive model changes", () => {
   assert.deepEqual(modelTransition("small", "small", "ai", true), {
     changed: false,

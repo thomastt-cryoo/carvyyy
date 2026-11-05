@@ -237,8 +237,10 @@ export function serialQueue() {
     settled() {
       return tail;
     },
-    clearError() {
+    clearError(expected) {
+      if (expected !== undefined && error !== expected) return false;
       error = null;
+      return true;
     },
   };
 }

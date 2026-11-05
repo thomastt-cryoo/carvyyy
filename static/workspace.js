@@ -7,9 +7,9 @@ import {
   serialQueue,
   savedPreset,
   modelTransition,
-} from "./core.js";
+} from "./core.js?v=m3.3";
 import { renderIcons, icon } from "./icons.js";
-import { createViewer } from "./viewer.js";
+import { createViewer } from "./viewer.js?v=m3.4";
 import { createPainting } from "./painting.js";
 
 const $ = (id) => document.getElementById(id);
@@ -96,7 +96,7 @@ const session = (path) => `/api/sessions/${state.id}${path}`;
 function message(value) {
   $("editor-message").textContent = value;
 }
-function fail(error, retry = null) {
+function fail(error, retry = null, retryLabel = "Retry") {
   $("error-text").textContent = error.message || String(error);
   $("error-banner").hidden = false;
   retryAction = retry;
@@ -105,7 +105,7 @@ function fail(error, retry = null) {
     retryAction = () => openHistory();
     $("retry-action").textContent = "Manage history";
     $("retry-action").hidden = false;
-  } else $("retry-action").textContent = "Retry";
+  } else $("retry-action").textContent = retryLabel;
 }
 function clearError() {
   $("error-banner").hidden = true;
@@ -418,16 +418,31 @@ function syncEditor() {
     $(`${id}-value`).textContent = Number(editor[id]).toFixed(2);
   }
   const list = $("editor-source"),
-    aiOption = new Option("Original AI prediction", "ai");
+    aiOption = new Option(
+      editor.ai_available === false
+        ? "Original AI prediction · unavailable"
+        : "Original AI prediction",
+      "ai",
+    );
   aiOption.disabled = editor.ai_available === false;
   list.replaceChildren(aiOption);
   for (const item of editor.imports || [])
     list.append(new Option(item.filename, `imported:${item.id}`));
   list.value =
     editor.depth_source === "ai" ? "ai" : `imported:${editor.imported.id}`;
+  $("depth-export-source").querySelector('[value="ai"]').disabled =
+    editor.ai_available === false;
+  $("depth-export-source").querySelector('[value="imported"]').disabled =
+    !editor.imported;
+  if ($("depth-export-source").selectedOptions[0]?.disabled)
+    $("depth-export-source").value = "working";
+  for (const id of ["depth-export-png", "depth-export-npy"])
+    $(id).disabled = !state.ready;
   $("depth-source-summary").textContent =
     editor.depth_source === "ai"
-      ? "Original AI"
+      ? editor.ai_available === false
+        ? "Import a depth map"
+        : "Original AI"
       : editor.imported?.filename || "Imported";
   for (const id of [
     "mask-enabled",
@@ -804,6 +819,12 @@ $("return-edited").onclick = () => compare(false);
 $("export-return-edited").onclick = () => compare(false);
 function schedulePreview(delay = 220) {
   clearTimeout(previewTimer);
+  if (state.id && state.ready && ["3d", "depth"].includes(state.view)) {
+    $("preview-busy").hidden = false;
+    $("preview-busy-label").textContent = state.compare
+      ? "Loading original AI"
+      : "Updating relief";
+  }
   previewTimer = setTimeout(
     () =>
       refreshPreview().catch((e) => {
@@ -874,6 +895,12 @@ function processing(title, detail, retry = false) {
   $("canvas-message-detail").textContent = detail;
   $("canvas-message").querySelector(".spinner").hidden = retry;
   $("generation-retry").hidden = !retry;
+  $("generation-retry").textContent = chooseModel(
+    state.models,
+    state.defaultModel,
+  )
+    ? "Retry generation"
+    : "Import a depth map";
 }
 async function waitForDepth(token, fresh = false) {
   processing(
@@ -1050,7 +1077,7 @@ async function upload(file) {
     await refreshLibrary();
     await openProject(project.id, true, true);
   } catch (e) {
-    fail(e, () => $("photo-file").click());
+    fail(e, () => $("photo-file").click(), "Choose another image");
   } finally {
     $("dropzone").removeAttribute("aria-busy");
     $("dropzone").querySelector("strong").textContent = "Drop a photo here";
@@ -1077,6 +1104,10 @@ for (const event of ["dragleave", "drop"])
   });
 $("dropzone").addEventListener("drop", (e) => upload(e.dataTransfer.files[0]));
 async function retryGeneration() {
+  if (!chooseModel(state.models, state.defaultModel)) {
+    openSource();
+    return;
+  }
   const token = scope.capture();
   try {
     await json(`/api/projects/${token.id}/retry`, { method: "POST" });
@@ -1392,6 +1423,8 @@ $("depth-file").onchange = async (event) => {
   form.append("file", file);
   const invert = $("depth-white-far").checked,
     alignment = $("depth-stretch").checked ? "stretch" : "match";
+  const importToken = scope.capture(),
+    previousError = $("source-message").textContent;
   try {
     await action(async (token) => {
       const editor = await json(
@@ -1409,9 +1442,14 @@ $("depth-file").onchange = async (event) => {
       planExport();
       refreshLibrary();
       $("source-message").textContent =
-        "High-precision depth imported. The original AI remains available.";
+        "High-precision depth imported. Your original file is preserved.";
+      if ($("error-text").textContent === previousError) clearError();
     });
   } catch (e) {
+    if (!scope.current(importToken)) return;
+    // Rejected input never changed the saved project. Permit correcting the file
+    // without clearing a different failed write from the serialized queue.
+    if (e.status === 400 || e.status === 422) queue.clearError(e);
     $("source-message").textContent = e.message;
   } finally {
     event.target.value = "";

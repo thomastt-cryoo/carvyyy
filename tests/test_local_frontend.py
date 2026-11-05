@@ -4,6 +4,7 @@ import json
 import re
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi.testclient import TestClient
 
@@ -34,7 +35,10 @@ def test_workspace_static_asset_graph_is_local_and_served():
         "imports"
     ]
     visited = set()
-    pending = [STATIC / path.lstrip("/") for path in parser.paths]
+    for url in parser.paths:
+        assert not urlsplit(url).scheme and not urlsplit(url).netloc
+        assert client.get(url).status_code == 200
+    pending = [STATIC / urlsplit(url).path.lstrip("/") for url in parser.paths]
     while pending:
         path = pending.pop()
         if path in visited:
@@ -55,6 +59,7 @@ def test_workspace_static_asset_graph_is_local_and_served():
             for item in imports:
                 target = mappings.get(item, item)
                 assert not re.match(r"\w+:", target), target
+                target = urlsplit(target).path
                 pending.append(
                     STATIC / target.lstrip("/") if target.startswith("/") else path.parent / target
                 )

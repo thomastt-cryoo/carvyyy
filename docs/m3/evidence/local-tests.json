@@ -6,8 +6,9 @@
       "failures": "0",
       "skipped": "0",
       "tests": "181",
-      "time": "52.498",
-      "timestamp": "2026-11-05T07:33:48.637867+04:00"
+      "time": "59.714",
+      "timestamp": "2026-11-05T08:44:44.341341+04:00",
+      "hostname": "DESKTOP-3HEZ7YJ"
     }
   ],
   "real-tiger": [
@@ -17,12 +18,13 @@
       "failures": "0",
       "skipped": "0",
       "tests": "1",
-      "time": "90.864",
-      "timestamp": "2026-11-05T07:17:10.131285+04:00"
+      "time": "77.102",
+      "timestamp": "2026-11-05T08:58:00.844592+04:00",
+      "hostname": "DESKTOP-3HEZ7YJ"
     }
   ],
   "frontend": {
-    "passed": 7,
+    "passed": 8,
     "failed": 0,
     "skipped": 0,
     "runner": "node --test tests/frontend/workspace.test.mjs"

@@ -164,7 +164,10 @@ def create_session(image_bytes: bytes, filename: str) -> SessionInfo:
     except InvalidImageError:
         raise
     except Exception as exc:  # noqa: BLE001 - any decode failure is a validation error
-        raise InvalidImageError(f"Could not decode image: {exc}") from exc
+        raise InvalidImageError(
+            "This image could not be read. Try opening it in an image editor "
+            "and saving a new JPEG, PNG, WebP, or HEIC file."
+        ) from exc
 
     session_id = uuid.uuid4().hex
     out_dir = session_dir(session_id)

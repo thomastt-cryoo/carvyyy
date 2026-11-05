@@ -54,3 +54,11 @@ checkpoints retain archived states on disk; users must be told about the transit
 to a new undo history. Damaged metadata repair keeps a backup under `recovery/`.
 Backups/checkpoints/recovery copies intentionally require a future storage UX for
 disk limits and permanent deletion. Do not remove these files automatically.
+
+Final browser acceptance resumed after a desktop restart restored authorization.
+See evidence/browser-verification.json (31 checks), responsive-checks.json (eight
+size/theme captures), browser-download-geometry.json and offline-browser.json.
+The local-only proxy in tools/m3/offline_preview.py enforces a CSP that permits
+only the loopback origin and records requests; it does not change system networking.
+Run the normal server on 8098, then the proxy on 8100 for this acceptance fixture.
+Temporary preview servers were stopped after verification.
