@@ -1,0 +1,32 @@
+{
+  "status": "partial; final acceptance pending",
+  "actual_browser": "ChatGPT in-app browser through CUA",
+  "successful_execution": [
+    "dark and light welcome screenshot",
+    "upload supplied transparent tiger and face",
+    "genuine local Small inference and real GLB rendering",
+    "rename portrait to Face study",
+    "Portrait preset applied to actual backend",
+    "mask remove stroke and undo",
+    "depth raise stroke",
+    "read-only original/edited comparison",
+    "import and source selection disabled during original comparison",
+    "advanced field access and precise numeric values saved",
+    "both themes at 1920x1080, 1440x900, 1366x768 and 1024x768",
+    "compact height correction observed to fit export quality at 1366x768"
+  ],
+  "observed_console_errors_in_successful_checks": [],
+  "caught_bug": "Reselecting active model could leave Export disabled",
+  "fix_verification": "Frontend regression passes; final browser retest pending",
+  "blocking_tool_message": "Local browser use is disabled in Work settings",
+  "owner_screenshot_state": "Configuration > Work > Local browser use: On",
+  "remaining": [
+    "all new dialogs and library/delete/restore/checkpoint workflows",
+    "redesigned PNG16/NPY import/export and STL/OBJ downloads",
+    "camera controls, remaining tools and shortcuts",
+    "rapid project switching and failure/retry",
+    "restart persistence and offline network trace",
+    "final complete screenshots including tiger and export"
+  ],
+  "note": "HTTP and unit checks are separate evidence and are not substituted for the pending browser workflows."
+}

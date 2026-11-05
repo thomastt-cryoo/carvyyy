@@ -1,0 +1,90 @@
+[
+  {
+    "canvas": {
+      "height": 918,
+      "width": 1370
+    },
+    "height": 1080,
+    "qualityVisible": true,
+    "scrollWidth": 1920,
+    "theme": "dark",
+    "width": 1920
+  },
+  {
+    "canvas": {
+      "height": 738,
+      "width": 920
+    },
+    "height": 900,
+    "qualityVisible": true,
+    "scrollWidth": 1440,
+    "theme": "dark",
+    "width": 1440
+  },
+  {
+    "canvas": {
+      "height": 606,
+      "width": 846.4000244140625
+    },
+    "height": 768,
+    "qualityVisible": false,
+    "scrollWidth": 1366,
+    "theme": "dark",
+    "width": 1366
+  },
+  {
+    "canvas": {
+      "height": 606,
+      "width": 676
+    },
+    "height": 768,
+    "qualityVisible": false,
+    "scrollWidth": 1024,
+    "theme": "dark",
+    "width": 1024
+  },
+  {
+    "canvas": {
+      "height": 918,
+      "width": 1370
+    },
+    "height": 1080,
+    "qualityVisible": true,
+    "scrollWidth": 1920,
+    "theme": "light",
+    "width": 1920
+  },
+  {
+    "canvas": {
+      "height": 738,
+      "width": 920
+    },
+    "height": 900,
+    "qualityVisible": true,
+    "scrollWidth": 1440,
+    "theme": "light",
+    "width": 1440
+  },
+  {
+    "canvas": {
+      "height": 606,
+      "width": 846.4000244140625
+    },
+    "height": 768,
+    "qualityVisible": false,
+    "scrollWidth": 1366,
+    "theme": "light",
+    "width": 1366
+  },
+  {
+    "canvas": {
+      "height": 606,
+      "width": 676
+    },
+    "height": 768,
+    "qualityVisible": false,
+    "scrollWidth": 1024,
+    "theme": "light",
+    "width": 1024
+  }
+]

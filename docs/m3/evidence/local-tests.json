@@ -1,0 +1,30 @@
+{
+  "all-tests": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "181",
+      "time": "52.498",
+      "timestamp": "2026-11-05T07:33:48.637867+04:00"
+    }
+  ],
+  "real-tiger": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "1",
+      "time": "90.864",
+      "timestamp": "2026-11-05T07:17:10.131285+04:00"
+    }
+  ],
+  "frontend": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "runner": "node --test tests/frontend/workspace.test.mjs"
+  }
+}
