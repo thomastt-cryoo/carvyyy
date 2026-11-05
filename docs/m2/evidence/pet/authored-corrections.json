@@ -1,0 +1,83 @@
+{
+  "label": "Human-authored demonstration, not recovered AI anatomy",
+  "strokes": [
+    {
+      "channel": "depth",
+      "tool": "smooth",
+      "points": [
+        [
+          0.07,
+          0.7
+        ],
+        [
+          0.2,
+          0.77
+        ],
+        [
+          0.33,
+          0.83
+        ]
+      ],
+      "radius": 0.08,
+      "strength": 0.9
+    },
+    {
+      "channel": "mask",
+      "tool": "remove",
+      "points": [
+        [
+          0.04,
+          0.72
+        ],
+        [
+          0.14,
+          0.83
+        ],
+        [
+          0.24,
+          0.91
+        ]
+      ],
+      "radius": 0.085,
+      "strength": 1
+    },
+    {
+      "channel": "mask",
+      "tool": "remove",
+      "points": [
+        [
+          0.02,
+          0.96
+        ],
+        [
+          0.32,
+          0.96
+        ]
+      ],
+      "radius": 0.07,
+      "strength": 1
+    }
+  ],
+  "undo_redo_working_bytes_identical": true,
+  "original_ai_sha256": "238e146c56b2dcca51f6100756c7064790af22f3e3cbc0ec05716708d795ab82",
+  "original_ai_unchanged": true,
+  "state": {
+    "version": 1,
+    "revision": 29,
+    "depth_source": "ai",
+    "imported": null,
+    "imports": [],
+    "mask_enabled": true,
+    "mask_feather_mm": 0.8,
+    "mask_transition_mm": 4.0,
+    "sculpt_strength": 0.45,
+    "texture_guard": 0.8,
+    "depth_undo": true,
+    "depth_redo": false,
+    "depth_operations": 8,
+    "mask_undo": true,
+    "mask_redo": false,
+    "mask_operations": 10,
+    "depth_orientation": "white is nearer / higher relief (before optional inversion)"
+  }
+}

@@ -43,7 +43,6 @@ def test_decimation_preserves_outward_solid_and_dimensions() -> None:
     assert reduced.extents == pytest.approx(full.extents, abs=0.1)
 
 
-@pytest.mark.xfail(strict=True, reason="M1-D01: extreme aspect ratio resizes a side to one vertex")
 def test_extremely_wide_photo_can_generate_both_previews() -> None:
     depth = np.zeros((2, 2000), dtype=np.float32)
     params = ReliefParams(depth_model="da2-small")
@@ -52,7 +51,6 @@ def test_extremely_wide_photo_can_generate_both_previews() -> None:
     assert meshing.build_relief_mesh(h, params).is_watertight
 
 
-@pytest.mark.xfail(strict=True, reason="M1-D02: frame padding is added after preview grid limit")
 def test_border_frame_respects_preview_resource_limit() -> None:
     depth = np.zeros((32, 32), dtype=np.float32)
     params = ReliefParams(depth_model="da2-small", model_width_mm=10, border_frame_mm=50)

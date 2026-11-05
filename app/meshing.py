@@ -28,6 +28,7 @@ from collections.abc import Callable
 import numpy as np
 import trimesh
 
+from app.grid import plan_for_shape
 from app.schemas import ReliefParams
 
 DEFAULT_DECIMATE_AGGRESSIVENESS = 7.0  # fast_simplification default; balances speed/quality
@@ -56,7 +57,9 @@ def _perimeter_indices(h: int, w: int) -> np.ndarray:
     return np.array(top + right + bottom + left, dtype=np.int64)
 
 
-def build_relief_mesh(heightmap: np.ndarray, params: ReliefParams) -> trimesh.Trimesh:
+def build_relief_mesh(
+    heightmap: np.ndarray, params: ReliefParams, *, image_shape: tuple[int, int] | None = None
+) -> trimesh.Trimesh:
     """Assemble a watertight solid: displaced top surface + flat base + side walls.
 
     Units: millimeters. X spans `model_width_mm`; Y is derived from the heightmap's
@@ -64,13 +67,14 @@ def build_relief_mesh(heightmap: np.ndarray, params: ReliefParams) -> trimesh.Tr
     Y coordinate so the relief isn't mirrored vertically.
     """
     h, w = heightmap.shape
+    if h < 2 or w < 2 or not np.isfinite(heightmap).all():
+        raise ValueError("A relief requires a finite heightmap of at least 2 by 2 samples.")
     # total_width_mm, not model_width_mm: the heightmap may carry a border-frame pad,
     # and the frame adds to the part's physical size rather than squeezing the image.
     total_width_mm = params.total_width_mm
-    model_height_mm = total_width_mm * h / w
-
-    xs = np.linspace(0.0, total_width_mm, w, dtype=np.float64)
-    ys = np.linspace(model_height_mm, 0.0, h, dtype=np.float64)
+    plan = plan_for_shape(heightmap.shape, params, image_shape)
+    model_height_mm = plan.height_mm
+    xs, ys = plan.axes()
     grid_x, grid_y = np.meshgrid(xs, ys)
     z_top = params.base_thickness_mm + heightmap.astype(np.float64) * params.relief_height_mm
 
@@ -140,6 +144,8 @@ def build_export_mesh(
     heightmap: np.ndarray,
     params: ReliefParams,
     on_stage: Callable[[float, str], None] | None = None,
+    *,
+    image_shape: tuple[int, int] | None = None,
 ) -> trimesh.Trimesh:
     """Full meshing pipeline for export: build, validate, optionally decimate + re-validate.
 
@@ -147,7 +153,11 @@ def build_export_mesh(
     export job can report coarse progress; fractions are the job-level shares.
     """
     stage = on_stage or (lambda frac, name: None)
-    mesh = build_relief_mesh(heightmap, params)
+    mesh = (
+        build_relief_mesh(heightmap, params)
+        if image_shape is None
+        else build_relief_mesh(heightmap, params, image_shape=image_shape)
+    )
     stage(0.45, "validating watertight")
     if not mesh.is_watertight:
         raise NotWatertightError("Assembled relief mesh failed the watertight check.")

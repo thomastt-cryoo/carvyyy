@@ -1,0 +1,5 @@
+# Duplicate/exploratory files remain available locally; preserve canonical before/after.
+*/initial*
+*/ai-depth.npy
+*/ai-depth-16.png
+*/final-working-depth.npy

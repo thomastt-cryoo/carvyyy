@@ -1,0 +1,42 @@
+[
+  {
+    "file": "portrait_150x150x11mm (1).stl",
+    "watertight": true,
+    "winding_consistent": true,
+    "finite": true,
+    "triangles": 528374,
+    "bounds_mm": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        150.0,
+        10.9921293258667
+      ]
+    ],
+    "sha256": "de3bf5bce978474dc92f4ae3fe6b8891f265de548faf7c49ba07f7bc1074dab3"
+  },
+  {
+    "file": "portrait_150x150x11mm.obj",
+    "watertight": true,
+    "winding_consistent": true,
+    "finite": true,
+    "triangles": 237768,
+    "bounds_mm": [
+      [
+        -1.3e-06,
+        -4.7e-06,
+        0.0
+      ],
+      [
+        150.0,
+        150.0,
+        10.99234515
+      ]
+    ],
+    "sha256": "07b78fe58701f71ab5657342d1d15481c5ae3ca46c77dd8626e377425c9dc681"
+  }
+]

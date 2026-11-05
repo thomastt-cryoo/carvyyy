@@ -126,6 +126,11 @@ class ModelInfo(BaseModel):
     role: str
     license: str
     available: bool
+    distribution_approved: bool = True
+    authorization_required: bool = False
+    use_allowed: bool = True
+    platform_available: bool = True
+    availability_reason: str | None = None
 
 
 class ModelsResponse(BaseModel):

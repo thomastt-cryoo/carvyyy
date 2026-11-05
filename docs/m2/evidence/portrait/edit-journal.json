@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "revision": 10,
+  "depth_source": "ai",
+  "imported": null,
+  "imports": [],
+  "mask_enabled": true,
+  "mask_feather_mm": 0.8,
+  "mask_transition_mm": 4.0,
+  "sculpt_strength": 0.45,
+  "texture_guard": 0.8,
+  "histories": {
+    "mask": {
+      "cursor": 4,
+      "operations": [
+        {
+          "kind": "replace",
+          "file": "masks/cffd6c1d5a8f4a72bb9271575fc47ea7.npy",
+          "method": "grabcut",
+          "rectangle": null,
+          "foreground_fraction": 0.4575309753417969
+        },
+        {
+          "kind": "replace",
+          "file": "masks/d80154b9877d4323837cc627f1ac3be4.npy",
+          "method": "u2netp",
+          "rectangle": null,
+          "foreground_fraction": 0.5497443675994873
+        },
+        {
+          "kind": "replace",
+          "file": "masks/851bbab9005c4b2fa7076797d4c6529f.npy",
+          "method": "u2netp",
+          "rectangle": null,
+          "foreground_fraction": 0.5497443675994873
+        },
+        {
+          "kind": "replace",
+          "file": "masks/555ea28c469043e48bc9eb60255a667a.npy",
+          "method": "u2netp",
+          "rectangle": null,
+          "foreground_fraction": 0.5497443675994873
+        }
+      ]
+    },
+    "ai:da2-small": {
+      "cursor": 3,
+      "operations": [
+        {
+          "kind": "reset"
+        },
+        {
+          "kind": "reset"
+        },
+        {
+          "kind": "reset"
+        }
+      ]
+    }
+  }
+}

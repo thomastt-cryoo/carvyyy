@@ -1,0 +1,26 @@
+{
+  "commit": "24d399d270ddc37de9be43986350362b43ee32c6",
+  "M2": {
+    "windows": {
+      "job_id": 126988150664,
+      "fast_pass": 160,
+      "fast_deselected": 3,
+      "fast_skipped": 0,
+      "fast_xfail": 0,
+      "fast_seconds": 23.82,
+      "real_smoke_pass": 1,
+      "real_smoke_seconds": 12.7
+    },
+    "macos_14": {
+      "job_id": 126988150730,
+      "fast_pass": 160,
+      "fast_deselected": 3,
+      "fast_skipped": 0,
+      "fast_xfail": 0,
+      "fast_seconds": 34.91,
+      "real_smoke_pass": 1,
+      "real_smoke_seconds": 16.44
+    }
+  },
+  "source": "Counts extracted from actual completed GitHub Actions job logs."
+}

@@ -231,9 +231,9 @@ def test_compute_heightmap_applies_invert_and_flatten_and_frame() -> None:
         detail_blend=0.0,
     )
     out = hm.compute_heightmap(raw, luma, params, target_long_side=64)
-    # border_frame_mm=10 @ 1 px/mm on a 64px grid -> 10 px pad each side, at full height.
-    assert out.shape == (84, 84)
-    assert np.all(out[:10, :] == 1.0)
+    # M2: the 64-sample budget covers frame and image together.
+    assert out.shape == (64, 64)
+    assert np.all(out[0, :] == 1.0)
 
 
 # --- hillshade ------------------------------------------------------------------------------

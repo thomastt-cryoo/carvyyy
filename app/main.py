@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import logging
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -13,8 +14,11 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
-from app import depth, heightmap, jobs, meshing
-from app.config import MODEL_REGISTRY, resolve_default_model
+from app import depth, editing, heightmap, jobs, meshing, pipeline, storage
+from app.config import MODEL_REGISTRY, model_use_allowed, resolve_default_model, settings
+from app.editor_api import maintenance_router
+from app.editor_api import router as editor_router
+from app.resources import ResourceLimitError, require_export_plan
 from app.schemas import (
     ErrorResponse,
     ExportJobResponse,
@@ -69,10 +73,34 @@ async def _lifespan(app: FastAPI):
         torch_version,
         resolve_default_model(device),
     )
+    if settings.auto_clean_cache:
+        storage.cleanup_cache(dry_run=False)
     yield
 
 
 app = FastAPI(title="Photo2Relief", lifespan=_lifespan)
+app.include_router(editor_router)
+app.include_router(maintenance_router)
+
+
+@app.exception_handler(editing.EditingError)
+async def editing_error(request, exc):
+    if isinstance(exc, editing.DepthNotReadyError):
+        return _error(409, "depth_not_ready", str(exc))
+    if isinstance(exc, editing.RevisionConflict):
+        return _error(409, "revision_conflict", str(exc))
+    return _error(400, "editing_error", str(exc))
+
+
+@app.exception_handler(SessionNotFoundError)
+async def missing_editor_session(request, exc):
+    return _error(404, "not_found", "The editing session no longer exists.")
+
+
+@app.exception_handler(ResourceLimitError)
+async def resource_error(request, exc):
+    return _error(422, "resource_limit", str(exc))
+
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -191,6 +219,12 @@ async def put_params(session_id: str, params: ReliefParams):
     except SessionNotFoundError:
         return _not_found(session_id)
 
+    if params.depth_model != meta.get("model_id") and not model_use_allowed(params.depth_model):
+        return _error(
+            403,
+            "model_authorization_required",
+            "This model needs separate commercial authorization. Choose DA2 Small.",
+        )
     write_params(session_id, params)
     # Changing the depth model requires (cached) re-inference; everything else in
     # ReliefParams is a cheap heightmap re-run and needs no backend work here.
@@ -210,32 +244,24 @@ def _encode_png_l(render: np.ndarray) -> bytes:
     "/api/sessions/{session_id}/preview/heightmap",
     responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
 )
-async def preview_heightmap(session_id: str, grayscale: bool = False):
+def preview_heightmap(session_id: str, grayscale: bool = False, original: bool = False):
     try:
         params = read_params(session_id)
     except SessionNotFoundError:
         return _not_found(session_id)
 
-    depth_path = depth.session_depth_path(session_id, params.depth_model)
-    if not depth_path.exists():
-        return JSONResponse(
-            status_code=409,
-            content=ErrorResponse(
-                error="depth_not_ready",
-                detail=(
-                    f"Depth for model '{params.depth_model}' isn't ready yet "
-                    "for this session; poll /status."
-                ),
-            ).model_dump(),
-        )
-
-    raw_depth = np.load(depth_path)
-    with Image.open(session_dir(session_id) / SOURCE_IMAGE_NAME) as img:
-        luma = heightmap.luma_at_shape(img.convert("RGB"), raw_depth.shape)
-
-    h = heightmap.compute_heightmap(raw_depth, luma, params, target_long_side=PREVIEW_MAX_PX)
+    h, image_shape = pipeline.render_heightmap(
+        session_id, params, PREVIEW_MAX_PX, original=original
+    )
+    part_height = (
+        params.model_width_mm * image_shape[0] / image_shape[1] + 2 * params.border_frame_mm
+    )
     render = (
-        h if grayscale else heightmap.hillshade(h, params.total_width_mm, params.relief_height_mm)
+        h
+        if grayscale
+        else heightmap.hillshade(
+            h, params.total_width_mm, params.relief_height_mm, model_height_mm=part_height
+        )
     )
     return Response(content=_encode_png_l(render), media_type="image/png")
 
@@ -246,7 +272,21 @@ async def list_models() -> ModelsResponse:
     default_model = resolve_default_model(depth.select_device())
     return ModelsResponse(
         models=[
-            ModelInfo(model_id=s.model_id, role=s.role, license=s.license, available=s.available)
+            ModelInfo(
+                model_id=s.model_id,
+                role=s.role,
+                license=s.license,
+                available=s.available,
+                distribution_approved=s.distribution_approved,
+                authorization_required=not s.distribution_approved,
+                use_allowed=model_use_allowed(s.model_id),
+                platform_available=(s.backend != "da3" or sys.platform != "darwin"),
+                availability_reason=(
+                    "The DA3 worker is not supported on macOS/MPS."
+                    if s.backend == "da3" and sys.platform == "darwin"
+                    else None
+                ),
+            )
             for s in MODEL_REGISTRY.values()
         ],
         default_model=default_model,
@@ -258,7 +298,7 @@ async def list_models() -> ModelsResponse:
     "/api/sessions/{session_id}/preview/mesh",
     responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
 )
-async def preview_mesh(session_id: str, params: ReliefParams):
+def preview_mesh(session_id: str, params: ReliefParams, original: bool = False):
     """Reduced-res relief as binary glTF for the three.js viewport (SPEC §4: grid long
     side ≤ 256, includes base, target < 2 s CPU). Params come in the body -- unlike the
     2D preview, this doesn't read params.json, so a slider drag can preview un-saved
@@ -269,21 +309,10 @@ async def preview_mesh(session_id: str, params: ReliefParams):
     except SessionNotFoundError:
         return _not_found(session_id)
 
-    depth_path = depth.session_depth_path(session_id, params.depth_model)
-    if not depth_path.exists():
-        return _error(
-            409,
-            "depth_not_ready",
-            f"Depth for model '{params.depth_model}' isn't ready yet for this session; "
-            "poll /status.",
-        )
-
-    raw_depth = np.load(depth_path)
-    with Image.open(session_dir(session_id) / SOURCE_IMAGE_NAME) as img:
-        luma = heightmap.luma_at_shape(img.convert("RGB"), raw_depth.shape)
-
-    h = heightmap.compute_heightmap(raw_depth, luma, params, target_long_side=PREVIEW_MESH_MAX_PX)
-    mesh = meshing.build_relief_mesh(h, params)
+    h, image_shape = pipeline.render_heightmap(
+        session_id, params, PREVIEW_MESH_MAX_PX, original=original
+    )
+    mesh = meshing.build_relief_mesh(h, params, image_shape=image_shape)
     return Response(content=meshing.export_bytes(mesh, "glb"), media_type="model/gltf-binary")
 
 
@@ -298,14 +327,10 @@ async def export_session(session_id: str, params: ReliefParams):
     except SessionNotFoundError:
         return _not_found(session_id)
 
-    depth_path = depth.session_depth_path(session_id, params.depth_model)
-    if not depth_path.exists():
-        return _error(
-            409,
-            "depth_not_ready",
-            f"Depth for model '{params.depth_model}' isn't ready yet for this session; "
-            "poll /status.",
-        )
+    state = editing.read_state(session_id)
+    editing.base_depth(session_id, params.depth_model, state)
+    meta = read_meta(session_id)
+    require_export_plan((meta["height"], meta["width"]), params)
 
     write_params(session_id, params)
     job_id = jobs.start_export_job(session_id, params)

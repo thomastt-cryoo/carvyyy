@@ -1,10 +1,11 @@
 # Photo2Relief
 
-> Photo Relief Studio M1 work preserves this upstream application. See
-> [the M1 report](docs/m1/REPORT.md), [feature checklist](docs/m1/FEATURE_INVENTORY.md)
-> and [architecture decision](docs/m1/ARCHITECTURE.md). M1 changes dated 2026-11-05;
-> upstream provenance is recorded in the report. The customer installer and redesign
-> are later milestones.
+> Photo Relief Studio M2 adds reversible local subject/depth editing and safer
+> physical geometry. See the [M2 report](docs/m2/REPORT.md),
+> [feature checklist](docs/m2/FEATURE_INVENTORY.md), [architecture](docs/m2/ARCHITECTURE.md)
+> and [developer setup](docs/m2/DEVELOPMENT.md). The approved
+> [M1 foundation/provenance](docs/m1/REPORT.md) is preserved. The final interface
+> and production customer installer remain later milestones.
 
 Turn a single 2D photograph into a CNC-machinable 2.5D relief mesh. Locally hosted, Docker-based web app: upload a photo, tune the relief interactively with live 2D/3D previews, export a watertight binary STL (or OBJ) in millimeters, and import it straight into Autodesk Fusion for CAM.
 

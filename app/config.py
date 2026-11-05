@@ -34,6 +34,21 @@ class Settings:
     max_upload_bytes: int = _env_int("P2R_MAX_UPLOAD_MB", 40) * 1024 * 1024
     max_upload_megapixels: float = float(os.environ.get("P2R_MAX_UPLOAD_MEGAPIXELS", "30"))
 
+    # M2: conservative preflight; all resolutions remain available when safe.
+    export_memory_mb: int = _env_int("P2R_EXPORT_MEMORY_MB", 1536)
+    memory_fraction: float = float(os.environ.get("P2R_MEMORY_FRACTION", "0.55"))
+    export_max_triangles: int = _env_int("P2R_EXPORT_MAX_TRIANGLES", 9_000_000)
+    max_image_aspect: float = float(os.environ.get("P2R_MAX_IMAGE_ASPECT", "64"))
+    commercial_build: bool = _env_bool("P2R_COMMERCIAL_BUILD", True)
+    cache_max_mb: int = _env_int("P2R_CACHE_MAX_MB", 2048)
+    cache_retention_days: int = _env_int("P2R_CACHE_RETENTION_DAYS", 30)
+    auto_clean_cache: bool = _env_bool("P2R_AUTO_CLEAN_CACHE", False)
+    authorized_models: tuple[str, ...] = tuple(
+        item.strip()
+        for item in os.environ.get("P2R_AUTHORIZED_MODELS", "").split(",")
+        if item.strip()
+    )
+
     default_model_id: str = os.environ.get("P2R_DEFAULT_MODEL_ID", "da3mono-large")
 
     def __init__(self) -> None:
@@ -68,6 +83,7 @@ class ModelSpec:
     license: str  # as listed on the HF page at build time
     role: str  # short UI hint (geometric vs artistic vs fast/CPU)
     available: bool  # False = adapter not wired yet (selecting it errors clearly)
+    distribution_approved: bool = True
 
 
 MODEL_REGISTRY: dict[str, ModelSpec] = {
@@ -88,6 +104,7 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
         license="CC-BY-NC-4.0",
         role="Artistic bas-relief look (exaggerated near-field).",
         available=True,
+        distribution_approved=False,
     ),
     "da2-small": ModelSpec(
         model_id="da2-small",
@@ -95,7 +112,7 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
         backend="da2",
         convention="disparity",
         license="Apache-2.0",
-        role="Fast, CPU-safe fallback (only Apache-licensed option).",
+        role="Lightweight Apache-licensed CPU fallback.",
         available=True,
     ),
 }
@@ -105,16 +122,25 @@ def resolve_default_model(device: str) -> str:
     """The model auto-selected when the user hasn't chosen one.
 
     GPU (cuda) → the SPEC default (``da3mono-large``, overridable via P2R_DEFAULT_MODEL_ID),
-    falling back to ``da2-large`` if the configured default is unavailable.
-    Apple-Silicon (mps) → ``da2-large``: the best model that actually runs on MPS (DA3's
-    worker deps don't install on arm64 Mac), and the M-series GPU handles it comfortably.
+    falling back to ``da2-small`` in commercial builds if unavailable/restricted.
+    Apple-Silicon (mps) → Apache-licensed ``da2-small`` for commercial builds;
+    research mode retains ``da2-large`` (DA3's worker does not install on arm64 Mac).
     CPU → ``da2-small`` (the fast Apache-licensed fallback), per SPEC §5.1.1.
     """
     if device == "mps":
-        return "da2-large"
+        return "da2-small" if settings.commercial_build else "da2-large"
     if device != "cuda":
         return "da2-small"
     spec = MODEL_REGISTRY.get(settings.default_model_id)
-    if spec is not None and spec.available:
+    if spec is not None and spec.available and model_use_allowed(spec.model_id):
         return settings.default_model_id
-    return "da2-large"
+    return "da2-small" if settings.commercial_build else "da2-large"
+
+
+def model_use_allowed(model_id: str) -> bool:
+    spec = MODEL_REGISTRY[model_id]
+    return (
+        spec.distribution_approved
+        or not settings.commercial_build
+        or model_id in settings.authorized_models
+    )

@@ -1,0 +1,33 @@
+{
+  "load_s": 0.18981260000145994,
+  "cases": [
+    {
+      "case": "portrait",
+      "inference_s": 0.5183156000057352,
+      "coverage": 0.5497443675994873
+    },
+    {
+      "case": "pet",
+      "inference_s": 0.45291939999879105,
+      "coverage": 0.665869951248169
+    },
+    {
+      "case": "ornament",
+      "inference_s": 0.3834763000049861,
+      "coverage": 0.5812442898750305
+    },
+    {
+      "case": "object",
+      "inference_s": 0.4408404999994673,
+      "coverage": 0.4760398864746094
+    },
+    {
+      "case": "complex",
+      "inference_s": 0.4807370999988052,
+      "coverage": 0.02385001629590988
+    }
+  ],
+  "baseline_rss_mb": 59.828125,
+  "peak_rss_mb": 558.5546875,
+  "added_peak_mb": 498.7265625
+}
