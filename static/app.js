@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "/vendor/three/OrbitControls.js";
 import { GLTFLoader } from "/vendor/three/GLTFLoader.js";
+import { createStudioEditor } from "/editor.js";
 
 // --- state ---------------------------------------------------------------------------
 
@@ -20,6 +21,16 @@ const state = {
 const DEBOUNCE_2D_MS = 300; // SPEC §5.4
 const DEBOUNCE_3D_MS = 800;
 const SESSION_STORAGE_KEY = "p2r_session_id";
+
+const studio = createStudioEditor({
+  api,
+  getSession: () => state.sessionId,
+  changed: async () => {
+    state.lastExport = null;
+    if (studio.usingImported()) { state.depthReady = true; state.readyModel = state.params.depth_model; setPill("ready", "Ready"); }
+    refresh2d(); refresh3dDebounced(); refreshExportPlan();
+  },
+});
 
 // --- parameter table (ranges mirror ReliefParams in app/schemas.py) --------------------
 // Tab layout per owner feedback: Size | Shaping (depth + surface) | Export.
@@ -160,7 +171,7 @@ const PARAM_GROUPS = {
       max: 0.95,
       step: 0.05,
       tip: "Fraction of triangles removed to shrink the file. 0 = keep full detail.",
-      hint: "Fraction of triangles removed to shrink the file (0.5 ≈ half as many). 0 = off; Fusion + CAM handle full meshes fine.",
+      hint: "Fraction of triangles removed (0.5 ≈ half). Simplification still builds the full grid first.",
     },
     {
       id: "output_format",
@@ -379,7 +390,9 @@ async function loadModels() {
     const o = document.createElement("option");
     o.value = m.model_id;
     o.textContent = m.available ? m.model_id : `${m.model_id} (unavailable)`;
-    o.disabled = !m.available;
+    o.disabled = !m.available || !m.platform_available || !m.use_allowed;
+    if (m.authorization_required && !m.use_allowed) o.textContent += " (separate authorization required)";
+    if (!m.platform_available) o.textContent += " (unsupported platform)";
     sel.appendChild(o);
   }
   sel.addEventListener("change", () => {
@@ -436,6 +449,7 @@ async function enterSession(sessionId, image, filename) {
   state.depthReady = false;
   state.lastExport = null;
   localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+  history.replaceState(null, "", `?session=${encodeURIComponent(sessionId)}`);
   $("image-info").textContent = `${filename} — ${image.w} × ${image.h} px`;
   // Thumbnail replaces the dropzone prompt (the info line already carries the name).
   const thumb = $("dropzone-thumb");
@@ -445,6 +459,7 @@ async function enterSession(sessionId, image, filename) {
 
   // params.json holds this session's tuned values (server-seeded defaults when new).
   state.params = await (await api(`/api/sessions/${sessionId}/params`)).json();
+  await studio.bindSession(sessionId);
   $("params-card").hidden = false;
   $("export-card").hidden = false;
   syncControlsFromParams();
@@ -455,7 +470,7 @@ async function enterSession(sessionId, image, filename) {
 // Resume the previous session after a page reload — a reload must NOT silently reset
 // tuned parameters by forcing a fresh upload (owner feedback).
 async function tryResume() {
-  const sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
+  const sessionId = new URLSearchParams(location.search).get("session") || localStorage.getItem(SESSION_STORAGE_KEY);
   if (!sessionId) return;
   try {
     const s = await (await api(`/api/sessions/${sessionId}/status`)).json();
@@ -477,7 +492,7 @@ async function waitForDepth() {
   let s;
   for (;;) {
     s = await (await api(`/api/sessions/${state.sessionId}/status`)).json();
-    if (s.status === "ready") break;
+    if (s.status === "ready" || studio.usingImported()) break;
     if (s.status === "error") {
       setPill("error", "Depth failed");
       setBusy("2d", null);
@@ -505,6 +520,7 @@ async function waitForDepth() {
   showError("");
   refresh2d();
   refresh3d();
+  refreshExportPlan();
 }
 
 // --- param changes → save + preview refresh ---------------------------------------------------
@@ -514,6 +530,7 @@ function onParamChanged(id, value) {
   if (id === "depth_floor" || id === "depth_ceiling") syncControlsFromParams();
   updateDerivedSize(); // finished-part + stock readouts track width/frame/base/relief
   saveAndRefresh();
+  refreshExportPlan();
 }
 
 const saveAndRefresh = debounce(async () => {
@@ -560,7 +577,7 @@ async function refresh2d() {
   let blob;
   try {
     const res = await api(
-      `/api/sessions/${state.sessionId}/preview/heightmap?grayscale=${grayscale}`
+      `/api/sessions/${state.sessionId}/preview/heightmap?grayscale=${grayscale}&original=${$("compare-original").checked}`
     );
     blob = await res.blob();
   } catch (err) {
@@ -582,6 +599,7 @@ async function refresh2d() {
 }
 
 $("grayscale-toggle").addEventListener("change", refresh2d);
+$("compare-original").addEventListener("change", () => { refresh2d(); refresh3d(); refreshExportPlan(); });
 
 // --- 3D preview (three.js) ---------------------------------------------------------------------
 
@@ -641,7 +659,7 @@ async function refresh3d() {
   setBusy("3d", "Rebuilding mesh…");
   let buffer;
   try {
-    const res = await api(`/api/sessions/${state.sessionId}/preview/mesh`, {
+    const res = await api(`/api/sessions/${state.sessionId}/preview/mesh?original=${$("compare-original").checked}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(state.params),
@@ -728,8 +746,10 @@ function triggerDownload(url) {
 
 $("export-btn").addEventListener("click", async () => {
   if (!state.sessionId) return;
+  if ($("compare-original").checked) { showError("Turn off the original-AI comparison before exporting the saved edited result."); return; }
+  await studio.flush();
   const btn = $("export-btn");
-  const paramsKey = JSON.stringify(state.params);
+  const paramsKey = JSON.stringify(state.params) + ":" + studio.revision();
 
   // Same params as the last successful export → serve the cached file, skip re-meshing.
   if (state.lastExport?.key === paramsKey) {
@@ -782,6 +802,22 @@ $("export-btn").addEventListener("click", async () => {
     btn.disabled = false;
   }
 });
+
+let exportPlanSequence = 0;
+async function refreshExportPlan() {
+  if (!state.sessionId || !state.params) return;
+  const sequence = ++exportPlanSequence;
+  try {
+    const plan = await (await api(`/api/sessions/${state.sessionId}/export-plan`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state.params),
+    })).json();
+    if (sequence !== exportPlanSequence) return;
+    $("export-plan-text").textContent = plan.allowed
+      ? `${plan.grid.columns} × ${plan.grid.rows} grid · ~${Math.round(plan.output_bytes_estimate / 1e6)} MB file · ~${Math.round(plan.memory_bytes_estimate / 1048576)} MB working memory`
+      : plan.message;
+    $("export-btn").disabled = !state.depthReady || !plan.allowed || $("compare-original").checked;
+  } catch (error) { showError(`Export planning failed: ${error.message}`); }
+}
 
 // --- boot ------------------------------------------------------------------------------------------
 

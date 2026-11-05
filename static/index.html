@@ -63,12 +63,16 @@
           </div>
 
           <button id="reset-btn" class="secondary">Reset to defaults</button>
+          <button id="edit-btn" class="secondary" disabled>Edit subject / depth</button>
+          <label class="checkbox-row"><input id="compare-original" type="checkbox" />Compare original AI (view only)</label>
+          <p id="editor-summary" class="hint"></p>
         </section>
 
         <section class="card" id="export-card" hidden>
           <button id="export-btn">Export mesh</button>
           <p id="export-status" class="hint"></p>
           <p id="export-summary" class="summary" hidden></p>
+          <p id="export-plan-text" class="hint"></p>
         </section>
       </aside>
 
@@ -105,6 +109,44 @@
       </section>
     </main>
 
+    <dialog id="studio-editor" aria-labelledby="studio-title">
+      <div class="editor-heading"><h2 id="studio-title">Subject and depth editor</h2><button id="editor-close" class="secondary">Close editor</button></div>
+      <p class="hint">Edits are saved automatically. Original photo and AI predictions stay unchanged. White depth means nearer / higher relief.</p>
+      <div class="editor-grid">
+        <div class="editor-image-panel">
+          <div class="editor-inline"><label for="editor-view">View</label><select id="editor-view"><option value="photo">Photo + mask</option><option value="working">Corrected depth + mask</option><option value="processed">Processed depth</option><option value="ai">Original AI depth (view only)</option></select></div>
+          <div id="editor-canvas-wrap"><canvas id="editor-canvas" tabindex="0" aria-label="Paint subject mask or depth corrections"></canvas></div>
+          <p id="editor-message" role="status">Select a tool, then paint on the photograph.</p>
+          <p class="hint">Red areas are removed. Brush coordinates follow the original photograph, including after a depth-map import.</p>
+        </div>
+        <div class="editor-tools">
+          <label for="editor-source">Depth source</label><select id="editor-source"><option value="ai">AI prediction</option></select>
+          <label for="mask-method">Isolation method</label><select id="mask-method"><option value="auto">Automatic (U2NETP if installed, else GrabCut)</option><option value="u2netp">U2NETP (optional local model)</option><option value="grabcut">GrabCut (built in)</option></select>
+          <p class="hint" id="segmentation-status">Automatic isolation runs locally.</p>
+          <div class="editor-inline"><button id="auto-mask">Automatic isolation</button><button id="isolate-selection" class="secondary">Isolate selection</button></div>
+          <label for="editor-tool">Tool</label><select id="editor-tool"><option value="remove">Remove from subject</option><option value="keep">Keep in subject</option><option value="rectangle">Select subject rectangle</option><option value="raise">Raise area</option><option value="lower">Lower area</option><option value="smooth">Smooth area</option><option value="flatten">Flatten area</option></select>
+          <label for="brush-size">Brush radius (% of long side)</label><input id="brush-size" type="range" min="1" max="35" value="6" />
+          <label for="brush-strength">Strength (%)</label><input id="brush-strength" type="range" min="1" max="100" value="100" />
+          <label for="flatten-level">Flatten height (0 = far, 1 = near)</label><input id="flatten-level" type="number" min="0" max="1" step="0.01" value="0.5" />
+          <div class="editor-inline"><button id="editor-undo" class="secondary">Undo mask</button><button id="editor-redo" class="secondary">Redo mask</button><button id="editor-reset" class="secondary">Reset mask</button></div>
+          <label class="checkbox-row"><input id="mask-enabled" type="checkbox" />Apply subject mask</label>
+          <label for="mask-feather">Mask softness (mm)</label><input id="mask-feather" type="number" min="0" max="10" step="0.1" value="0.8" />
+          <label for="mask-transition">Blend subject into base (mm)</label><input id="mask-transition" type="number" min="0.1" max="50" step="0.1" value="4" />
+          <label for="sculpt-strength">Sculptural smoothing</label><input id="sculpt-strength" type="range" min="0" max="1" step="0.05" value="0" />
+          <label for="texture-guard">Restrain photographic grooves</label><input id="texture-guard" type="range" min="0" max="1" step="0.05" value="0" />
+          <p class="hint">These optional controls reduce narrow ridges and shadow texture. They cannot reconstruct missing facial anatomy. Original shaping controls remain available.</p>
+          <button id="restore-ai" class="secondary">Restore original AI depth</button>
+          <details><summary>Depth-map import / export</summary>
+            <p class="hint">Use 16-bit grayscale PNG or float NPY. Matching aspect ratios resample automatically; different aspect ratios need explicit alignment.</p>
+            <label for="depth-file">Import depth file</label><input id="depth-file" type="file" accept=".png,.npy" />
+            <label class="checkbox-row"><input id="depth-white-far" type="checkbox" />Imported white means farther (invert on import)</label>
+            <label class="checkbox-row"><input id="depth-stretch" type="checkbox" />Explicitly stretch a different aspect ratio to this photo</label>
+            <label for="depth-export-source">Export source</label><select id="depth-export-source"><option value="working">Corrected working depth</option><option value="ai">Original AI prediction</option><option value="imported">Unedited imported depth</option></select>
+            <div class="editor-inline"><button id="depth-export-png" class="secondary">Save 16-bit PNG</button><button id="depth-export-npy" class="secondary">Save float NPY</button></div>
+          </details>
+        </div>
+      </div>
+    </dialog>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

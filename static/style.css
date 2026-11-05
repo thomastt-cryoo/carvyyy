@@ -344,3 +344,25 @@ body.doc { display: block; overflow: auto; }
 .doc .toc a { color: var(--accent); text-decoration: none; font-weight: 600; }
 .doc .toc a:hover { text-decoration: underline; }
 .doc h2[id] { scroll-margin-top: 12px; }
+
+/* M2 verification controls; the product-wide redesign remains M3. */
+#edit-btn { margin-top: 8px; }
+#studio-editor { color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; width: min(1180px, 96vw); max-height: 94vh; padding: 18px; overflow: auto; }
+#studio-editor::backdrop { background: rgba(0,0,0,.65); }
+.editor-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.editor-heading h2 { font-size: 19px; margin: 0; }
+.editor-heading button { width: auto; flex: 0 0 auto; }
+.editor-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; }
+.editor-tools { display: flex; flex-direction: column; gap: 7px; }
+.editor-tools label { font-size: 12px; color: var(--muted); }
+.editor-tools input[type=number], .editor-tools select, .editor-inline select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 6px; width: 100%; }
+.editor-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.editor-inline button { flex: 1 1 auto; padding: 7px; font-size: 12px; }
+#editor-canvas-wrap { background: var(--panel-2); margin-top: 12px; display: flex; align-items: center; justify-content: center; min-height: 220px; }
+#editor-canvas { display: block; max-width: 100%; max-height: 64vh; width: auto; height: auto; touch-action: none; cursor: crosshair; }
+#editor-message { min-height: 24px; font-size: 13px; }
+#editor-message.error { color: var(--error); }
+.editor-tools details { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 6px; }
+.editor-tools details input[type=file] { display: block; width: 100%; font-size: 12px; margin: 8px 0; }
+#studio-editor.busy #editor-canvas { cursor: progress; }
+@media (max-width: 800px) { .editor-grid { grid-template-columns: 1fr; } #editor-canvas { max-height: 48vh; } }
