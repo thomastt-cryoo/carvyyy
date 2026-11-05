@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Literal
 
@@ -58,6 +59,29 @@ class Repair(BaseModel):
 @router.get("")
 def project_list():
     return {"projects": project_store.all_projects()}
+
+
+@router.get("/deleted")
+def deleted_projects():
+    root = settings.sessions_dir.resolve().parent / "project-trash"
+    records = []
+    if not root.is_dir() or root.is_symlink():
+        return {"projects": records}
+    for path in root.iterdir():
+        if (
+            not sessions._SESSION_ID_RE.fullmatch(path.name)
+            or path.is_symlink()
+            or not path.resolve().is_relative_to(root)
+            or not path.is_dir()
+        ):
+            continue
+        try:
+            value = json.loads((path / "project.json").read_text())
+            name = value.get("name", "Deleted project")
+        except (ValueError, OSError, AttributeError):
+            name = "Deleted project"
+        records.append({"id": path.name, "name": name})
+    return {"projects": records}
 
 
 @router.post("/upload")

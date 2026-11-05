@@ -434,6 +434,18 @@ def is_processing(session_id: str) -> bool:
         return bool(_pending.get(session_id))
 
 
+def model_is_processing(model_id: str) -> bool:
+    with _pending_lock:
+        pending = list(_pending)
+    for sid in pending:
+        try:
+            if read_meta(sid).get("model_id") == model_id:
+                return True
+        except (OSError, ValueError, KeyError):
+            continue
+    return False
+
+
 def start_inference_job(session_id: str, model_id: str) -> None:
     """Submit inference to the single-worker executor and track status in meta.json."""
     from app.editing import lock_for

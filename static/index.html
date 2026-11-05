@@ -1,152 +1,772 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Photo2Relief</title>
-    <link rel="stylesheet" href="/style.css" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="application-name"
+      content="Photo2Relief / Photo Relief Studio"
+    />
+    <title>Photo Relief Studio</title>
     <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/workspace.css" />
     <script type="importmap">
       { "imports": { "three": "/vendor/three/three.module.js" } }
     </script>
+    <script src="/appearance.js"></script>
   </head>
   <body>
-    <header>
-      <div>
-        <h1>Photo2Relief</h1>
-        <p class="tagline">Photo &rarr; heightmap &rarr; CNC-machinable relief mesh (mm)</p>
-      </div>
-      <nav class="header-right">
-        <a href="/help.html" target="_blank" class="help-btn">Help</a>
-        <span id="status-pill" class="pill pill-idle">No photo</span>
-      </nav>
-    </header>
-
-    <main id="app">
-      <aside class="sidebar">
-        <section class="card" id="upload-card">
-          <label id="dropzone" for="file-input" title="Drop or click to replace the photo">
-            <img id="dropzone-thumb" alt="" hidden />
-            <span id="dropzone-text">Drop a photo here or click to choose</span>
-            <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
-          </label>
-          <p id="image-info" class="hint"></p>
-        </section>
-
-        <section class="card param-card" id="params-card" hidden>
-          <div class="control model-control">
-            <label class="name">Depth model</label>
-            <select id="depth_model"></select>
-            <p class="hint" id="model-hint"></p>
-          </div>
-
-          <div class="tabbar" role="tablist">
-            <button class="tab active" data-tab="tab-size">Size</button>
-            <button class="tab" data-tab="tab-shaping">Shaping</button>
-            <button class="tab" data-tab="tab-export">Export</button>
-          </div>
-
-          <div class="tabpanel" id="tab-size">
-            <div id="group-size"></div>
-            <p class="hint" id="derived-size"></p>
-            <p class="hint" id="stock-size"></p>
-          </div>
-
-          <div class="tabpanel" id="tab-shaping" hidden>
-            <div id="group-depth"></div>
-            <div class="subhead">Surface</div>
-            <div id="group-surface"></div>
-          </div>
-
-          <div class="tabpanel" id="tab-export" hidden>
-            <div id="group-export"></div>
-          </div>
-
-          <button id="reset-btn" class="secondary">Reset to defaults</button>
-          <button id="edit-btn" class="secondary" disabled>Edit subject / depth</button>
-          <label class="checkbox-row"><input id="compare-original" type="checkbox" />Compare original AI (view only)</label>
-          <p id="editor-summary" class="hint"></p>
-        </section>
-
-        <section class="card" id="export-card" hidden>
-          <button id="export-btn">Export mesh</button>
-          <p id="export-status" class="hint"></p>
-          <p id="export-summary" class="summary" hidden></p>
-          <p id="export-plan-text" class="hint"></p>
-        </section>
+    <div class="app-shell" id="app-shell">
+      <header class="app-header">
+        <div class="brand">
+          <button
+            class="icon-button"
+            id="nav-toggle"
+            aria-label="Toggle project navigation"
+            title="Toggle project navigation"
+            data-icon="sidebar"
+          ></button
+          ><span class="brand-mark" aria-hidden="true">◒</span
+          ><span class="brand-name">Relief <span>Studio</span></span>
+        </div>
+        <div class="project-heading">
+          <button id="project-title" title="Rename project">New project</button
+          ><span id="save-state" role="status"
+            >Everything stays on your computer</span
+          >
+        </div>
+        <button id="open-export" class="button primary" disabled>
+          <span data-icon="export"></span>Export<span class="desktop-label">
+            relief</span
+          >
+        </button>
+      </header>
+      <aside class="navigation" id="navigation" aria-label="Projects">
+        <button id="new-project" class="button new-project">
+          <span data-icon="plus"></span
+          ><span class="nav-label">New project</span>
+        </button>
+        <button id="open-library" class="nav-button" aria-label="Your projects">
+          <span data-icon="folder"></span
+          ><span class="nav-label">Your projects</span
+          ><span id="project-count" class="count nav-label">0</span>
+        </button>
+        <p class="overline nav-label">RECENT</p>
+        <div id="recent-projects" class="recent-projects"></div>
+        <p id="no-projects" class="muted small nav-label">
+          Your projects will appear here.
+        </p>
+        <div class="nav-footer">
+          <button
+            id="theme-toggle"
+            class="nav-button"
+            title="Switch appearance"
+          >
+            <span data-icon="moon"></span
+            ><span class="nav-label" id="theme-label">Dark appearance</span>
+          </button>
+          <button id="open-settings" class="nav-button">
+            <span data-icon="settings"></span
+            ><span class="nav-label">Settings</span>
+          </button>
+          <button id="open-help" class="nav-button">
+            <span data-icon="help"></span
+            ><span class="nav-label">Help & shortcuts</span>
+          </button>
+          <span class="local-note nav-label"
+            ><span class="local-dot"></span>Local workspace</span
+          >
+        </div>
       </aside>
-
-      <section class="previews">
-        <div id="error-banner" class="error-banner" hidden></div>
-
-        <div class="card preview-card">
-          <div class="preview-head">
-            <h2>Heightmap preview</h2>
-            <label class="toggle"><input type="checkbox" id="grayscale-toggle" /> grayscale</label>
+      <main class="main-area">
+        <div id="error-banner" class="error-banner" role="alert" hidden>
+          <span id="error-text"></span
+          ><button id="retry-action" class="text-button" hidden>Retry</button
+          ><button
+            id="dismiss-error"
+            class="icon-button"
+            aria-label="Dismiss error"
+            data-icon="close"
+          ></button>
+        </div>
+        <section
+          class="welcome"
+          id="welcome"
+          aria-label="Create your first relief"
+        >
+          <div class="welcome-content">
+            <div
+              class="welcome-symbol"
+              aria-hidden="true"
+              data-icon="layers"
+            ></div>
+            <p class="overline">PHOTO RELIEF STUDIO</p>
+            <h1>A new dimension<br />for your photographs.</h1>
+            <p class="welcome-copy">
+              Turn a photo into a relief you can shape, inspect<br
+                class="wide-only"
+              />
+              and export for carving. All on your computer.
+            </p>
+            <div
+              id="dropzone"
+              class="dropzone"
+              tabindex="0"
+              role="button"
+              aria-label="Upload a photograph"
+            >
+              <span class="upload-symbol" data-icon="upload"></span
+              ><strong>Drop a photo here</strong
+              ><span class="muted"
+                >or <span class="browse-link">browse files</span></span
+              ><small>JPG, PNG, WebP, HEIC · up to 40 MB</small>
+            </div>
+            <input
+              id="photo-file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              hidden
+            />
+            <div class="first-steps">
+              <span><b>1</b> Upload</span><i></i
+              ><span><b>2</b> Make it yours</span><i></i
+              ><span><b>3</b> Export</span>
+            </div>
+            <p class="welcome-note" id="setup-note">
+              No accounts. No cloud processing.
+            </p>
           </div>
-          <div class="preview-body" id="preview2d-body">
-            <p class="placeholder" id="preview2d-placeholder">Upload a photo to see the relief preview.</p>
-            <img id="preview2d" alt="Hillshaded heightmap preview" hidden />
-            <div class="busy-overlay" id="busy2d" hidden>
-              <div class="spinner"></div>
-              <span id="busy2d-text">Updating&hellip;</span>
+        </section>
+        <section
+          class="workspace"
+          id="workspace"
+          hidden
+          aria-label="Relief workspace"
+        >
+          <div class="canvas-toolbar">
+            <div class="view-tabs" role="tablist" aria-label="Preview view">
+              <button role="tab" data-view="3d" aria-selected="true">
+                3D relief</button
+              ><button role="tab" data-view="photo" aria-selected="false">
+                Photo</button
+              ><button role="tab" data-view="depth" aria-selected="false">
+                Depth map</button
+              ><button role="tab" data-view="edit" aria-selected="false">
+                Edit
+              </button>
+            </div>
+            <button
+              id="compare-original"
+              aria-label="View original AI comparison"
+              class="compare-button"
+              aria-pressed="false"
+              title="View original AI geometry without changing your saved edits"
+            >
+              <span data-icon="compare"></span><span>Original AI</span>
+            </button>
+            <button
+              id="inspector-toggle"
+              class="icon-button"
+              title="Toggle customization panel"
+              aria-label="Toggle customization panel"
+              data-icon="sliders"
+            ></button>
+          </div>
+          <div id="comparison-note" class="comparison-note" hidden>
+            Original AI · read-only comparison
+            <button id="return-edited" class="text-button">
+              Return to edited
+            </button>
+          </div>
+          <div id="edit-toolbar" class="edit-toolbar" hidden>
+            <div class="segmented" role="group" aria-label="Editing layer">
+              <button data-layer="mask" aria-pressed="true">Subject mask</button
+              ><button data-layer="depth" aria-pressed="false">
+                Relief depth
+              </button>
+            </div>
+            <div id="inline-tools" class="inline-tools"></div>
+            <div class="history-actions">
+              <button
+                id="editor-undo"
+                class="icon-button"
+                title="Undo (Ctrl/Cmd Z)"
+                aria-label="Undo mask"
+                data-icon="undo"
+              ></button
+              ><button
+                id="editor-redo"
+                class="icon-button"
+                title="Redo (Ctrl/Cmd Shift Z)"
+                aria-label="Redo mask"
+                data-icon="redo"
+              ></button>
             </div>
           </div>
-        </div>
-
-        <div class="card preview-card viewport-card">
-          <div class="preview-head">
-            <h2>3D preview <span class="hint">(reduced resolution &mdash; export is full-res)</span></h2>
-          </div>
-          <div class="preview-body" id="viewport">
-            <p class="placeholder" id="preview3d-placeholder">The 3D preview appears here.</p>
-            <div class="busy-overlay" id="busy3d" hidden>
-              <div class="spinner"></div>
-              <span id="busy3d-text">Updating&hellip;</span>
+          <div class="canvas-stage" id="canvas-stage">
+            <div id="viewer" class="viewer"></div>
+            <div id="image-pane" class="image-pane" hidden>
+              <img id="preview-image" alt="Original photograph" />
+            </div>
+            <div id="paint-pane" class="paint-pane" hidden>
+              <div class="paint-surface">
+                <canvas
+                  id="editor-canvas"
+                  tabindex="0"
+                  aria-label="Paint aligned subject or relief corrections"
+                ></canvas>
+                <div id="brush-cursor" class="brush-cursor" hidden></div>
+              </div>
+            </div>
+            <div id="canvas-message" class="canvas-message" hidden>
+              <span class="spinner"></span
+              ><strong id="canvas-message-title">Estimating depth</strong>
+              <p id="canvas-message-detail">
+                Processing locally. Your photo stays on this computer.
+              </p>
+              <button id="generation-retry" class="button" hidden>
+                Retry generation
+              </button>
+            </div>
+            <div id="preview-busy" class="preview-busy" hidden>
+              <span class="spinner"></span
+              ><span id="preview-busy-label">Updating relief</span>
+            </div>
+            <div id="camera-tools" class="camera-tools" aria-label="3D camera">
+              <button
+                id="camera-fit"
+                class="icon-button"
+                aria-label="Fit model to view"
+                title="Fit model"
+                data-icon="fit"
+              ></button
+              ><button
+                id="camera-reset"
+                class="icon-button"
+                aria-label="Reset camera"
+                title="Reset camera"
+                data-icon="reset"
+              ></button
+              ><button
+                id="camera-top"
+                class="icon-button"
+                aria-label="View from above"
+                title="View from above"
+                data-icon="top"
+              ></button
+              ><span></span
+              ><button
+                id="camera-zoom-in"
+                class="icon-button"
+                aria-label="Zoom in"
+                title="Zoom in"
+                data-icon="plus"
+              ></button
+              ><button
+                id="camera-zoom-out"
+                class="icon-button"
+                aria-label="Zoom out"
+                title="Zoom out"
+                data-icon="minus"
+              ></button>
             </div>
           </div>
+          <footer class="canvas-footer">
+            <span id="view-note"
+              >Drag to rotate · scroll to zoom · right-drag to pan</span
+            ><span id="physical-size"></span
+            ><span id="editor-message" role="status"></span>
+          </footer>
+        </section>
+      </main>
+      <aside
+        class="inspector"
+        id="inspector"
+        hidden
+        aria-label="Customize relief"
+      >
+        <div class="inspector-heading">
+          <h2>Make it yours</h2>
+          <button
+            id="project-menu"
+            class="icon-button"
+            aria-label="Project actions"
+            title="Rename or delete project"
+            data-icon="more"
+          ></button>
         </div>
-      </section>
-    </main>
+        <div class="panel-tabs" role="tablist" aria-label="Customization tools">
+          <button role="tab" data-panel="adjust" aria-selected="true">
+            Customize</button
+          ><button role="tab" data-panel="background" aria-selected="false">
+            Background</button
+          ><button role="tab" data-panel="sculpt" aria-selected="false">
+            Sculpt
+          </button>
+        </div>
+        <div class="inspector-content">
+          <section data-panel-content="adjust">
+            <div class="preset-row">
+              <label for="preset">Starting point</label
+              ><select id="preset">
+                <option>Custom</option>
+                <option>Portrait</option>
+                <option>Pet</option>
+                <option>Object</option>
+                <option>Ornament</option>
+              </select>
+            </div>
+            <p class="hint">
+              Shaping settings, not a new AI model. Your painted edits are kept.
+            </p>
+            <button id="undo-preset" class="text-button" hidden>
+              Undo preset change
+            </button>
+            <fieldset id="essential-fields" class="fields"></fieldset>
+            <div class="quick-background">
+              <div>
+                <strong>Focus on your subject</strong>
+                <p class="hint">Flatten the surrounding background.</p>
+              </div>
+              <button id="quick-remove-background" class="button compact">
+                Remove background
+              </button>
+            </div>
+            <div class="quality-row">
+              <label for="export-quality">Export quality</label
+              ><select id="export-quality">
+                <option value="512">Standard · 512</option>
+                <option value="1024">High · 1024</option>
+                <option value="2048">Maximum · 2048</option>
+              </select>
+            </div>
+            <button id="open-depth-source" class="source-button">
+              <span data-icon="layers"></span
+              ><span
+                >Depth source
+                <strong id="depth-source-summary">Original AI</strong></span
+              ><span data-icon="chevron"></span>
+            </button>
+            <details class="advanced" id="advanced-settings">
+              <summary>
+                Advanced settings <span data-icon="chevron"></span>
+              </summary>
+              <h3>Size & backing</h3>
+              <fieldset id="geometry-fields" class="fields"></fieldset>
+              <h3>Depth shaping</h3>
+              <fieldset id="shaping-fields" class="fields"></fieldset>
+              <h3>Surface refinement</h3>
+              <fieldset class="fields" id="quality-fields"></fieldset>
+              <h3>Depth model</h3>
+              <div class="field">
+                <label for="depth_model">Model</label
+                ><select id="depth_model"></select>
+                <p id="model-status" class="hint"></p>
+              </div>
+              <button id="reset-adjustments" class="text-button">
+                Restore adjustment defaults
+              </button>
+            </details>
+          </section>
+          <section data-panel-content="background" hidden>
+            <p class="section-intro">
+              Keep the subject.<br /><strong
+                >Let the background fall away.</strong
+              >
+            </p>
+            <button id="remove-background" class="button primary full">
+              <span data-icon="isolate"></span>Remove background
+            </button>
+            <p id="segmentation-note" class="hint">
+              Uses a locally available method. Inspect the result and refine it
+              below.
+            </p>
+            <label class="switch-row"
+              ><span>Apply subject mask</span
+              ><input id="mask-enabled" type="checkbox"
+            /></label>
+            <h3>Refine the subject</h3>
+            <div class="tool-grid" id="mask-tools"></div>
+            <p class="hint">
+              Paint on the photo to keep or remove areas. A rectangle limits
+              automatic isolation to a selected subject.
+            </p>
+            <button id="isolate-selection" class="button full" hidden>
+              Isolate selected area
+            </button>
+            <div class="brush-settings" data-brush-controls></div>
+            <div class="field">
+              <label for="mask-feather">Edge softness <span>mm</span></label
+              ><input
+                id="mask-feather"
+                type="number"
+                min="0"
+                max="10"
+                step="0.1"
+                value="0.8"
+              />
+              <p class="hint">
+                Feather the silhouette without changing alignment.
+              </p>
+            </div>
+            <div class="field">
+              <label for="mask-transition"
+                >Blend into backing <span>mm</span></label
+              ><input
+                id="mask-transition"
+                type="number"
+                min="0.1"
+                max="50"
+                step="0.1"
+                value="4"
+              />
+              <p class="hint">
+                A wider transition gives the boundary a gentler slope.
+              </p>
+            </div>
+            <details>
+              <summary>Isolation method</summary>
+              <label for="mask-method" class="sr-only">Isolation method</label
+              ><select id="mask-method">
+                <option value="auto">Automatic · best available</option>
+                <option value="alpha">Original image cutout</option>
+                <option value="u2netp">U2NETP · local model</option>
+                <option value="grabcut">GrabCut · built in</option>
+              </select>
+              <p class="hint" id="segmentation-availability"></p>
+            </details>
+            <button id="reset-mask" class="text-button">
+              Reset subject mask
+            </button>
+          </section>
+          <section data-panel-content="sculpt" hidden>
+            <p class="section-intro">
+              Shape the relief.<br /><strong
+                >One small correction at a time.</strong
+              >
+            </p>
+            <div class="tool-grid" id="depth-tools"></div>
+            <p class="hint">
+              Paint on the depth map. White is higher, black is lower. Your
+              original AI prediction stays safe.
+            </p>
+            <div class="brush-settings" data-brush-controls></div>
+            <div class="field" id="flatten-control" hidden>
+              <label for="flatten-level">Flatten level</label
+              ><input
+                id="flatten-level"
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.5"
+              />
+              <p class="hint">
+                0 is the far end; 1 is the near end, before your shaping
+                settings.
+              </p>
+            </div>
+            <div class="inline-actions">
+              <button id="sculpt-undo" class="button">Undo depth</button
+              ><button id="sculpt-redo" class="button">Redo depth</button>
+            </div>
+            <button id="reset-depth" class="text-button">
+              Reset current depth corrections</button
+            ><button id="manage-history" class="text-button">
+              History & checkpoints
+            </button>
+          </section>
+        </div>
+        <div class="inspector-footer">
+          <span id="inspector-status">Changes save automatically</span
+          ><button id="source-shortcut" class="text-button">Depth maps</button>
+        </div>
+      </aside>
+    </div>
+    <div class="toast" id="toast" role="status" hidden>
+      <span id="toast-text"></span
+      ><button id="toast-action" class="text-button" hidden>Undo</button
+      ><button
+        id="toast-close"
+        class="icon-button"
+        aria-label="Dismiss notification"
+        data-icon="close"
+      ></button>
+    </div>
 
-    <dialog id="studio-editor" aria-labelledby="studio-title">
-      <div class="editor-heading"><h2 id="studio-title">Subject and depth editor</h2><button id="editor-close" class="secondary">Close editor</button></div>
-      <p class="hint">Edits are saved automatically. Original photo and AI predictions stay unchanged. White depth means nearer / higher relief.</p>
-      <div class="editor-grid">
-        <div class="editor-image-panel">
-          <div class="editor-inline"><label for="editor-view">View</label><select id="editor-view"><option value="photo">Photo + mask</option><option value="working">Corrected depth + mask</option><option value="processed">Processed depth</option><option value="ai">Original AI depth (view only)</option></select></div>
-          <div id="editor-canvas-wrap"><canvas id="editor-canvas" tabindex="0" aria-label="Paint subject mask or depth corrections"></canvas></div>
-          <p id="editor-message" role="status">Select a tool, then paint on the photograph.</p>
-          <p class="hint">Red areas are removed. Brush coordinates follow the original photograph, including after a depth-map import.</p>
+    <dialog id="library-dialog" aria-labelledby="library-title">
+      <div class="dialog-header">
+        <div>
+          <p class="overline">ON THIS COMPUTER</p>
+          <h2 id="library-title">Your projects</h2>
         </div>
-        <div class="editor-tools">
-          <label for="editor-source">Depth source</label><select id="editor-source"><option value="ai">AI prediction</option></select>
-          <label for="mask-method">Isolation method</label><select id="mask-method"><option value="auto">Automatic (U2NETP if installed, else GrabCut)</option><option value="u2netp">U2NETP (optional local model)</option><option value="grabcut">GrabCut (built in)</option></select>
-          <p class="hint" id="segmentation-status">Automatic isolation runs locally.</p>
-          <div class="editor-inline"><button id="auto-mask">Automatic isolation</button><button id="isolate-selection" class="secondary">Isolate selection</button></div>
-          <label for="editor-tool">Tool</label><select id="editor-tool"><option value="remove">Remove from subject</option><option value="keep">Keep in subject</option><option value="rectangle">Select subject rectangle</option><option value="raise">Raise area</option><option value="lower">Lower area</option><option value="smooth">Smooth area</option><option value="flatten">Flatten area</option></select>
-          <label for="brush-size">Brush radius (% of long side)</label><input id="brush-size" type="range" min="1" max="35" value="6" />
-          <label for="brush-strength">Strength (%)</label><input id="brush-strength" type="range" min="1" max="100" value="100" />
-          <label for="flatten-level">Flatten height (0 = far, 1 = near)</label><input id="flatten-level" type="number" min="0" max="1" step="0.01" value="0.5" />
-          <div class="editor-inline"><button id="editor-undo" class="secondary">Undo mask</button><button id="editor-redo" class="secondary">Redo mask</button><button id="editor-reset" class="secondary">Reset mask</button></div>
-          <label class="checkbox-row"><input id="mask-enabled" type="checkbox" />Apply subject mask</label>
-          <label for="mask-feather">Mask softness (mm)</label><input id="mask-feather" type="number" min="0" max="10" step="0.1" value="0.8" />
-          <label for="mask-transition">Blend subject into base (mm)</label><input id="mask-transition" type="number" min="0.1" max="50" step="0.1" value="4" />
-          <label for="sculpt-strength">Sculptural smoothing</label><input id="sculpt-strength" type="range" min="0" max="1" step="0.05" value="0" />
-          <label for="texture-guard">Restrain photographic grooves</label><input id="texture-guard" type="range" min="0" max="1" step="0.05" value="0" />
-          <p class="hint">These optional controls reduce narrow ridges and shadow texture. They cannot reconstruct missing facial anatomy. Original shaping controls remain available.</p>
-          <button id="restore-ai" class="secondary">Restore original AI depth</button>
-          <details><summary>Depth-map import / export</summary>
-            <p class="hint">Use 16-bit grayscale PNG or float NPY. Matching aspect ratios resample automatically; different aspect ratios need explicit alignment.</p>
-            <label for="depth-file">Import depth file</label><input id="depth-file" type="file" accept=".png,.npy" />
-            <label class="checkbox-row"><input id="depth-white-far" type="checkbox" />Imported white means farther (invert on import)</label>
-            <label class="checkbox-row"><input id="depth-stretch" type="checkbox" />Explicitly stretch a different aspect ratio to this photo</label>
-            <label for="depth-export-source">Export source</label><select id="depth-export-source"><option value="working">Corrected working depth</option><option value="ai">Original AI prediction</option><option value="imported">Unedited imported depth</option></select>
-            <div class="editor-inline"><button id="depth-export-png" class="secondary">Save 16-bit PNG</button><button id="depth-export-npy" class="secondary">Save float NPY</button></div>
-          </details>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close projects"
+          data-icon="close"
+        ></button>
+      </div>
+      <input
+        id="project-search"
+        type="search"
+        placeholder="Find a project…"
+        aria-label="Find a project"
+      />
+      <div id="library-projects" class="library-projects"></div>
+      <details id="deleted-projects" hidden>
+        <summary>Recently deleted</summary>
+        <p class="hint">
+          Local recovery copies are kept until a future storage-management
+          release. Restoring does not change shared models.
+        </p>
+        <div id="deleted-project-list"></div>
+      </details>
+    </dialog>
+    <dialog
+      id="project-dialog"
+      class="small-dialog"
+      aria-labelledby="project-dialog-title"
+    >
+      <div class="dialog-header">
+        <h2 id="project-dialog-title">Project settings</h2>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close project settings"
+          data-icon="close"
+        ></button>
+      </div>
+      <form id="rename-form">
+        <label for="project-name">Project name</label
+        ><input id="project-name" maxlength="120" required />
+        <div class="dialog-actions">
+          <button type="button" id="delete-project" class="text-button danger">
+            Delete project</button
+          ><button class="button primary" type="submit">Save name</button>
         </div>
+      </form>
+    </dialog>
+    <dialog
+      id="confirm-dialog"
+      class="small-dialog"
+      aria-labelledby="confirm-title"
+    >
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button id="confirm-cancel" class="button">Cancel</button
+        ><button id="confirm-accept" class="button primary">Continue</button>
       </div>
     </dialog>
-    <script type="module" src="/app.js"></script>
+    <dialog id="source-dialog" aria-labelledby="source-title">
+      <div class="dialog-header">
+        <div>
+          <p class="overline">HIGH PRECISION · LOCAL FILES</p>
+          <h2 id="source-title">Depth maps</h2>
+        </div>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close depth maps"
+          data-icon="close"
+        ></button>
+      </div>
+      <p class="muted">
+        Use the original AI estimate or bring in your own corrected depth.
+        Higher / whiter means nearer, before optional inversion.
+      </p>
+      <label for="editor-source">Current depth source</label
+      ><select id="editor-source"></select>
+      <div class="dialog-section">
+        <h3>Import a depth map</h3>
+        <p class="hint">
+          16-bit grayscale PNG for image editors, or float32 NPY for lossless
+          scientific exchange. The original file is preserved.
+        </p>
+        <label class="check-row"
+          ><input id="depth-white-far" type="checkbox" />White means farther in
+          this file</label
+        ><label class="check-row"
+          ><input id="depth-stretch" type="checkbox" />Stretch a different
+          aspect ratio to this photo</label
+        >
+        <p class="hint">
+          Matching aspect ratios resample automatically. Stretching changes
+          proportions; align or crop the map first when possible.
+        </p>
+        <label for="depth-file" class="button file-button"
+          ><span data-icon="upload"></span>Choose depth file</label
+        ><input
+          id="depth-file"
+          type="file"
+          accept=".png,.npy"
+          class="sr-only"
+        />
+      </div>
+      <div class="dialog-section">
+        <h3>Export depth</h3>
+        <label for="depth-export-source">Depth to save</label
+        ><select id="depth-export-source">
+          <option value="working">Corrected working depth</option>
+          <option value="ai">Original AI prediction</option>
+          <option value="imported">Original imported depth</option>
+        </select>
+        <div class="inline-actions">
+          <button id="depth-export-png" class="button">Save 16-bit PNG</button
+          ><button id="depth-export-npy" class="button">
+            Save float32 NPY
+          </button>
+        </div>
+      </div>
+      <button id="restore-ai" class="text-button">
+        Restore original AI workflow
+      </button>
+      <p id="source-message" class="hint" role="status"></p>
+    </dialog>
+    <dialog id="export-dialog" aria-labelledby="export-title">
+      <div class="dialog-header">
+        <div>
+          <p class="overline">READY FOR THE NEXT STEP</p>
+          <h2 id="export-title">Export your relief</h2>
+        </div>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close export"
+          data-icon="close"
+        ></button>
+      </div>
+      <p class="muted">
+        Export the saved edited result as a solid mesh. Units: millimetres.
+      </p>
+      <p id="export-comparison-note" class="notice" hidden>
+        You're viewing original AI.
+        <button id="export-return-edited" class="text-button">
+          Return to edited to export
+        </button>
+      </p>
+      <div class="export-dimensions">
+        <span>Finished size</span><strong id="export-dimensions"></strong>
+      </div>
+      <fieldset class="fields" id="export-fields"></fieldset>
+      <p class="hint">
+        Standard = 512, High = 1024, Maximum = 2048. More samples can preserve
+        detail but cannot recover missing geometry.
+      </p>
+      <div id="export-plan" class="export-plan">
+        <span class="spinner"></span>Planning export…
+      </div>
+      <button id="lower-quality" class="button full" hidden>
+        Use Standard quality · 512
+      </button>
+      <div id="export-progress" hidden>
+        <label id="export-stage">Starting export</label
+        ><progress id="export-progress-bar" max="1"></progress>
+        <p class="hint">
+          Stages reflect actual backend progress, not a time estimate.
+        </p>
+      </div>
+      <p id="export-result" role="status"></p>
+      <div class="dialog-actions">
+        <a id="download-mesh" class="button" hidden download>Download mesh</a
+        ><button id="export-build" class="button primary">Create export</button>
+      </div>
+    </dialog>
+    <dialog id="history-dialog" aria-labelledby="history-title">
+      <div class="dialog-header">
+        <h2 id="history-title">History & checkpoints</h2>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close history"
+          data-icon="close"
+        ></button>
+      </div>
+      <p>
+        Save the current result as a new starting point when an editing layer
+        approaches its history limit. Previous history is archived, not deleted.
+        The original image and AI depth remain intact.
+      </p>
+      <label for="checkpoint-layer">Layer to checkpoint</label
+      ><select id="checkpoint-layer">
+        <option value="depth">Relief depth</option>
+        <option value="mask">Subject mask</option></select
+      ><button id="create-checkpoint" class="button">Create checkpoint</button>
+      <h3>Archived editing states</h3>
+      <div id="checkpoint-list"></div>
+      <p class="hint">
+        Restoring returns both depth and mask editing state to that checkpoint.
+        Current work is archived first; dimensions and shaping settings stay
+        current.
+      </p>
+    </dialog>
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <div class="dialog-header">
+        <h2 id="settings-title">Workspace settings</h2>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close settings"
+          data-icon="close"
+        ></button>
+      </div>
+      <h3>Appearance</h3>
+      <div class="segmented" aria-label="Appearance">
+        <button data-theme-choice="dark">Dark</button
+        ><button data-theme-choice="light">Light</button>
+      </div>
+      <p class="hint">Your choice is remembered on this computer.</p>
+      <h3>Local setup</h3>
+      <div id="setup-models"></div>
+      <p class="hint">
+        Installed models work offline. Models needing setup cannot be selected
+        here. The integrated first-run installer is a later milestone.
+      </p>
+      <h3>Storage</h3>
+      <p id="storage-summary" class="hint"></p>
+      <p class="hint">
+        Projects and deleted-project recovery copies are kept locally. Automatic
+        cleanup never removes your edited projects or AI model files.
+      </p>
+    </dialog>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <div class="dialog-header">
+        <h2 id="help-title">A little guidance</h2>
+        <button
+          class="icon-button"
+          data-close
+          aria-label="Close help"
+          data-icon="close"
+        ></button>
+      </div>
+      <h3>From photo to relief</h3>
+      <p>
+        Upload a clear photo, wait for the local depth estimate, then adjust its
+        size and surface. Inspect the 3D result before exporting STL or OBJ.
+      </p>
+      <h3>Move around in 3D</h3>
+      <p>
+        Drag to rotate, scroll to zoom, and right-drag to pan. Use Fit, Reset or
+        the top-view button to find your model again. Painting happens only in
+        Edit view.
+      </p>
+      <h3>Correct the subject or the depth</h3>
+      <p>
+        Background tools paint what belongs to the subject. Sculpt tools raise,
+        lower, smooth or flatten depth. Ctrl/Cmd Z undoes the selected layer;
+        Shift adds redo. Escape closes dialogs or cancels a stroke.
+      </p>
+      <h3>Keep expectations grounded</h3>
+      <p>
+        One photo cannot reveal every contour. Presets change existing settings;
+        they do not reconstruct missing anatomy, reflections or ornament
+        details. A valid solid still needs inspection in your CAM software.
+      </p>
+      <a href="/help.html" class="text-button"
+        >All original parameter explanations</a
+      >
+    </dialog>
+    <script type="module" src="/workspace.js"></script>
   </body>
 </html>

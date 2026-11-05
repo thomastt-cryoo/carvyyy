@@ -30,9 +30,11 @@ def test_library_rename_recoverable_delete_preserves_models_and_other_work(
     assert response.json()["name"] == "Tiger study"
     assert client.patch(f"/api/projects/{sid}", json={"name": "   "}).status_code == 422
     assert client.delete(f"/api/projects/{sid}").json()["recoverable"]
+    assert client.get("/api/projects/deleted").json()["projects"][0]["name"] == "Tiger study"
     assert client.get(f"/api/projects/{sid}").status_code == 404
     assert protected.read_bytes() == b"keep" and sessions.session_dir(another.session_id).exists()
     restored = client.post(f"/api/projects/{sid}/restore").json()
+    assert client.get("/api/projects/deleted").json()["projects"] == []
     assert restored["name"] == "Tiger study"
     assert depth.session_depth_path(sid, params.depth_model).read_bytes() == original
     np.testing.assert_array_equal(editing.working_inputs(sid, params.depth_model)[0], raw)
@@ -97,6 +99,25 @@ def test_damaged_metadata_is_visible_and_repair_keeps_backups_and_ai(document, f
         for p in sessions.session_dir(sid).glob(f"recovery/*/{filename}")
     )
     assert depth.session_depth_path(sid, params.depth_model).read_bytes() == original
+
+
+@pytest.mark.parametrize("filename,content", [("meta.json", "[]"), ("project.json", '{"name":[]}')])
+def test_valid_json_with_invalid_metadata_shape_is_recoverable(document, filename, content):
+    sid, _, _, _ = document
+    (sessions.session_dir(sid) / filename).write_text(content)
+    record = client.get(f"/api/projects/{sid}")
+    assert record.status_code == 200 and record.json()["issues"]
+    assert (
+        client.post(f"/api/projects/{sid}/repair", json={"reset_settings": True}).status_code == 200
+    )
+
+
+def test_missing_original_has_clear_recovery_without_discarding_edits(document):
+    sid, _, _, original = document
+    (sessions.session_dir(sid) / "source.png").write_bytes(b"damaged")
+    result = client.post(f"/api/projects/{sid}/repair", json={"reset_settings": True})
+    assert result.status_code == 400 and "backup" in result.json()["detail"]
+    assert (sessions.session_dir(sid) / "raw_depth_da2-small.npy").read_bytes() == original
 
 
 def test_checkpoint_preserves_result_archives_old_history_and_recovers_later_work(

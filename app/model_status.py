@@ -87,4 +87,5 @@ def availability(model_id: str) -> dict:
         "runtime_installed": runtime,
         "selectable": state in {"installed", "loaded"},
         "setup_reason": reason,
+        "activity": "processing locally" if depth.model_is_processing(model_id) else None,
     }

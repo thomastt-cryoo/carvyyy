@@ -136,6 +136,7 @@ class ModelInfo(BaseModel):
     runtime_installed: bool = False
     selectable: bool = False
     setup_reason: str | None = None
+    activity: str | None = None
 
 
 class ModelsResponse(BaseModel):

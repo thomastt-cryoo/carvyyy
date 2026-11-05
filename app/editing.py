@@ -190,6 +190,7 @@ def public_state(sid: str, model_id: str) -> dict:
             result[channel + "_redo"] = history["cursor"] < len(history["operations"])
             result[channel + "_operations"] = history["cursor"]
         result["depth_orientation"] = "white is nearer / higher relief (before optional inversion)"
+        result["ai_available"] = depth.session_depth_path(sid, model_id).is_file()
         return result
 
 

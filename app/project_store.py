@@ -39,6 +39,14 @@ def document(sid: str) -> dict:
     issues = []
     try:
         meta = sessions.read_meta(sid)
+        if (
+            not isinstance(meta, dict)
+            or not all(
+                isinstance(meta.get(key), int) and meta[key] > 0 for key in ["width", "height"]
+            )
+            or not isinstance(meta.get("original_filename"), str)
+        ):
+            raise ValueError("Invalid project metadata")
     except (ValueError, KeyError, OSError):
         meta = {}
         issues.append("Project information needs repair.")
@@ -47,6 +55,8 @@ def document(sid: str) -> dict:
         saved = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         if not isinstance(saved, dict) or saved.get("version", 1) != 1:
             raise ValueError("Unknown project metadata")
+        if saved and (not isinstance(saved.get("name"), str) or not saved["name"].strip()):
+            raise ValueError("Invalid project name")
     except (ValueError, OSError):
         saved = {}
         issues.append("The project name/settings record needs repair.")
@@ -85,7 +95,10 @@ def read(sid: str) -> dict:
     path = sessions.session_dir(sid) / "project.json"
     if path.exists():
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            value = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(value, dict) or not isinstance(value.get("name"), str):
+                raise ValueError("Invalid project information")
+            return value
         except (ValueError, OSError) as exc:
             raise editing.EditingError(
                 "Repair this project's information before changing it."
@@ -123,8 +136,15 @@ def repair(sid: str, reset_settings: bool = False) -> dict:
     root = sessions.session_dir(sid)
     document(sid)  # Validate directory containment and existence.
     with editing.lock_for(sid):
-        with Image.open(root / sessions.SOURCE_IMAGE_NAME) as photo:
-            width, height = photo.size
+        try:
+            with Image.open(root / sessions.SOURCE_IMAGE_NAME) as photo:
+                photo.verify()
+                width, height = photo.size
+        except (OSError, ValueError) as exc:
+            raise editing.EditingError(
+                "The original image is missing or damaged. Restore this project from a backup "
+                "or create a new project from the original photo. Existing work has been kept."
+            ) from exc
         backup = root / "recovery" / (str(time.time_ns()))
         backup.mkdir(parents=True)
         for name in ["meta.json", "project.json", "params.json"]:
