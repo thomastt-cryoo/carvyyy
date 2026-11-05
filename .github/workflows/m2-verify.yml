@@ -1,0 +1,50 @@
+name: M2 platform verification
+on:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'tools/m2/install_segmentation.py'
+      - '.github/workflows/m2-verify.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: m2-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - name: Locked CPU and optional segmentation environment
+        run: uv sync --frozen --extra cpu --extra segmentation
+      - name: Fast regressions (no model inference)
+        run: uv run --no-sync pytest -q --junitxml=fast-tests.xml
+      - name: Explicit verified lightweight segmentation asset
+        run: uv run --no-sync python tools/m2/install_segmentation.py
+      - name: Real local CPU models, corrections and STL/OBJ roundtrips
+        env:
+          P2R_DEVICE: cpu
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          OMP_NUM_THREADS: '4'
+          MKL_NUM_THREADS: '4'
+        run: uv run --no-sync pytest -q -m slow tests/test_m2_smoke.py --junitxml=real-editing.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m2-${{ matrix.os }}
+          path: |
+            fast-tests.xml
+            real-editing.xml
+          if-no-files-found: warn

@@ -61,6 +61,9 @@ def session_dir(session_id: str) -> Path:
     # session, so SessionNotFoundError is the right signal (endpoints already 404 it).
     if not _SESSION_ID_RE.match(session_id):
         raise SessionNotFoundError(session_id)
+    from app.storage import touch_session
+
+    touch_session(session_id)
     return settings.sessions_dir / session_id
 
 
@@ -119,10 +122,18 @@ def create_session(image_bytes: bytes, filename: str) -> SessionInfo:
                 )
 
             megapixels = (img.width * img.height) / 1_000_000
+            if min(img.width, img.height) < 2:
+                raise InvalidImageError("Use a photograph at least 2 by 2 pixels in size.")
             mp_limit = settings.max_upload_megapixels
             if megapixels > mp_limit:
                 raise InvalidImageError(
                     f"Image is {megapixels:.1f} MP; the limit is {mp_limit:.0f} MP."
+                )
+            if max(img.width, img.height) / min(img.width, img.height) > settings.max_image_aspect:
+                raise InvalidImageError(
+                    f"This photograph is too narrow for meaningful AI depth estimation "
+                    f"(maximum aspect ratio {settings.max_image_aspect:g}:1). "
+                    "Crop it to a less extreme rectangle before uploading."
                 )
 
             corrected = ImageOps.exif_transpose(img)

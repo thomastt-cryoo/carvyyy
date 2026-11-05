@@ -15,6 +15,8 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import gaussian_filter
 
+from app import quality
+from app.grid import plan_grid
 from app.schemas import ReliefParams
 
 DETAIL_HIGHPASS_SIGMA_PX = 8.0
@@ -75,8 +77,8 @@ def resize_to_long_side(h: np.ndarray, target_long_side: int) -> np.ndarray:
     if long_side == target_long_side:
         return h.astype(np.float32)
     scale = target_long_side / long_side
-    new_w = max(1, round(width * scale))
-    new_h = max(1, round(height * scale))
+    new_w = max(2, round(width * scale))
+    new_h = max(2, round(height * scale))
     interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_CUBIC
     return cv2.resize(h, (new_w, new_h), interpolation=interp).astype(np.float32)
 
@@ -123,6 +125,13 @@ def compute_heightmap(
     luma: np.ndarray,
     params: ReliefParams,
     target_long_side: int,
+    *,
+    image_shape: tuple[int, int] | None = None,
+    mask: np.ndarray | None = None,
+    feather_mm: float = 0.8,
+    transition_mm: float = 2.0,
+    sculpt_strength: float = 0.0,
+    texture_guard: float = 0.0,
 ) -> np.ndarray:
     """Full pipeline: raw_depth (+ luma, same shape, both at working/inference resolution)
     + params -> heightmap in [0, 1] at the requested grid resolution.
@@ -135,6 +144,8 @@ def compute_heightmap(
             f"raw_depth {raw_depth.shape} and luma {luma.shape} must share a shape "
             "(resample luma to the depth's working resolution before calling)."
         )
+    if not np.isfinite(raw_depth).all() or not np.isfinite(luma).all():
+        raise ValueError("Depth and luminance must contain finite values.")
     h = percentile_clip_normalize(raw_depth, params.depth_floor, params.depth_ceiling)
     if params.invert_depth:
         h = invert(h)
@@ -142,10 +153,34 @@ def compute_heightmap(
     if params.flatten_background:
         h = flatten_background(h, params.background_threshold)
     h = smooth(h, params.smoothing, params.edge_preserve)
-    h = detail_blend(h, luma, params.detail_blend)
-    h = resize_to_long_side(h, target_long_side)
+    h = quality.sculpt_depth(h, sculpt_strength, mask)
+    h = (
+        detail_blend(h, luma, params.detail_blend)
+        if texture_guard <= 0
+        else quality.guarded_detail(h, luma, params.detail_blend, texture_guard)
+    )
+    if mask is not None:
+        if mask.shape != h.shape or not np.isfinite(mask).all():
+            raise ValueError("Mask must be finite and aligned with the depth map.")
+        h *= quality.mask_alpha(mask, params.model_width_mm, feather_mm, transition_mm)
     h = edge_taper(h, params.edge_taper_mm, params.model_width_mm)
-    h = border_frame(h, params.border_frame_mm, params.model_width_mm)
+    # M2: physical aspect and frame boundaries are independent of rounded samples.
+    # The entire finished part, including its frame, shares this vertex budget.
+    plan = plan_grid(image_shape or raw_depth.shape, params, target_long_side)
+    xs, ys = plan.axes()
+    u = ((xs - plan.frame_mm) / plan.image_width_mm * (h.shape[1] - 1)).astype(np.float32)
+    v = (
+        (plan.image_height_mm + plan.frame_mm - ys) / plan.image_height_mm * (h.shape[0] - 1)
+    ).astype(np.float32)
+    map_x, map_y = np.meshgrid(u, v)
+    h = cv2.remap(h, map_x, map_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    if plan.frame_mm > 0:
+        outside = ((xs <= plan.frame_mm) | (xs >= plan.frame_mm + plan.image_width_mm))[None, :]
+        outside = (
+            outside
+            | ((ys <= plan.frame_mm) | (ys >= plan.frame_mm + plan.image_height_mm))[:, None]
+        )
+        h[outside] = 1.0
     return np.clip(h, 0.0, 1.0).astype(np.float32)
 
 
@@ -166,13 +201,16 @@ def hillshade(
     relief_height_mm: float,
     azimuth_deg: float = 315.0,
     altitude_deg: float = 45.0,
+    model_height_mm: float | None = None,
 ) -> np.ndarray:
     """Simple Lambertian hillshade of the heightmap surface -- reads far better than raw
     grayscale for judging relief (SPEC M3). Returns float32 [0, 1].
     """
-    px_size_mm = model_width_mm / h.shape[1]
     z = h.astype(np.float32) * relief_height_mm
-    gy, gx = np.gradient(z, px_size_mm)
+    height_mm = model_height_mm or model_width_mm * h.shape[0] / h.shape[1]
+    gy, gx = np.gradient(
+        z, height_mm / max(1, h.shape[0] - 1), model_width_mm / max(1, h.shape[1] - 1)
+    )
     normal = np.stack([-gx, -gy, np.ones_like(z, dtype=np.float32)], axis=-1)
     normal = normal / np.linalg.norm(normal, axis=-1, keepdims=True)
     az = np.radians(azimuth_deg)

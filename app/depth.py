@@ -22,7 +22,8 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 from PIL import Image
 
-from app.config import MODEL_REGISTRY, ModelSpec, settings
+from app import storage
+from app.config import MODEL_REGISTRY, ModelSpec, model_use_allowed, settings
 from app.sessions import SOURCE_IMAGE_NAME, read_meta, session_dir, write_status
 
 
@@ -268,6 +269,12 @@ def _ensure_backend(model_id: str) -> DepthBackend:
         spec = MODEL_REGISTRY.get(model_id)
         if spec is None:
             raise DepthInferenceError(f"Unknown model_id '{model_id}'.")
+        if not model_use_allowed(model_id):
+            raise BackendUnavailableError(
+                "This model requires separate authorization for commercial use. "
+                "Choose DA2 Small or an approved installed model. The adapter is retained "
+                "for authorized/research builds; restricted weights are not downloaded by default."
+            )
         if not spec.available:
             _make_backend(spec).load("cpu")  # raises BackendUnavailableError with guidance
             # Backstop: never fall through and load a model marked unavailable, even if
@@ -389,9 +396,11 @@ def run_inference(session_id: str, model_id: str) -> np.ndarray:
 
     if sess_path.exists():
         return np.load(sess_path)
-    if cache_path.exists():
-        shutil.copyfile(cache_path, sess_path)
-        return np.load(sess_path)
+    with storage.cache_access():
+        if cache_path.exists():
+            shutil.copyfile(cache_path, sess_path)
+            os.utime(cache_path, None)
+            return np.load(sess_path)
 
     src = session_dir(session_id) / SOURCE_IMAGE_NAME
     if not src.exists():
@@ -407,7 +416,8 @@ def run_inference(session_id: str, model_id: str) -> np.ndarray:
             record_inference_time(model_id, _active_device, time.monotonic() - infer_started)
 
     depth = np.ascontiguousarray(depth.astype(np.float32))
-    np.save(cache_path, depth)
+    with storage.cache_access():
+        np.save(cache_path, depth)
     np.save(sess_path, depth)
     return depth
 
@@ -422,6 +432,11 @@ def start_inference_job(session_id: str, model_id: str) -> None:
 
 
 def _run_job(session_id: str, model_id: str) -> None:
+    with storage.session_lease(session_id):
+        _run_job_leased(session_id, model_id)
+
+
+def _run_job_leased(session_id: str, model_id: str) -> None:
     started = time.monotonic()
     try:
         run_inference(session_id, model_id)

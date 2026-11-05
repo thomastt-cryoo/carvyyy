@@ -3,6 +3,10 @@ on:
   push:
     branches: [codex/m1-foundation]
   pull_request:
+    paths:
+      - 'bootstrapper/**'
+      - 'tools/m1/bootstrap_smoke.py'
+      - '.github/workflows/m1-verify.yml'
   workflow_dispatch:
 permissions:
   contents: read

@@ -16,6 +16,7 @@ dependencies = [
     "opencv-python-headless>=4.10",
     "trimesh>=4.5",
     "fast-simplification>=0.1.7",
+    "psutil>=7.2.2",
 ]
 
 # torch is split into mutually-exclusive extras so the CPU Docker base image never
@@ -24,6 +25,7 @@ dependencies = [
 [project.optional-dependencies]
 cpu = ["torch==2.9.1"]
 cu128 = ["torch==2.9.1"]
+segmentation = ["onnxruntime==1.31.1"]
 
 [dependency-groups]
 dev = [
