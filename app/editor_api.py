@@ -15,7 +15,7 @@ from app import editing, pipeline, segmentation, storage
 from app.config import settings
 from app.resources import export_plan
 from app.schemas import ReliefParams
-from app.sessions import SOURCE_IMAGE_NAME, read_meta, read_params, session_dir
+from app.sessions import SOURCE_IMAGE_NAME, read_meta, read_params, session_file
 
 router = APIRouter(prefix="/api/sessions/{sid}")
 maintenance_router = APIRouter(prefix="/api/storage")
@@ -37,6 +37,12 @@ class CacheCleanup(BaseModel):
     dry_run: bool = True
     max_mb: float | None = Field(None, ge=0)
     retention_days: float | None = Field(None, ge=0)
+    expected_plan: str | None = Field(None, pattern=r"^[0-9a-f]{64}$")
+
+
+class PurgeProject(BaseModel):
+    pending: bool = False
+    expected_plan: str | None = Field(None, pattern=r"^[0-9a-f]{64}$")
 
 
 class RestoreAI(BaseModel):
@@ -53,13 +59,28 @@ def segmentation_status(sid: str):
     read_meta(sid)
     return {
         **segmentation.status(),
-        "source_alpha": (session_dir(sid) / "source-alpha.png").is_file(),
+        "source_alpha": session_file(sid, "source-alpha.png").is_file(),
     }
 
 
 @maintenance_router.post("/cleanup")
 def clean_cache(request: CacheCleanup):
-    return storage.cleanup_cache(**request.model_dump())
+    try:
+        return storage.cleanup_cache(**request.model_dump())
+    except ValueError as exc:
+        raise editing.RevisionConflict(str(exc)) from exc
+
+
+@maintenance_router.post("/purge/{sid}")
+def purge_deleted_project(sid: str, request: PurgeProject):
+    try:
+        return storage.purge_project(sid, **request.model_dump())
+    except ValueError as exc:
+        raise editing.RevisionConflict(str(exc)) from exc
+    except OSError as exc:
+        raise editing.RevisionConflict(
+            "The recovery copy is in use or unavailable. Close files from this project and retry."
+        ) from exc
 
 
 @router.get("/editor")
@@ -159,7 +180,7 @@ def editor_image(
     sid: str, view: Literal["photo", "working", "ai", "mask", "processed"] = "working"
 ):
     if view == "photo":
-        with Image.open(session_dir(sid) / SOURCE_IMAGE_NAME) as source:
+        with Image.open(session_file(sid, SOURCE_IMAGE_NAME)) as source:
             photo = source.convert("RGB")
             photo.thumbnail((768, 768))
             encoded = io.BytesIO()

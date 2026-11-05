@@ -50,7 +50,7 @@ def document(sid: str) -> dict:
     except (ValueError, KeyError, OSError):
         meta = {}
         issues.append("Project information needs repair.")
-    path = root / "project.json"
+    path = sessions.session_file(sid, "project.json")
     try:
         saved = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
         if not isinstance(saved, dict) or saved.get("version", 1) != 1:
@@ -60,7 +60,7 @@ def document(sid: str) -> dict:
     except (ValueError, OSError):
         saved = {}
         issues.append("The project name/settings record needs repair.")
-    if not (root / sessions.SOURCE_IMAGE_NAME).is_file():
+    if not sessions.session_file(sid, sessions.SOURCE_IMAGE_NAME).is_file():
         issues.append("The original image is missing. Restore this project from a backup.")
     try:
         sessions.read_params(sid)
@@ -70,7 +70,11 @@ def document(sid: str) -> dict:
         [root.stat().st_mtime]
         + [
             p.stat().st_mtime
-            for p in [path, root / "params.json", root / "editing/state.json"]
+            for p in [
+                path,
+                sessions.session_file(sid, "params.json"),
+                sessions.session_file(sid, "editing", "state.json"),
+            ]
             if p.is_file()
         ]
     )
@@ -92,7 +96,7 @@ def document(sid: str) -> dict:
 
 def read(sid: str) -> dict:
     info = document(sid)
-    path = sessions.session_dir(sid) / "project.json"
+    path = sessions.session_file(sid, "project.json")
     if path.exists():
         try:
             value = json.loads(path.read_text(encoding="utf-8"))
@@ -113,7 +117,7 @@ def read(sid: str) -> dict:
 
 def write(sid: str, value: dict) -> None:
     value["updated_at"] = timestamp()
-    atomic_json(sessions.session_dir(sid) / "project.json", value)
+    atomic_json(sessions.session_file(sid, "project.json"), value)
 
 
 def all_projects() -> list[dict]:
@@ -133,11 +137,10 @@ def repair(sid: str, reset_settings: bool = False) -> dict:
     from app.depth import select_device
     from app.schemas import ReliefParams
 
-    root = sessions.session_dir(sid)
     document(sid)  # Validate directory containment and existence.
     with editing.lock_for(sid):
         try:
-            with Image.open(root / sessions.SOURCE_IMAGE_NAME) as photo:
+            with Image.open(sessions.session_file(sid, sessions.SOURCE_IMAGE_NAME)) as photo:
                 photo.verify()
                 width, height = photo.size
         except (OSError, ValueError) as exc:
@@ -145,10 +148,10 @@ def repair(sid: str, reset_settings: bool = False) -> dict:
                 "The original image is missing or damaged. Restore this project from a backup "
                 "or create a new project from the original photo. Existing work has been kept."
             ) from exc
-        backup = root / "recovery" / (str(time.time_ns()))
+        backup = sessions.session_file(sid, "recovery", str(time.time_ns()))
         backup.mkdir(parents=True)
         for name in ["meta.json", "project.json", "params.json"]:
-            path = root / name
+            path = sessions.session_file(sid, name)
             if path.is_file():
                 (backup / name).write_bytes(path.read_bytes())
         try:
@@ -166,15 +169,17 @@ def repair(sid: str, reset_settings: bool = False) -> dict:
         except editing.EditingError:
             name = "Recovered project"
         atomic_json(
-            root / "meta.json",
+            sessions.session_file(sid, "meta.json"),
             {
                 "session_id": sid,
                 "original_filename": name + ".png",
                 "width": width,
                 "height": height,
-                "image_hash": hashlib.sha256((root / "source.png").read_bytes()).hexdigest(),
+                "image_hash": hashlib.sha256(
+                    sessions.session_file(sid, sessions.SOURCE_IMAGE_NAME).read_bytes()
+                ).hexdigest(),
                 "status": "ready"
-                if (root / f"raw_depth_{params.depth_model}.npy").exists()
+                if sessions.session_file(sid, f"raw_depth_{params.depth_model}.npy").exists()
                 else "created",
                 "model_id": params.depth_model,
                 "device": None,

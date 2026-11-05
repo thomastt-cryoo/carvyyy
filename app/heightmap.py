@@ -132,6 +132,7 @@ def compute_heightmap(
     transition_mm: float = 2.0,
     sculpt_strength: float = 0.0,
     texture_guard: float = 0.0,
+    cnc_refinement: bool = False,
 ) -> np.ndarray:
     """Full pipeline: raw_depth (+ luma, same shape, both at working/inference resolution)
     + params -> heightmap in [0, 1] at the requested grid resolution.
@@ -159,6 +160,8 @@ def compute_heightmap(
         if texture_guard <= 0
         else quality.guarded_detail(h, luma, params.detail_blend, texture_guard)
     )
+    if cnc_refinement:
+        h = quality.refine_cnc_surface(h, params.model_width_mm, params.relief_height_mm, mask)
     if mask is not None:
         if mask.shape != h.shape or not np.isfinite(mask).all():
             raise ValueError("Mask must be finite and aligned with the depth map.")

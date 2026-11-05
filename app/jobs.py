@@ -14,12 +14,17 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
-from app import editing, meshing, pipeline, storage
+from app import cnc, editing, meshing, pipeline, storage
 from app.resources import require_export_plan
 from app.schemas import ReliefParams
-from app.sessions import read_meta, session_dir
+from app.sessions import read_meta, session_file
 
 _UNSAFE_FILENAME_CHARS = re.compile(r"[^A-Za-z0-9._ -]")
+MAX_INSPECTION_TRIANGLES = 2_250_000
+INSPECTION_LIMIT_REASON = (
+    "This mesh exceeds the in-app inspection limit. Download it to inspect in your CAM software, "
+    "or choose a smaller export for in-app inspection."
+)
 
 
 @dataclass
@@ -30,6 +35,8 @@ class ExportJob:
     error: str | None = None
     file_path: Path | None = None
     preview_path: Path | None = None
+    inspection_note: str | None = None
+    surface: dict | None = None
     filename: str | None = None
     elapsed_s: float | None = None
     # Export summary (SPEC §5.4): triangle count, file size, physical dims.
@@ -59,11 +66,11 @@ def start_export_job(session_id: str, params: ReliefParams) -> str:
     job = ExportJob(job_id=job_id, session_id=session_id)
     with editing.lock_for(session_id):
         job.editor_snapshot = editing.read_state(session_id)
-    with _lock:
-        completed = [key for key, old in _jobs.items() if old.status != "processing"]
-        for key in completed[:-127]:
-            _jobs.pop(key, None)  # Completed files remain in their protected sessions.
-        _jobs[job_id] = job
+        with _lock:
+            completed = [key for key, old in _jobs.items() if old.status != "processing"]
+            for key in completed[:-127]:
+                _jobs.pop(key, None)  # Completed files remain in their protected sessions.
+            _jobs[job_id] = job
     _executor.submit(_run_export, job, params)
     return job_id
 
@@ -112,6 +119,8 @@ def _run_export_leased(job: ExportJob, params: ReliefParams) -> None:
             on_stage=lambda frac, stage: _set_progress(job, frac, stage),
             image_shape=image_shape,
         )
+        _set_progress(job, 0.76, "measuring surface")
+        surface = cnc.surface_report(mesh)
         _set_progress(job, 0.8, f"writing {params.output_format.upper()}")
         data = meshing.export_bytes(mesh, params.output_format)
 
@@ -128,21 +137,40 @@ def _run_export_leased(job: ExportJob, params: ReliefParams) -> None:
             f"x{_fmt_dim_mm(thickness_mm)}mm."
             f"{params.output_format}"
         )
-        out_path = session_dir(job.session_id) / "exports" / job.job_id / filename
+        out_path = session_file(job.session_id, "exports", job.job_id, filename)
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_bytes(data)
+        temporary = out_path.with_suffix(".tmp")
+        try:
+            temporary.write_bytes(data)
+            temporary.replace(out_path)
+        finally:
+            temporary.unlink(missing_ok=True)
         file_bytes = len(data)
         del data
-        _set_progress(job, 0.95, "preparing inspection")
-        # Serialize the same validated, possibly simplified mesh: never resample
-        # the heightmap or rebuild from later project settings for inspection.
-        preview_path = out_path.with_name("inspection.glb")
-        preview_path.write_bytes(meshing.export_bytes(mesh, "glb"))
+        preview_path, inspection_note = None, None
+        if len(mesh.faces) <= MAX_INSPECTION_TRIANGLES:
+            _set_progress(job, 0.95, "preparing inspection")
+            target = session_file(job.session_id, "exports", job.job_id, "inspection.glb")
+            try:
+                target.write_bytes(meshing.export_bytes(mesh, "glb"))
+                preview_path = target
+            except (OSError, MemoryError, ValueError):
+                inspection_note = (
+                    "The export is ready. Its in-app inspection copy could not be saved."
+                )
+                try:
+                    target.unlink(missing_ok=True)
+                except OSError:
+                    pass
+        else:
+            inspection_note = INSPECTION_LIMIT_REASON
 
         with _lock:
             # Endpoint readers don't take this lock, so publish status *last*: they must
             # never observe "ready" while file_path/filename are still None.
             job.preview_path = preview_path
+            job.inspection_note = inspection_note
+            job.surface = surface
             job.file_path = out_path
             job.filename = filename
             job.triangles = len(mesh.faces)

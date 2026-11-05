@@ -4,6 +4,7 @@ Run the normal offline-configured backend on 8098 first. This proxy is a test
 fixture, not a distribution component. It records paths/statuses only.
 """
 
+import argparse
 import json
 import urllib.error
 import urllib.request
@@ -22,10 +23,13 @@ TRACE_LOCK = Lock()
 
 
 class OfflinePreview(BaseHTTPRequestHandler):
+    upstream = "http://127.0.0.1:8098"
+    trace = TRACE
+
     def forward(self):
         body = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         request = urllib.request.Request(
-            "http://127.0.0.1:8098" + self.path,
+            self.upstream + self.path,
             data=body if body else None,
             method=self.command,
             headers={
@@ -55,8 +59,7 @@ class OfflinePreview(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             self.wfile.write(content)
-            TRACE.parent.mkdir(parents=True, exist_ok=True)
-            with TRACE_LOCK, TRACE.open("a", encoding="utf-8") as trace:
+            with TRACE_LOCK, self.trace.open("a", encoding="utf-8") as trace:
                 trace.write(
                     json.dumps(
                         {"method": self.command, "path": self.path, "status": response.status}
@@ -71,7 +74,14 @@ class OfflinePreview(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    TRACE.parent.mkdir(parents=True, exist_ok=True)
-    TRACE.write_text("", encoding="utf-8")
-    print("External-origin-blocked browser acceptance: http://127.0.0.1:8100", flush=True)
-    ThreadingHTTPServer(("127.0.0.1", 8100), OfflinePreview).serve_forever()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--backend-port", type=int, default=8098)
+    parser.add_argument("--port", type=int, default=8100)
+    parser.add_argument("--trace", type=Path, default=TRACE)
+    args = parser.parse_args()
+    OfflinePreview.upstream = f"http://127.0.0.1:{args.backend_port}"
+    OfflinePreview.trace = args.trace
+    args.trace.parent.mkdir(parents=True, exist_ok=True)
+    args.trace.write_text("", encoding="utf-8")
+    print(f"External-origin-blocked browser acceptance: http://127.0.0.1:{args.port}", flush=True)
+    ThreadingHTTPServer(("127.0.0.1", args.port), OfflinePreview).serve_forever()

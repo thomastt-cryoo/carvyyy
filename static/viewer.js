@@ -12,6 +12,7 @@ export function createViewer(element) {
     size,
     active = false,
     serial = 0,
+    fitted = false,
     dark = true,
     keyLight,
     light = { direction: 315, angle: 35, intensity: 1.8 };
@@ -119,10 +120,12 @@ export function createViewer(element) {
       new GLTFLoader().parse(buffer, "", resolve, reject),
     );
     if (version !== serial || !isCurrent()) {
-      result.scene.traverse((o) => o.geometry?.dispose());
+      result.scene.traverse((o) => {
+        o.geometry?.dispose();
+        o.material?.dispose();
+      });
       return;
     }
-    const first = !mesh;
     dispose();
     mesh = result.scene;
     mesh.traverse((o) => {
@@ -147,7 +150,10 @@ export function createViewer(element) {
     grid.position.y = -0.1;
     scene.add(grid);
     theme(dark);
-    if (first || reset) fit(true);
+    if (!fitted || reset) {
+      fit(true);
+      fitted = true;
+    }
     resize();
   }
   return {
@@ -166,10 +172,12 @@ export function createViewer(element) {
         resize();
       }
     },
-    clear() {
+    clear(keepCamera = false) {
       active = false;
+      if (!keepCamera) fitted = false;
       serial++;
       dispose();
+      renderer?.renderLists.dispose();
     },
     top() {
       if (mesh) {

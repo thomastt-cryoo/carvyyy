@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import tempfile
 import threading
 import time
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Protocol, runtime_checkable
@@ -24,7 +24,8 @@ from PIL import Image
 
 from app import storage
 from app.config import MODEL_REGISTRY, ModelSpec, model_use_allowed, settings
-from app.sessions import SOURCE_IMAGE_NAME, read_meta, session_dir, write_status
+from app.path_safety import UnsafePathError, contained_path
+from app.sessions import SOURCE_IMAGE_NAME, read_meta, session_file, write_status
 
 
 class BackendUnavailableError(RuntimeError):
@@ -364,13 +365,43 @@ def estimate_inference_s(model_id: str | None, device: str | None) -> float | No
 
 
 def _cache_path(image_hash: str, model_id: str) -> Path:
-    d = settings.cache_dir / image_hash
-    d.mkdir(parents=True, exist_ok=True)
-    return d / f"raw_depth_{model_id}_{settings.max_infer_px}.npy"
+    if not isinstance(image_hash, str) or not storage._HASH.fullmatch(image_hash):
+        raise DepthInferenceError("The photo fingerprint is damaged. Repair the project first.")
+    return contained_path(
+        settings.cache_dir, image_hash, f"raw_depth_{model_id}_{settings.max_infer_px}.npy"
+    )
 
 
 def session_depth_path(session_id: str, model_id: str) -> Path:
-    return session_dir(session_id) / f"raw_depth_{model_id}.npy"
+    if model_id not in MODEL_REGISTRY:
+        raise DepthInferenceError("Unknown depth model.")
+    return session_file(session_id, f"raw_depth_{model_id}.npy")
+
+
+def load_normalized_depth(path: Path) -> np.ndarray:
+    array = np.load(path, allow_pickle=False)
+    if (
+        not isinstance(array, np.ndarray)
+        or array.ndim != 2
+        or min(array.shape) < 2
+        or array.dtype.kind != "f"
+        or not np.isfinite(array).all()
+        or array.min() < 0
+        or array.max() > 1
+    ):
+        raise ValueError("Expected a finite 2D depth array in the range 0 to 1.")
+    return array.astype(np.float32, copy=False)
+
+
+def save_depth_atomic(path: Path, array: np.ndarray) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{uuid.uuid4().hex}.tmp")
+    try:
+        with temporary.open("xb") as handle:
+            np.save(handle, array, allow_pickle=False)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _downscale_for_inference(image: Image.Image) -> Image.Image:
@@ -392,17 +423,28 @@ def run_inference(session_id: str, model_id: str) -> np.ndarray:
     meta = read_meta(session_id)
     image_hash = meta["image_hash"]
     sess_path = session_depth_path(session_id, model_id)
-    cache_path = _cache_path(image_hash, model_id)
-
     if sess_path.exists():
-        return np.load(sess_path)
+        try:
+            return load_normalized_depth(sess_path)
+        except (OSError, ValueError, EOFError) as exc:
+            raise DepthInferenceError(
+                "The original saved depth is damaged. Restore it from backup or import a depth map."
+            ) from exc
     with storage.cache_access():
-        if cache_path.exists():
-            shutil.copyfile(cache_path, sess_path)
-            os.utime(cache_path, None)
-            return np.load(sess_path)
+        try:
+            cache_path = _cache_path(image_hash, model_id)
+            cached = load_normalized_depth(cache_path)
+        except (OSError, ValueError, EOFError):
+            cached = None
+        if cached is not None:
+            save_depth_atomic(sess_path, cached)
+            try:
+                os.utime(cache_path, None)
+            except OSError:
+                pass
+            return cached
 
-    src = session_dir(session_id) / SOURCE_IMAGE_NAME
+    src = session_file(session_id, SOURCE_IMAGE_NAME)
     if not src.exists():
         raise DepthInferenceError(f"Session {session_id} has no source image.")
 
@@ -416,9 +458,12 @@ def run_inference(session_id: str, model_id: str) -> np.ndarray:
             record_inference_time(model_id, _active_device, time.monotonic() - infer_started)
 
     depth = np.ascontiguousarray(depth.astype(np.float32))
+    save_depth_atomic(sess_path, depth)
     with storage.cache_access():
-        np.save(cache_path, depth)
-    np.save(sess_path, depth)
+        try:
+            save_depth_atomic(_cache_path(image_hash, model_id), depth)
+        except (OSError, UnsafePathError):
+            pass  # An unavailable duplicate cache does not invalidate the original.
     return depth
 
 

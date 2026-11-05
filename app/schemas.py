@@ -112,6 +112,8 @@ class JobStatusResponse(BaseModel):
     error: str | None
     download_url: str | None
     preview_url: str | None = None
+    inspection_note: str | None = None
+    surface: dict[str, float] | None = None
     # Coarse stage-based progress while processing (SPEC §4's `progress?`).
     progress: float = 0.0  # 0..1
     stage: str | None = None

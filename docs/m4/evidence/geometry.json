@@ -1,0 +1,176 @@
+[
+  {
+    "name": "tiger",
+    "format": "stl",
+    "params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 512,
+      "decimate_ratio": 0.95,
+      "output_format": "stl"
+    },
+    "refinement": true,
+    "previews": {
+      "256": {
+        "seconds": 0.9474257000038051,
+        "bytes": 2396716
+      },
+      "512": {
+        "seconds": 0.8152429000037955,
+        "bytes": 9511472
+      }
+    },
+    "export_seconds": 3.59544559999631,
+    "file": "m4-tiger-512.stl",
+    "sha256": "511ad32092c4b634953e788ae9d601fbab9b2976625249d83406230a641fd21e",
+    "triangles": 26418,
+    "bounds_mm": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        150.0,
+        11.0
+      ]
+    ],
+    "inspection_bytes": 476272,
+    "surface": {
+      "max_slope_deg": 90.0,
+      "steep_area_percent": 0.01,
+      "thickness_mm": 11.0
+    },
+    "settled_rss_mib": 378.00390625
+  },
+  {
+    "name": "tiger",
+    "format": "obj",
+    "params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 512,
+      "decimate_ratio": 0.95,
+      "output_format": "obj"
+    },
+    "refinement": true,
+    "previews": {
+      "256": {
+        "seconds": 0.7893305000034161,
+        "bytes": 2396716
+      },
+      "512": {
+        "seconds": 0.779069399999571,
+        "bytes": 9511472
+      }
+    },
+    "export_seconds": 2.9821937999950023,
+    "file": "m4-tiger-512.obj",
+    "sha256": "a7dded554252cd10e1f8c14e686ec6533ff3d826964d953e1b3959346971323f",
+    "triangles": 26418,
+    "bounds_mm": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        150.0,
+        11.0
+      ]
+    ],
+    "inspection_bytes": 476272,
+    "surface": {
+      "max_slope_deg": 90.0,
+      "steep_area_percent": 0.01,
+      "thickness_mm": 11.0
+    },
+    "settled_rss_mib": 405.29296875
+  },
+  {
+    "name": "face",
+    "format": "stl",
+    "params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 512,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "refinement": true,
+    "previews": {
+      "256": {
+        "seconds": 0.4811575999992783,
+        "bytes": 1597972
+      },
+      "512": {
+        "seconds": 0.5554913000014494,
+        "bytes": 6328808
+      }
+    },
+    "export_seconds": 1.4437507999973604,
+    "file": "m4-face-512.stl",
+    "sha256": "21fd3f28697f9a40fa3e84c8504a8df9fec57e6e86fb5f3642e9a9f7417011df",
+    "triangles": 351558,
+    "bounds_mm": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        225.8241729736328,
+        10.982783317565918
+      ]
+    ],
+    "inspection_bytes": 6328808,
+    "surface": {
+      "max_slope_deg": 78.9,
+      "steep_area_percent": 0.27,
+      "thickness_mm": 10.983
+    },
+    "settled_rss_mib": 633.7890625
+  }
+]

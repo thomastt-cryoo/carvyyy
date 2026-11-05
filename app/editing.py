@@ -23,7 +23,8 @@ from scipy.ndimage import gaussian_filter
 
 from app import depth
 from app.config import settings
-from app.sessions import SOURCE_IMAGE_NAME, read_meta, session_dir
+from app.path_safety import UnsafePathError, contained_path
+from app.sessions import SOURCE_IMAGE_NAME, read_meta, session_dir, session_file
 
 
 class EditingError(ValueError):
@@ -63,6 +64,7 @@ class EditorSettings(BaseModel):
     mask_transition_mm: float | None = Field(None, ge=0.1, le=50)
     sculpt_strength: float | None = Field(None, ge=0, le=1)
     texture_guard: float | None = Field(None, ge=0, le=1)
+    cnc_refinement: bool | None = None
     expected_revision: int | None = Field(None, ge=0)
 
 
@@ -80,18 +82,22 @@ def lock_for(sid: str) -> threading.RLock:
 
 def _root(sid: str) -> Path:
     read_meta(sid)
-    return session_dir(sid) / "editing"
+    try:
+        return contained_path(session_dir(sid), "editing")
+    except UnsafePathError as exc:
+        raise EditingError(
+            "Linked editing folders are not supported. Restore the project folder."
+        ) from exc
 
 
 def _file(sid: str, relative: str) -> Path:
     value = PurePosixPath(relative)
     if value.is_absolute() or ".." in value.parts or "\\" in relative or ":" in relative:
         raise EditingError("Unsafe editing document path.")
-    root = _root(sid).resolve()
-    path = root.joinpath(*value.parts).resolve()
-    if not path.is_relative_to(root):
-        raise EditingError("Editing document path leaves its session.")
-    return path
+    try:
+        return contained_path(_root(sid), *value.parts)
+    except UnsafePathError as exc:
+        raise EditingError("Editing document path leaves its session or follows a link.") from exc
 
 
 def _atomic_json(path: Path, value: dict) -> None:
@@ -116,7 +122,7 @@ def _save_array(path: Path, array: np.ndarray) -> None:
 
 
 def read_state(sid: str) -> dict:
-    path = _root(sid) / "state.json"
+    path = _file(sid, "state.json")
     if not path.exists():
         return {
             "version": 1,
@@ -129,6 +135,7 @@ def read_state(sid: str) -> dict:
             "mask_transition_mm": 4.0,
             "sculpt_strength": 0.0,
             "texture_guard": 0.0,
+            "cnc_refinement": False,
             "histories": {},
         }
     try:
@@ -137,8 +144,9 @@ def read_state(sid: str) -> dict:
         state = json.loads(path.read_text(encoding="utf-8"))
         if state.get("version") != 1 or not isinstance(state["histories"], dict):
             raise ValueError("unsupported document version")
+        state.setdefault("cnc_refinement", False)
         return state
-    except (ValueError, KeyError) as exc:
+    except (ValueError, KeyError, AttributeError, OSError) as exc:
         raise EditingError(
             "Cannot read the editing journal. Original photo and AI depth are safe."
         ) from exc
@@ -165,7 +173,7 @@ def _check_revision(state: dict, expected: int | None) -> None:
 
 def _commit(sid: str, state: dict) -> None:
     state["revision"] += 1
-    _atomic_json(_root(sid) / "state.json", state)
+    _atomic_json(_file(sid, "state.json"), state)
 
 
 def _append(sid: str, state: dict, key: str, operation: dict) -> None:
@@ -317,10 +325,13 @@ def base_depth(sid: str, model_id: str, state: dict, *, source: str | None = Non
             f"Depth for '{model_id}' is not ready. "
             "Wait for inference or choose an installed source."
         )
-    array = np.load(path, allow_pickle=False)
-    if array.ndim != 2 or not np.isfinite(array).all() or array.min() < 0 or array.max() > 1:
-        raise EditingError("The depth source must be a finite 2D array in the range 0 to 1.")
-    return np.asarray(array, dtype=np.float32)
+    try:
+        return depth.load_normalized_depth(path)
+    except (OSError, ValueError, EOFError) as exc:
+        raise EditingError(
+            "The saved depth source is damaged. Restore a backup or import a corrected depth map; "
+            "the source has not been overwritten."
+        ) from exc
 
 
 def working_inputs(
@@ -335,16 +346,17 @@ def working_inputs(
         cache_key = hashlib.sha256(
             json.dumps({"key": key, "ops": operations}, sort_keys=True).encode()
         ).hexdigest()
-        root = _root(sid)
-        marker, cache = root / "working-cache.json", root / "working-depth.npy"
-        if (
-            operations
-            and marker.exists()
-            and cache.exists()
-            and json.loads(marker.read_text()).get("key") == cache_key
-        ):
-            working = np.load(cache, allow_pickle=False)
-        else:
+        marker, cache = _file(sid, "working-cache.json"), _file(sid, "working-depth.npy")
+        working = None
+        if operations and marker.exists() and cache.exists():
+            try:
+                if json.loads(marker.read_text()).get("key") == cache_key:
+                    loaded = depth.load_normalized_depth(cache)
+                    if loaded.shape == base.shape:
+                        working = loaded
+            except (OSError, ValueError, EOFError, AttributeError):
+                pass  # Disposable cache: replay immutable source and saved gestures.
+        if working is None:
             working = base.copy() if operations else base
             for op in operations:
                 working = (
@@ -496,7 +508,13 @@ def restore_ai(sid: str, model_id: str, expected_revision: int | None = None) ->
         state = read_state(sid)
         _check_revision(state, expected_revision)
         base_depth(sid, model_id, state, source="ai")
-        state.update(depth_source="ai", mask_enabled=False, sculpt_strength=0.0, texture_guard=0.0)
+        state.update(
+            depth_source="ai",
+            mask_enabled=False,
+            sculpt_strength=0.0,
+            texture_guard=0.0,
+            cnc_refinement=False,
+        )
         _append(sid, state, _key(state, model_id), {"kind": "reset"})
 
 
@@ -512,7 +530,7 @@ def automatic_mask(
 
     if method not in {"auto", "grabcut", "u2netp", "alpha"}:
         raise EditingError("Unknown automatic isolation method.")
-    alpha_path = session_dir(sid) / "source-alpha.png"
+    alpha_path = session_file(sid, "source-alpha.png")
     if method == "alpha" or (method == "auto" and alpha_path.is_file()):
         if not alpha_path.is_file():
             raise EditingError(
@@ -565,7 +583,7 @@ def automatic_mask(
         _check_revision(state, expected_revision)
         raw = base_depth(sid, model_id, state)
         try:
-            with Image.open(session_dir(sid) / SOURCE_IMAGE_NAME) as photo:
+            with Image.open(session_file(sid, SOURCE_IMAGE_NAME)) as photo:
                 photo = photo.convert("RGB")
                 photo.thumbnail((1024, 1024))
                 mask = segmentation.predict(photo, rectangle)
@@ -608,7 +626,7 @@ def _grabcut_mask(
         state = read_state(sid)
         _check_revision(state, expected_revision)
         raw = base_depth(sid, model_id, state)
-        with Image.open(session_dir(sid) / SOURCE_IMAGE_NAME) as image:
+        with Image.open(session_file(sid, SOURCE_IMAGE_NAME)) as image:
             image = image.convert("RGB")
             image.thumbnail((512, 512))
             rgb = np.asarray(image).copy()

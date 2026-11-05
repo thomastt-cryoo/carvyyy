@@ -36,6 +36,26 @@ def guarded_detail(h: np.ndarray, luma: np.ndarray, amount: float, guard: float)
     return (h + amount * 0.15 * detail).astype(np.float32)
 
 
+def refine_cnc_surface(
+    h: np.ndarray, width_mm: float, relief_mm: float, mask: np.ndarray | None = None
+) -> np.ndarray:
+    """Reduce narrow peaks and grooves, with a 0.18 mm maximum height change."""
+    feature_mm = 1.2
+    sigma = max(0.35, feature_mm * (h.shape[1] - 1) / width_mm * 0.35)
+    if mask is None:
+        average = gaussian_filter(h, sigma)
+    else:
+        weight = np.clip(mask, 0, 1)
+        average = gaussian_filter(h * weight, sigma) / np.maximum(
+            gaussian_filter(weight, sigma), 1e-6
+        )
+    allowance = 0.12 * feature_mm / relief_mm
+    residual = h - average
+    delta = allowance * np.tanh(residual / allowance) - residual
+    limit = 0.25 * feature_mm / relief_mm
+    return np.clip(h + 0.6 * np.clip(delta, -limit, limit), 0, 1).astype(np.float32)
+
+
 def mask_alpha(
     mask: np.ndarray, width_mm: float, feather_mm: float, transition_mm: float
 ) -> np.ndarray:

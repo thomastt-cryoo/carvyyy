@@ -7,9 +7,9 @@ import {
   serialQueue,
   savedPreset,
   modelTransition,
-} from "./core.js?v=preview.3";
+} from "./core.js?v=m4.2";
 import { renderIcons, icon } from "./icons.js";
-import { createViewer } from "./viewer.js?v=preview.3";
+import { createViewer } from "./viewer.js?v=m4.1";
 import { createPainting } from "./painting.js";
 
 const $ = (id) => document.getElementById(id);
@@ -46,6 +46,7 @@ let paramTimer = null,
   previewController = null,
   renderedResolution = null,
   inspecting = false,
+  loadingInspection = false,
   planSequence = 0,
   imageURL = null,
   librarySequence = 0,
@@ -287,6 +288,14 @@ for (const field of [
       "PUT",
     ).catch(() => {});
 }
+$("cnc-refinement").setAttribute("aria-describedby", "cnc-refinement-help");
+$("cnc-refinement").onchange = () =>
+  mutate(
+    "/editor",
+    { cnc_refinement: $("cnc-refinement").checked },
+    "Saving surface refinement",
+    "PUT",
+  ).catch(() => {});
 for (const container of document.querySelectorAll("[data-brush-controls]")) {
   for (const [key, label, min, max, step] of [
     ["brushRadius", "Brush radius", 0.1, 50, 0.1],
@@ -421,6 +430,7 @@ function syncEditor() {
     $(id).value = editor[id];
     $(`${id}-value`).textContent = Number(editor[id]).toFixed(2);
   }
+  $("cnc-refinement").checked = Boolean(editor.cnc_refinement);
   const list = $("editor-source"),
     aiOption = new Option(
       editor.ai_available === false
@@ -454,6 +464,7 @@ function syncEditor() {
     "mask-transition",
     "sculpt_strength",
     "texture_guard",
+    "cnc-refinement",
     "preset",
     "editor-source",
     "remove-background",
@@ -483,15 +494,14 @@ function syncEditor() {
   syncParams();
 }
 function invalidateExport() {
+  if (inspecting) leaveInspection();
   state.lastExport = null;
   $("inspect-completed-export").hidden = true;
-  if (inspecting) {
-    inspecting = false;
-    schedulePreview(0);
-  }
   updatePreviewQuality();
   $("download-mesh").hidden = true;
   $("export-result").textContent = "";
+  $("export-surface").hidden = true;
+  $("export-inspection-note").hidden = true;
 }
 function syncProject() {
   $("inspector").inert = !state.params;
@@ -772,6 +782,7 @@ function setPanel(panel) {
 for (const button of document.querySelectorAll("[data-panel]"))
   button.onclick = () => setPanel(button.dataset.panel);
 function setView(view) {
+  leaveInspection();
   state.view = view;
   previewSequence++;
   $("preview-busy").hidden = true;
@@ -835,12 +846,22 @@ $("return-edited").onclick = () => compare(false);
 $("export-return-edited").onclick = () => compare(false);
 function updatePreviewQuality() {
   const exportResolution = state.params?.resolution || "—";
-  $("preview-quality").textContent = inspecting
-    ? `Export mesh: ${state.lastExport?.resolution} · ${state.lastExport?.triangles?.toLocaleString()} triangles`
-    : `Preview: ${renderedResolution || "loading"} · Export: ${exportResolution}`;
+  $("preview-quality").textContent = loadingInspection
+    ? "Loading export mesh"
+    : inspecting
+      ? `Export mesh: ${state.lastExport?.resolution} · ${state.lastExport?.triangles?.toLocaleString()} triangles`
+      : `Preview: ${renderedResolution || "loading"} · Export: ${exportResolution}`;
   $("return-preview").hidden = !inspecting;
+  $("return-preview").textContent = loadingInspection
+    ? "Cancel loading"
+    : "Return to live preview";
   $("inspect-export").disabled =
-    !state.ready || state.compare || Boolean(state.exporting);
+    !state.ready || state.compare || inspecting || Boolean(state.exporting);
+  $("inspect-export").title = state.compare
+    ? "Return to edited to inspect the export."
+    : !state.ready
+      ? "Wait for the project depth to be ready."
+      : "Show the validated export mesh at the selected quality.";
 }
 function cancelPreview() {
   clearTimeout(previewTimer);
@@ -851,8 +872,8 @@ function cancelPreview() {
   $("preview-busy").hidden = true;
 }
 function schedulePreview(delay = 120, interactive = false) {
+  leaveInspection();
   cancelPreview();
-  inspecting = false;
   updatePreviewQuality();
   if (!state.id || !state.ready) return;
   if (["3d", "depth"].includes(state.view)) {
@@ -866,7 +887,18 @@ function schedulePreview(delay = 120, interactive = false) {
       if (e.name !== "AbortError") fail(e, () => schedulePreview(0));
     });
   previewTimer = setTimeout(() => run(interactive ? 256 : 512), delay);
-  if (interactive) detailTimer = setTimeout(() => run(512), 800);
+  if (interactive && state.view === "3d")
+    detailTimer = setTimeout(() => run(512), 800);
+}
+function leaveInspection() {
+  if (!inspecting) return;
+  if (!loadingInspection) {
+    viewer.clear(true);
+    renderedResolution = null;
+  }
+  inspecting = false;
+  loadingInspection = false;
+  cancelPreview();
 }
 async function refreshPreview(resolution = 512) {
   if (!state.id || !state.ready || inspecting) return;
@@ -1054,6 +1086,7 @@ async function openProject(id, reload = false, fresh = false) {
   cancelPreview();
   renderedResolution = null;
   inspecting = false;
+  loadingInspection = false;
   painting.clear();
   viewer.clear();
   $("preview-image").removeAttribute("src");
@@ -1126,6 +1159,7 @@ async function newProject() {
     cancelPreview();
     renderedResolution = null;
     inspecting = false;
+    loadingInspection = false;
     syncProject();
     history.replaceState(null, "", location.pathname);
     try {
@@ -1711,7 +1745,24 @@ const stageNames = {
   decimating: "Reducing triangles",
   "re-validating watertight": "Checking the simplified solid",
   "preparing inspection": "Preparing export inspection",
+  "measuring surface": "Measuring the carved surface",
 };
+function showExportResult(result) {
+  $("download-mesh").href = result.download_url;
+  $("download-mesh").hidden = false;
+  $("inspect-completed-export").hidden = !result.preview_url;
+  $("export-inspection-note").textContent = result.inspection_note || "";
+  $("export-inspection-note").hidden = !result.inspection_note;
+  const surface = result.surface;
+  $("export-surface").hidden = !surface;
+  if (surface) {
+    const slope = surface.max_slope_deg.toFixed(1);
+    const area = surface.steep_area_percent.toFixed(2);
+    $("export-surface").textContent =
+      `Surface check: steepest face ${slope}°, ${area}% of the projected top at 60° or steeper. ` +
+      `Actual thickness ${surface.thickness_mm} mm. Check steep areas and small details with your cutter in CAM.`;
+  }
+}
 async function createExport() {
   if (state.exporting || state.compare) return;
   const token = scope.capture(),
@@ -1727,11 +1778,9 @@ async function createExport() {
     if (state.lastExport?.key === key) {
       const result = await json(`/api/jobs/${state.lastExport.id}`);
       if (result.status === "ready") {
-        $("download-mesh").href = result.download_url;
-        $("download-mesh").hidden = false;
+        showExportResult(result);
         $("export-result").textContent =
           "The existing export matches these saved settings.";
-        $("inspect-completed-export").hidden = false;
         return state.lastExport;
       }
     }
@@ -1741,6 +1790,8 @@ async function createExport() {
     $("export-progress").hidden = false;
     $("export-result").textContent = "";
     $("download-mesh").hidden = true;
+    $("export-surface").hidden = true;
+    $("export-inspection-note").hidden = true;
     $("export-progress-bar").removeAttribute("value");
     const job = await json(`/api/sessions/${token.id}/export`, {
       method: "POST",
@@ -1768,9 +1819,7 @@ async function createExport() {
         resolution: snapshot.resolution,
         triangles: result.triangles,
       };
-      $("inspect-completed-export").hidden = false;
-      $("download-mesh").href = result.download_url;
-      $("download-mesh").hidden = false;
+      showExportResult(result);
       $("export-result").textContent =
         `Export ready · ${result.triangles.toLocaleString()} triangles · ${bytes(result.file_bytes)}`;
       $("export-stage").textContent = "Complete";
@@ -1799,6 +1848,7 @@ $("export-build").onclick = createExport;
 async function inspectExport() {
   if (state.compare || !state.ready || state.exporting) return;
   const token = scope.capture();
+  let inspectionIsCurrent = () => scope.current(token);
   try {
     await flush();
     if (!scope.current(token)) return;
@@ -1821,10 +1871,12 @@ async function inspectExport() {
       );
       return;
     }
+    if (!artifact.preview || !$("export-dialog").open) return;
     $("export-dialog").close();
     setView("3d");
     cancelPreview();
     inspecting = true;
+    loadingInspection = true;
     updatePreviewQuality();
     const sequence = previewSequence,
       current = () =>
@@ -1832,17 +1884,23 @@ async function inspectExport() {
         previewSequence === sequence &&
         inspecting &&
         state.lastExport === artifact;
+    inspectionIsCurrent = current;
     $("preview-busy").hidden = false;
     $("preview-busy-label").textContent = "Loading actual exported mesh";
-    const buffer = await (await api(artifact.preview)).arrayBuffer();
+    previewController = new AbortController();
+    const buffer = await (
+      await api(artifact.preview, { signal: previewController.signal })
+    ).arrayBuffer();
     if (!current()) return;
     await viewer.load(buffer, false, current);
     if (current()) {
+      loadingInspection = false;
+      updatePreviewQuality();
       viewer.visible(true);
       $("preview-busy").hidden = true;
     }
   } catch (error) {
-    if (scope.current(token)) {
+    if (inspectionIsCurrent() && error.name !== "AbortError") {
       schedulePreview(0);
       fail(error, inspectExport);
     }
@@ -1851,17 +1909,125 @@ async function inspectExport() {
 $("inspect-export").onclick = inspectExport;
 $("inspect-completed-export").onclick = inspectExport;
 
+async function refreshStorage() {
+  const data = await json("/api/storage");
+  $("storage-summary").textContent = [
+    `Active projects ${bytes(data.active_project_bytes)}`,
+    `Recovery copies ${bytes(data.deleted_project_bytes)}`,
+    `Duplicate depth ${bytes(data.cache_bytes)}`,
+    `Working cache ${bytes(data.working_cache_bytes)}`,
+    `Exports ${bytes(data.export_bytes)}`,
+    `Inspection copies ${bytes(data.inspection_bytes)}`,
+    `Models ${bytes(data.model_bytes)}`,
+  ].join(" · ");
+  $("clear-duplicate-cache").disabled = !data.cache_bytes;
+  renderRecoveryStorage(
+    "storage-deleted",
+    "Deleted projects",
+    data.deleted_projects,
+  );
+  renderRecoveryStorage(
+    "storage-pending",
+    "Interrupted removals",
+    data.pending_purges,
+    true,
+  );
+}
+function renderRecoveryStorage(id, title, projects, pending = false) {
+  const container = $(id);
+  container.hidden = !projects.length;
+  container.replaceChildren();
+  if (!projects.length) return;
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  container.append(heading);
+  for (const project of projects) {
+    const row = document.createElement("div");
+    row.className = "checkpoint-row";
+    const name = document.createElement("span");
+    name.textContent = `${project.name} · ${bytes(project.bytes)}`;
+    const remove = document.createElement("button");
+    remove.className = "button compact danger";
+    remove.textContent = pending ? "Finish removal" : "Remove permanently";
+    remove.setAttribute("aria-label", `${remove.textContent}: ${project.name}`);
+    remove.onclick = () => purgeRecovery(project, pending, remove);
+    row.append(name, remove);
+    container.append(row);
+  }
+}
+async function purgeRecovery(project, pending, button) {
+  button.disabled = true;
+  const route = `/api/storage/purge/${project.id}`;
+  try {
+    const review = await json(route, { method: "POST", json: { pending } });
+    if (
+      !(await confirm(
+        pending
+          ? "Finish permanent removal?"
+          : "Permanently remove deleted project?",
+        `Remove “${project.name}” and ${bytes(review.bytes)} of its recovery files. This cannot be undone.`,
+        pending ? "Finish removal" : "Remove permanently",
+      ))
+    )
+      return;
+    const result = await json(route, {
+      method: "POST",
+      json: { pending, expected_plan: review.plan },
+    });
+    $("storage-result").textContent = result.pending
+      ? "Some files are still in use. Close them and choose Finish removal."
+      : "The selected recovery copy was removed.";
+    await refreshStorage();
+    await refreshDeleted();
+  } catch (error) {
+    $("storage-result").textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+$("clear-duplicate-cache").onclick = async () => {
+  const button = $("clear-duplicate-cache");
+  button.disabled = true;
+  try {
+    const options = { max_mb: 0, retention_days: 0 };
+    const review = await json("/api/storage/cleanup", {
+      method: "POST",
+      json: options,
+    });
+    if (!review.eligible_bytes) {
+      $("storage-result").textContent =
+        "Recent or in-use predictions are kept. No duplicate files are eligible right now.";
+      return;
+    }
+    if (
+      !(await confirm(
+        "Clear duplicate depth cache?",
+        `Free up to ${bytes(review.eligible_bytes)}. Saved projects and model files stay available.`,
+        "Clear duplicates",
+      ))
+    )
+      return;
+    const result = await json("/api/storage/cleanup", {
+      method: "POST",
+      json: { ...options, dry_run: false, expected_plan: review.plan },
+    });
+    $("storage-result").textContent =
+      `Freed ${bytes(result.removed_bytes)}.` +
+      (result.errors.length ? " Some files were in use and were kept." : "");
+  } catch (error) {
+    $("storage-result").textContent = error.message;
+  } finally {
+    button.disabled = false;
+    await refreshStorage().catch(() => {});
+  }
+};
 $("open-settings").onclick = async () => {
   modal("settings-dialog");
+  $("storage-result").textContent = "";
   try {
-    const [models, storage] = await Promise.all([
-      json("/api/models"),
-      json("/api/storage"),
-    ]);
+    const [models] = await Promise.all([json("/api/models"), refreshStorage()]);
     state.models = models.models;
     renderModels();
-    $("storage-summary").textContent =
-      `Projects: ${bytes(storage.protected_session_bytes)} · Shared depth cache: ${bytes(storage.cache_bytes)} · Models: ${bytes(storage.model_bytes)}`;
   } catch (e) {
     $("storage-summary").textContent = e.message;
   }

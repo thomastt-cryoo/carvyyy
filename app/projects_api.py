@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Literal
 
@@ -12,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from app import depth, editing, jobs, project_store, sessions, storage
 from app.config import MODEL_REGISTRY, resolve_default_model, settings
 from app.model_status import availability
+from app.path_safety import UnsafePathError, contained_path
 from app.schemas import ReliefParams
 
 router = APIRouter(prefix="/api/projects")
@@ -63,25 +63,8 @@ def project_list():
 
 @router.get("/deleted")
 def deleted_projects():
-    root = settings.sessions_dir.resolve().parent / "project-trash"
-    records = []
-    if not root.is_dir() or root.is_symlink():
-        return {"projects": records}
-    for path in root.iterdir():
-        if (
-            not sessions._SESSION_ID_RE.fullmatch(path.name)
-            or path.is_symlink()
-            or not path.resolve().is_relative_to(root)
-            or not path.is_dir()
-        ):
-            continue
-        try:
-            value = json.loads((path / "project.json").read_text())
-            name = value.get("name", "Deleted project")
-        except (ValueError, OSError, AttributeError):
-            name = "Deleted project"
-        records.append({"id": path.name, "name": name})
-    return {"projects": records}
+    with storage.maintenance_lock:
+        return {"projects": storage.recovery_projects()}
 
 
 @router.post("/upload")
@@ -188,46 +171,47 @@ def undo_preset(sid: str):
 
 @router.delete("/{sid}")
 def delete_project(sid: str):
-    root = sessions.session_dir(sid)
-    project_store.document(sid)
-    with editing.lock_for(sid):
-        with storage._activity_lock:
-            leased = storage._leases.get(sid, 0)
+    with editing.lock_for(sid), storage.maintenance_lock:
+        root = sessions.session_dir(sid)
+        project_store.document(sid)
         with jobs._lock:
             exporting = any(
                 job.session_id == sid and job.status == "processing" for job in jobs._jobs.values()
             )
-        if leased or depth.is_processing(sid) or exporting:
+        if storage.is_leased(sid) or depth.is_processing(sid) or exporting:
             raise editing.RevisionConflict(
                 "This project is still processing. Wait for it to finish before deleting."
             )
-        parent = settings.sessions_dir.resolve()
-        destination = parent.parent / "project-trash" / sid
-        if root.is_symlink() or not root.resolve().is_relative_to(parent):
-            raise editing.EditingError("Unsafe project directory; deletion was refused.")
-        if (
-            not destination.resolve().is_relative_to(parent.parent / "project-trash")
-            or destination.exists()
-        ):
+        try:
+            destination = contained_path(storage.recovery_root(), sid)
+        except UnsafePathError as exc:
+            raise editing.EditingError("The recovery folder is linked or unsafe.") from exc
+        if destination.exists():
             raise editing.EditingError("A recoverable copy already exists. Restore it first.")
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        root.rename(destination)  # Same parent volume, recoverable; no recursive deletion.
+        try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            root.rename(destination)
+        except OSError as exc:
+            raise editing.RevisionConflict(
+                "The project is in use. Close its files and retry."
+            ) from exc
     return {"deleted": True, "recoverable": True, "id": sid}
 
 
 @router.post("/{sid}/restore")
 def restore_project(sid: str):
-    target = sessions.session_dir(sid)
-    root = settings.sessions_dir.resolve().parent / "project-trash"
-    source = root / sid
-    with editing.lock_for(sid):
-        if (
-            source.is_symlink()
-            or not source.is_dir()
-            or not source.resolve().is_relative_to(root)
-            or target.exists()
-            or not target.resolve().is_relative_to(settings.sessions_dir.resolve())
-        ):
+    with editing.lock_for(sid), storage.maintenance_lock:
+        target = sessions.session_dir(sid)
+        try:
+            source = contained_path(storage.recovery_root(), sid)
+        except UnsafePathError as exc:
+            raise editing.EditingError("The recovery folder is linked or unsafe.") from exc
+        if not source.is_dir() or target.exists():
             raise editing.EditingError("The deleted project cannot be restored to this location.")
-        source.rename(target)
+        try:
+            source.rename(target)
+        except OSError as exc:
+            raise editing.RevisionConflict(
+                "The recovery copy is in use. Close its files and retry."
+            ) from exc
     return project(sid)

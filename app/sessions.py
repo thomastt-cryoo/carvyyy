@@ -19,6 +19,7 @@ import pillow_heif
 from PIL import Image, ImageOps
 
 from app.config import settings
+from app.path_safety import UnsafePathError, contained_path
 from app.schemas import ReliefParams
 
 pillow_heif.register_heif_opener()
@@ -64,11 +65,21 @@ def session_dir(session_id: str) -> Path:
     from app.storage import touch_session
 
     touch_session(session_id)
-    return settings.sessions_dir / session_id
+    try:
+        return contained_path(settings.sessions_dir, session_id)
+    except UnsafePathError as exc:
+        raise SessionNotFoundError(session_id) from exc
+
+
+def session_file(session_id: str, *parts: str) -> Path:
+    try:
+        return contained_path(session_dir(session_id), *parts)
+    except UnsafePathError as exc:
+        raise SessionNotFoundError(session_id) from exc
 
 
 def meta_path(session_id: str) -> Path:
-    return session_dir(session_id) / META_FILE_NAME
+    return session_file(session_id, META_FILE_NAME)
 
 
 def read_meta(session_id: str) -> dict:
@@ -88,7 +99,7 @@ def write_status(session_id: str, **fields: object) -> dict:
 
 
 def params_path(session_id: str) -> Path:
-    return session_dir(session_id) / PARAMS_FILE_NAME
+    return session_file(session_id, PARAMS_FILE_NAME)
 
 
 def read_params(session_id: str) -> ReliefParams:
@@ -170,27 +181,40 @@ def create_session(image_bytes: bytes, filename: str) -> SessionInfo:
         ) from exc
 
     session_id = uuid.uuid4().hex
-    out_dir = session_dir(session_id)
-    out_dir.mkdir(parents=True, exist_ok=False)
+    published = session_dir(session_id)
+    # A failed disk write never publishes a half-created project to the library.
+    out_dir = contained_path(settings.sessions_dir, f".upload-{session_id}")
 
     # Persist the normalized PNG, then hash those exact bytes. The hash is the depth
     # cache key, so re-uploading the same photo (a new session) reuses cached depth.
     source_path = out_dir / SOURCE_IMAGE_NAME
-    corrected.save(source_path, format="PNG")
-    # Retain the user's exact upload plus the normalized cutout for viewing/masking.
-    (out_dir / "original-upload.bin").write_bytes(image_bytes)
-    if alpha is not None and alpha.getextrema()[0] < 255:
-        original.convert("RGBA").save(out_dir / "original-cutout.png", format="PNG")
-        alpha.save(out_dir / "source-alpha.png", format="PNG")
-    image_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
-
-    info = SessionInfo(
-        session_id=session_id,
-        width=corrected.width,
-        height=corrected.height,
-        image_hash=image_hash,
-    )
-    _write_meta(out_dir, info, original_filename=filename)
+    staged = False
+    try:
+        out_dir.mkdir(parents=True, exist_ok=False)
+        staged = True
+        corrected.save(source_path, format="PNG")
+        # Retain exact upload and alpha without exposing an unfinished project.
+        (out_dir / "original-upload.bin").write_bytes(image_bytes)
+        if alpha is not None and alpha.getextrema()[0] < 255:
+            original.convert("RGBA").save(out_dir / "original-cutout.png", format="PNG")
+            alpha.save(out_dir / "source-alpha.png", format="PNG")
+        image_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        info = SessionInfo(session_id, corrected.width, corrected.height, image_hash)
+        _write_meta(out_dir, info, original_filename=filename)
+        out_dir.rename(published)
+    except OSError as exc:
+        # Only our own unpublished upload files are eligible; never recurse.
+        if staged:
+            try:
+                contained_path(settings.sessions_dir, out_dir.name)
+                for child in out_dir.iterdir():
+                    contained_path(out_dir, child.name).unlink()
+                out_dir.rmdir()
+            except (OSError, UnsafePathError):
+                pass
+        raise InvalidImageError(
+            "The photo could not be saved. Check disk space and folder write access, then retry."
+        ) from exc
     return info
 
 

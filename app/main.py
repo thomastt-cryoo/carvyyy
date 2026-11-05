@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 import sys
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -49,7 +50,7 @@ from app.sessions import (
     create_session,
     read_meta,
     read_params,
-    session_dir,
+    session_file,
     write_params,
 )
 
@@ -57,6 +58,7 @@ logger = logging.getLogger("photo2relief")
 
 PREVIEW_MAX_PX = 1024  # SPEC §4: preview PNG capped at ≤ 1024 px
 PREVIEW_MESH_MAX_PX = 512  # Detailed preview; export inspection serves the validated job mesh.
+_mesh_preview_slots = threading.BoundedSemaphore(2)
 
 
 def _error(status_code: int, error: str, detail: str) -> JSONResponse:
@@ -68,6 +70,28 @@ def _error(status_code: int, error: str, detail: str) -> JSONResponse:
 
 def _not_found(session_id: str) -> JSONResponse:
     return _error(404, "not_found", f"No session {session_id}")
+
+
+class ProjectFileResponse(FileResponse):
+    """Protect the file until ASGI has finished sending it."""
+
+    def __init__(self, sid: str, parts: tuple[str, ...], **kwargs):
+        self.sid = sid
+        self.parts = parts
+        super().__init__(session_file(sid, *parts), **kwargs)
+
+    async def __call__(self, scope, receive, send):
+        with storage.session_lease(self.sid):
+            try:
+                path = session_file(self.sid, *self.parts)
+                if not path.is_file():
+                    raise SessionNotFoundError(self.sid)
+            except SessionNotFoundError:
+                await _error(404, "not_found", "This project file is unavailable.")(
+                    scope, receive, send
+                )
+                return
+            await super().__call__(scope, receive, send)
 
 
 @asynccontextmanager
@@ -146,7 +170,7 @@ async def health() -> HealthResponse:
     responses={400: {"model": ErrorResponse}},
 )
 async def create_session_endpoint(image: UploadFile):
-    data = await image.read()
+    data = await image.read(settings.max_upload_bytes + 1)
     try:
         info = create_session(data, image.filename or "upload")
     except InvalidImageError as exc:
@@ -200,13 +224,15 @@ async def session_status(session_id: str):
 async def session_source(session_id: str):
     """The normalized session image (upload-area thumbnail; works across resume)."""
     try:
-        path = session_dir(session_id) / SOURCE_IMAGE_NAME
+        path = session_file(session_id, SOURCE_IMAGE_NAME)
     except SessionNotFoundError:
         return _not_found(session_id)
     if not path.exists():
         return _not_found(session_id)
-    cutout = session_dir(session_id) / "original-cutout.png"
-    return FileResponse(path=cutout if cutout.exists() else path, media_type="image/png")
+    cutout = session_file(session_id, "original-cutout.png")
+    return ProjectFileResponse(
+        session_id, ((cutout if cutout.exists() else path).name,), media_type="image/png"
+    )
 
 
 @app.get(
@@ -326,9 +352,12 @@ def preview_mesh(
     except SessionNotFoundError:
         return _not_found(session_id)
 
-    h, image_shape = pipeline.render_heightmap(session_id, params, resolution, original=original)
-    mesh = meshing.build_relief_mesh(h, params, image_shape=image_shape)
-    return Response(content=meshing.export_bytes(mesh, "glb"), media_type="model/gltf-binary")
+    with _mesh_preview_slots:
+        h, image_shape = pipeline.render_heightmap(
+            session_id, params, resolution, original=original
+        )
+        mesh = meshing.build_relief_mesh(h, params, image_shape=image_shape)
+        return Response(content=meshing.export_bytes(mesh, "glb"), media_type="model/gltf-binary")
 
 
 @app.post(
@@ -365,7 +394,11 @@ async def job_status(job_id: str):
         status=job.status,
         error=job.error,
         download_url=f"/api/jobs/{job_id}/download" if job.status == "ready" else None,
-        preview_url=f"/api/jobs/{job_id}/preview" if job.status == "ready" else None,
+        preview_url=f"/api/jobs/{job_id}/preview"
+        if job.status == "ready" and job.preview_path
+        else None,
+        inspection_note=job.inspection_note,
+        surface=job.surface,
         progress=job.progress,
         stage=job.stage,
         triangles=job.triangles,
@@ -384,7 +417,12 @@ async def job_download(job_id: str):
     if job is None or job.status != "ready" or job.file_path is None:
         return _error(404, "not_found", f"No completed job {job_id}")
     media_type = "application/sla" if job.filename.endswith(".stl") else "model/obj"
-    return FileResponse(path=job.file_path, media_type=media_type, filename=job.filename)
+    return ProjectFileResponse(
+        job.session_id,
+        ("exports", job.job_id, job.filename),
+        media_type=media_type,
+        filename=job.filename,
+    )
 
 
 @app.get("/api/jobs/{job_id}/preview")
@@ -392,7 +430,9 @@ def job_preview(job_id: str):
     job = jobs.get_job(job_id)
     if job is None or job.status != "ready" or job.preview_path is None:
         return _error(404, "not_found", f"No completed inspection for {job_id}")
-    return FileResponse(job.preview_path, media_type="model/gltf-binary")
+    return ProjectFileResponse(
+        job.session_id, ("exports", job.job_id, "inspection.glb"), media_type="model/gltf-binary"
+    )
 
 
 if STATIC_DIR.exists():
