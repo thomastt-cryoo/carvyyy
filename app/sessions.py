@@ -83,7 +83,7 @@ def write_status(session_id: str, **fields: object) -> dict:
     with _meta_lock:
         meta = read_meta(session_id)
         meta.update(fields)
-        meta_path(session_id).write_text(json.dumps(meta, indent=2))
+        atomic_json(meta_path(session_id), meta)
         return meta
 
 
@@ -104,7 +104,13 @@ def read_params(session_id: str) -> ReliefParams:
 def write_params(session_id: str, params: ReliefParams) -> None:
     if not session_dir(session_id).exists():
         raise SessionNotFoundError(session_id)
-    params_path(session_id).write_text(params.model_dump_json(indent=2))
+    atomic_json(params_path(session_id), params.model_dump())
+
+
+def atomic_json(path: Path, value: dict) -> None:
+    temporary = path.with_name(f".{uuid.uuid4().hex}.tmp")
+    temporary.write_text(json.dumps(value, indent=2, allow_nan=False), encoding="utf-8")
+    temporary.replace(path)
 
 
 def create_session(image_bytes: bytes, filename: str) -> SessionInfo:
@@ -139,6 +145,21 @@ def create_session(image_bytes: bytes, filename: str) -> SessionInfo:
             corrected = ImageOps.exif_transpose(img)
             if corrected is None:
                 corrected = img
+            original = corrected.copy()
+            # Composite cutouts on neutral white for inference instead of exposing
+            # hidden transparent RGB pixels as a black rectangular background.
+            alpha = (
+                corrected.convert("RGBA").getchannel("A")
+                if "A" in corrected.getbands() or "transparency" in corrected.info
+                else None
+            )
+            if alpha is not None:
+                if alpha.getextrema()[1] == 0:
+                    raise InvalidImageError(
+                        "This image is fully transparent. Choose an image with a visible subject."
+                    )
+                backdrop = Image.new("RGBA", corrected.size, (255, 255, 255, 255))
+                corrected = Image.alpha_composite(backdrop, corrected.convert("RGBA"))
             corrected = corrected.convert("RGB")
     except InvalidImageError:
         raise
@@ -153,6 +174,11 @@ def create_session(image_bytes: bytes, filename: str) -> SessionInfo:
     # cache key, so re-uploading the same photo (a new session) reuses cached depth.
     source_path = out_dir / SOURCE_IMAGE_NAME
     corrected.save(source_path, format="PNG")
+    # Retain the user's exact upload plus the normalized cutout for viewing/masking.
+    (out_dir / "original-upload.bin").write_bytes(image_bytes)
+    if alpha is not None and alpha.getextrema()[0] < 255:
+        original.convert("RGBA").save(out_dir / "original-cutout.png", format="PNG")
+        alpha.save(out_dir / "source-alpha.png", format="PNG")
     image_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
 
     info = SessionInfo(

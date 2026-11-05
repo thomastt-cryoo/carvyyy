@@ -131,6 +131,11 @@ class ModelInfo(BaseModel):
     use_allowed: bool = True
     platform_available: bool = True
     availability_reason: str | None = None
+    setup_state: str = "unknown"
+    installed: bool = False
+    runtime_installed: bool = False
+    selectable: bool = False
+    setup_reason: str | None = None
 
 
 class ModelsResponse(BaseModel):

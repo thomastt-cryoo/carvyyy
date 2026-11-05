@@ -14,10 +14,21 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
-from app import depth, editing, heightmap, jobs, meshing, pipeline, storage
+from app import (  # noqa: F401
+    checkpoints,
+    depth,
+    editing,
+    heightmap,
+    jobs,
+    meshing,
+    pipeline,
+    storage,
+)
 from app.config import MODEL_REGISTRY, model_use_allowed, resolve_default_model, settings
 from app.editor_api import maintenance_router
 from app.editor_api import router as editor_router
+from app.model_status import availability
+from app.projects_api import router as project_router
 from app.resources import ResourceLimitError, require_export_plan
 from app.schemas import (
     ErrorResponse,
@@ -81,6 +92,7 @@ async def _lifespan(app: FastAPI):
 app = FastAPI(title="Photo2Relief", lifespan=_lifespan)
 app.include_router(editor_router)
 app.include_router(maintenance_router)
+app.include_router(project_router)
 
 
 @app.exception_handler(editing.EditingError)
@@ -193,7 +205,8 @@ async def session_source(session_id: str):
         return _not_found(session_id)
     if not path.exists():
         return _not_found(session_id)
-    return FileResponse(path=path, media_type="image/png")
+    cutout = session_dir(session_id) / "original-cutout.png"
+    return FileResponse(path=cutout if cutout.exists() else path, media_type="image/png")
 
 
 @app.get(
@@ -286,6 +299,7 @@ async def list_models() -> ModelsResponse:
                     if s.backend == "da3" and sys.platform == "darwin"
                     else None
                 ),
+                **availability(s.model_id),
             )
             for s in MODEL_REGISTRY.values()
         ],

@@ -425,15 +425,37 @@ def run_inference(session_id: str, model_id: str) -> np.ndarray:
 # --- background jobs + status -----------------------------------------------------
 
 
+_pending_lock = threading.Lock()
+_pending: dict[str, int] = {}
+
+
+def is_processing(session_id: str) -> bool:
+    with _pending_lock:
+        return bool(_pending.get(session_id))
+
+
 def start_inference_job(session_id: str, model_id: str) -> None:
     """Submit inference to the single-worker executor and track status in meta.json."""
-    write_status(session_id, status="processing", model_id=model_id, device=select_device())
-    _executor.submit(_run_job, session_id, model_id)
+    from app.editing import lock_for
+
+    with lock_for(session_id):
+        write_status(session_id, status="processing", model_id=model_id, device=select_device())
+        with _pending_lock:
+            _pending[session_id] = _pending.get(session_id, 0) + 1
+        _executor.submit(_run_job, session_id, model_id)
 
 
 def _run_job(session_id: str, model_id: str) -> None:
-    with storage.session_lease(session_id):
-        _run_job_leased(session_id, model_id)
+    try:
+        with storage.session_lease(session_id):
+            _run_job_leased(session_id, model_id)
+    finally:
+        with _pending_lock:
+            remaining = _pending.get(session_id, 1) - 1
+            if remaining:
+                _pending[session_id] = remaining
+            else:
+                _pending.pop(session_id, None)
 
 
 def _run_job_leased(session_id: str, model_id: str) -> None:
