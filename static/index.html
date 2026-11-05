@@ -9,7 +9,7 @@
     />
     <title>Photo Relief Studio</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/workspace.css" />
+    <link rel="stylesheet" href="/workspace.css?v=preview.3" />
     <script type="importmap">
       { "imports": { "three": "/vendor/three/three.module.js" } }
     </script>
@@ -164,13 +164,38 @@
             >
               <span data-icon="compare"></span><span>Original AI</span>
             </button>
-            <button
-              id="inspector-toggle"
-              class="icon-button"
-              title="Toggle customization panel"
-              aria-label="Toggle customization panel"
-              data-icon="sliders"
-            ></button>
+          </div>
+          <div
+            class="preview-controls"
+            id="preview-controls"
+            aria-label="Preview quality and lighting"
+          >
+            <span id="preview-quality" role="status">Preview: loading</span>
+            <button id="inspect-export" class="button compact">
+              Inspect export
+            </button>
+            <button id="return-preview" class="text-button" hidden>
+              Return to live preview
+            </button>
+            <label for="light-direction">Light direction</label>
+            <input
+              id="light-direction"
+              type="range"
+              min="0"
+              max="360"
+              value="315"
+            />
+            <label for="light-angle">Light angle</label>
+            <input id="light-angle" type="range" min="10" max="80" value="35" />
+            <label for="light-intensity">Brightness</label>
+            <input
+              id="light-intensity"
+              type="range"
+              min="0.3"
+              max="3"
+              step="0.1"
+              value="1.8"
+            />
           </div>
           <div id="comparison-note" class="comparison-note" hidden>
             Original AI · read-only comparison
@@ -295,14 +320,15 @@
             data-icon="more"
           ></button>
         </div>
-        <div class="panel-tabs" role="tablist" aria-label="Customization tools">
-          <button role="tab" data-panel="adjust" aria-selected="true">
-            Customize</button
-          ><button role="tab" data-panel="background" aria-selected="false">
+        <div
+          class="panel-tabs"
+          role="navigation"
+          aria-label="Settings sections"
+        >
+          <button data-panel="adjust" aria-current="true">Customize</button
+          ><button data-panel="background" aria-current="false">
             Background</button
-          ><button role="tab" data-panel="sculpt" aria-selected="false">
-            Sculpt
-          </button>
+          ><button data-panel="sculpt" aria-current="false">Sculpt</button>
         </div>
         <div class="inspector-content">
           <section data-panel-content="adjust">
@@ -347,10 +373,8 @@
                 <strong id="depth-source-summary">Original AI</strong></span
               ><span data-icon="chevron"></span>
             </button>
-            <details class="advanced" id="advanced-settings">
-              <summary>
-                Advanced settings <span data-icon="chevron"></span>
-              </summary>
+            <div class="advanced" id="advanced-settings">
+              <h3>Size, shaping &amp; model</h3>
               <h3>Size & backing</h3>
               <fieldset id="geometry-fields" class="fields"></fieldset>
               <h3>Depth shaping</h3>
@@ -366,9 +390,10 @@
               <button id="reset-adjustments" class="text-button">
                 Restore adjustment defaults
               </button>
-            </details>
+            </div>
           </section>
-          <section data-panel-content="background" hidden>
+          <section data-panel-content="background">
+            <h3>Background isolation</h3>
             <p class="section-intro">
               Keep the subject.<br /><strong
                 >Let the background fall away.</strong
@@ -424,8 +449,8 @@
                 A wider transition gives the boundary a gentler slope.
               </p>
             </div>
-            <details>
-              <summary>Isolation method</summary>
+            <div>
+              <h3>Isolation method</h3>
               <label for="mask-method" class="sr-only">Isolation method</label
               ><select id="mask-method">
                 <option value="auto">Automatic · best available</option>
@@ -434,12 +459,13 @@
                 <option value="grabcut">GrabCut · built in</option>
               </select>
               <p class="hint" id="segmentation-availability"></p>
-            </details>
+            </div>
             <button id="reset-mask" class="text-button">
               Reset subject mask
             </button>
           </section>
-          <section data-panel-content="sculpt" hidden>
+          <section data-panel-content="sculpt">
+            <h3>Depth editing</h3>
             <p class="section-intro">
               Shape the relief.<br /><strong
                 >One small correction at a time.</strong
@@ -669,6 +695,9 @@
       </div>
       <p id="export-result" role="status"></p>
       <div class="dialog-actions">
+        <button id="inspect-completed-export" class="button" hidden>
+          Inspect this export
+        </button>
         <a id="download-mesh" class="button" hidden download>Download mesh</a
         ><button id="export-build" class="button primary">Create export</button>
       </div>
@@ -767,6 +796,6 @@
         >All original parameter explanations</a
       >
     </dialog>
-    <script type="module" src="/workspace.js?v=m3.4"></script>
+    <script type="module" src="/workspace.js?v=preview.3"></script>
   </body>
 </html>

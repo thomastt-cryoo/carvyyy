@@ -1,5 +1,10 @@
 # Photo Relief Studio — M3 completion report
 
+Follow-up: [Visible settings and progressive preview](PREVIEW_QUALITY.md) records
+the subsequent user-requested 256/512 preview, actual export inspection and
+always-expanded controls. The acceptance results below describe the original M3
+revision; the follow-up has its own verification and captures.
+
 2026-11-05 · `codex/m3-modern-workspace` · [PR #3](https://github.com/thomastt-cryoo/carvyyy/pull/3), based on approved M2 `d34392d29a5970faf051b1a0126249dcf8455508`.
 
 ## A. Executive summary

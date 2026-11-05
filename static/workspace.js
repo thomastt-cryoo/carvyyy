@@ -7,9 +7,9 @@ import {
   serialQueue,
   savedPreset,
   modelTransition,
-} from "./core.js?v=m3.3";
+} from "./core.js?v=preview.3";
 import { renderIcons, icon } from "./icons.js";
-import { createViewer } from "./viewer.js?v=m3.4";
+import { createViewer } from "./viewer.js?v=preview.3";
 import { createPainting } from "./painting.js";
 
 const $ = (id) => document.getElementById(id);
@@ -42,6 +42,10 @@ let paramTimer = null,
   queued = 0,
   previewSequence = 0,
   previewTimer = null,
+  detailTimer = null,
+  previewController = null,
+  renderedResolution = null,
+  inspecting = false,
   planSequence = 0,
   imageURL = null,
   librarySequence = 0,
@@ -205,8 +209,6 @@ for (const b of document.querySelectorAll("[data-theme-choice]"))
 theme(document.documentElement.dataset.theme);
 $("nav-toggle").onclick = () =>
   $("app-shell").classList.toggle("nav-collapsed");
-$("inspector-toggle").onclick = () =>
-  $("app-shell").classList.toggle("inspector-collapsed");
 
 function buildField(field, target) {
   const block = document.createElement("div");
@@ -234,6 +236,7 @@ function buildField(field, target) {
       paramVersion++;
       syncParams();
       invalidateExport();
+      schedulePreview(40, true);
       scheduleParams();
     } catch (e) {
       fail(e);
@@ -388,6 +391,7 @@ function syncParams() {
   }
   $("export-quality").value = state.params.resolution;
   $("export-quality").disabled = state.compare;
+  updatePreviewQuality();
   const meta = state.project?.image;
   if (meta?.w && meta?.h) {
     const width =
@@ -480,6 +484,12 @@ function syncEditor() {
 }
 function invalidateExport() {
   state.lastExport = null;
+  $("inspect-completed-export").hidden = true;
+  if (inspecting) {
+    inspecting = false;
+    schedulePreview(0);
+  }
+  updatePreviewQuality();
   $("download-mesh").hidden = true;
   $("export-result").textContent = "";
 }
@@ -505,6 +515,7 @@ function syncProject() {
   updateSaving();
   syncParams();
   syncEditor();
+  updatePreviewQuality();
 }
 
 async function action(fn, label = "Saving changes") {
@@ -572,11 +583,11 @@ function scheduleParams() {
   clearTimeout(paramTimer);
   paramTimer = setTimeout(() => {
     paramTimer = null;
-    saveParams().catch(() => {});
+    saveParams(false).catch(() => {});
   }, 300);
   updateSaving();
 }
-async function saveParams() {
+async function saveParams(refresh = true) {
   if (!state.id || !state.params) return;
   clearTimeout(paramTimer);
   paramTimer = null;
@@ -604,13 +615,13 @@ async function saveParams() {
     ) {
       state.ready = false;
       waitForDepth(token).catch((e) => fail(e));
-    } else schedulePreview();
+    } else if (refresh) schedulePreview();
     planExport();
     refreshLibrary();
   });
 }
 async function flush() {
-  if (paramTimer !== null) await saveParams();
+  if (paramTimer !== null) await saveParams(false);
   await queue.flush();
 }
 async function reloadProject() {
@@ -749,12 +760,14 @@ async function refreshDeleted() {
 function setPanel(panel) {
   state.panel = panel;
   for (const button of document.querySelectorAll("[data-panel]"))
-    button.setAttribute(
-      "aria-selected",
-      String(button.dataset.panel === panel),
-    );
-  for (const section of document.querySelectorAll("[data-panel-content]"))
-    section.hidden = section.dataset.panelContent !== panel;
+    button.setAttribute("aria-current", String(button.dataset.panel === panel));
+  const section = document.querySelector(`[data-panel-content="${panel}"]`),
+    container = section?.parentElement;
+  if (container)
+    container.scrollTop +=
+      section.getBoundingClientRect().top -
+      container.getBoundingClientRect().top -
+      20;
 }
 for (const button of document.querySelectorAll("[data-panel]"))
   button.onclick = () => setPanel(button.dataset.panel);
@@ -769,6 +782,9 @@ function setView(view) {
   $("paint-pane").hidden = view !== "edit";
   $("edit-toolbar").hidden = view !== "edit";
   $("camera-tools").hidden = view !== "3d";
+  $("preview-controls").hidden = view !== "3d";
+  inspecting = false;
+  updatePreviewQuality();
   viewer.visible(view === "3d" && state.ready);
   $("view-note").textContent =
     view === "3d"
@@ -817,27 +833,54 @@ async function compare(value) {
 $("compare-original").onclick = () => compare(!state.compare);
 $("return-edited").onclick = () => compare(false);
 $("export-return-edited").onclick = () => compare(false);
-function schedulePreview(delay = 220) {
+function updatePreviewQuality() {
+  const exportResolution = state.params?.resolution || "—";
+  $("preview-quality").textContent = inspecting
+    ? `Export mesh: ${state.lastExport?.resolution} · ${state.lastExport?.triangles?.toLocaleString()} triangles`
+    : `Preview: ${renderedResolution || "loading"} · Export: ${exportResolution}`;
+  $("return-preview").hidden = !inspecting;
+  $("inspect-export").disabled =
+    !state.ready || state.compare || Boolean(state.exporting);
+}
+function cancelPreview() {
   clearTimeout(previewTimer);
-  if (state.id && state.ready && ["3d", "depth"].includes(state.view)) {
+  clearTimeout(detailTimer);
+  previewController?.abort();
+  viewer.cancelLoad();
+  previewSequence++;
+  $("preview-busy").hidden = true;
+}
+function schedulePreview(delay = 120, interactive = false) {
+  cancelPreview();
+  inspecting = false;
+  updatePreviewQuality();
+  if (!state.id || !state.ready) return;
+  if (["3d", "depth"].includes(state.view)) {
     $("preview-busy").hidden = false;
     $("preview-busy-label").textContent = state.compare
       ? "Loading original AI"
       : "Updating relief";
   }
-  previewTimer = setTimeout(
-    () =>
-      refreshPreview().catch((e) => {
-        fail(e, () => schedulePreview(0));
-      }),
-    delay,
-  );
+  const run = (resolution) =>
+    refreshPreview(resolution).catch((e) => {
+      if (e.name !== "AbortError") fail(e, () => schedulePreview(0));
+    });
+  previewTimer = setTimeout(() => run(interactive ? 256 : 512), delay);
+  if (interactive) detailTimer = setTimeout(() => run(512), 800);
 }
-async function refreshPreview() {
-  if (!state.id || !state.ready) return;
-  const token = scope.capture(),
+async function refreshPreview(resolution = 512) {
+  if (!state.id || !state.ready || inspecting) return;
+  previewController?.abort();
+  previewController = new AbortController();
+  const signal = previewController.signal,
+    token = scope.capture(),
     sequence = ++previewSequence,
     view = state.view;
+  const current = () =>
+    scope.current(token) &&
+    sequence === previewSequence &&
+    state.view === view &&
+    !inspecting;
   if (view === "photo") {
     $("preview-image").src = `/api/sessions/${token.id}/source`;
     $("preview-image").alt = "Original photograph";
@@ -850,33 +893,27 @@ async function refreshPreview() {
   $("preview-busy").hidden = false;
   $("preview-busy-label").textContent = state.compare
     ? "Loading original AI"
-    : "Updating relief";
+    : `Updating preview · ${resolution}`;
   try {
     if (view === "3d") {
       const response = await api(
-        `/api/sessions/${token.id}/preview/mesh?original=${state.compare}`,
-        { method: "POST", json: state.params },
+        `/api/sessions/${token.id}/preview/mesh?original=${state.compare}&resolution=${resolution}`,
+        { method: "POST", json: state.params, signal },
       );
       const buffer = await response.arrayBuffer();
-      if (
-        !scope.current(token) ||
-        sequence !== previewSequence ||
-        state.view !== view
-      )
-        return;
-      await viewer.load(buffer);
+      if (!current()) return;
+      await viewer.load(buffer, false, current);
+      if (!current()) return;
+      renderedResolution = resolution;
       viewer.visible(true);
+      updatePreviewQuality();
     } else {
       const response = await api(
         `/api/sessions/${token.id}/preview/heightmap?grayscale=true&original=${state.compare}`,
+        { signal },
       );
       const blob = await response.blob();
-      if (
-        !scope.current(token) ||
-        sequence !== previewSequence ||
-        state.view !== view
-      )
-        return;
+      if (!current()) return;
       if (imageURL) URL.revokeObjectURL(imageURL);
       imageURL = URL.createObjectURL(blob);
       $("preview-image").src = imageURL;
@@ -884,11 +921,50 @@ async function refreshPreview() {
         ? "Original AI shaped depth"
         : "Edited relief heightmap";
     }
+  } catch (error) {
+    if (current()) throw error;
   } finally {
-    if (scope.current(token) && sequence === previewSequence)
-      $("preview-busy").hidden = true;
+    if (current()) $("preview-busy").hidden = true;
   }
 }
+for (const [id, key] of [
+  ["light-direction", "direction"],
+  ["light-angle", "angle"],
+  ["light-intensity", "intensity"],
+]) {
+  $(id).oninput = () => {
+    viewer.lighting({ [key]: Number($(id).value) });
+    try {
+      localStorage.setItem(
+        "p2r_lighting",
+        JSON.stringify(
+          Object.fromEntries([
+            ["direction", Number($("light-direction").value)],
+            ["angle", Number($("light-angle").value)],
+            ["intensity", Number($("light-intensity").value)],
+          ]),
+        ),
+      );
+    } catch {}
+  };
+}
+try {
+  const saved = JSON.parse(localStorage.getItem("p2r_lighting") || "null");
+  if (saved)
+    for (const [id, key] of [
+      ["light-direction", "direction"],
+      ["light-angle", "angle"],
+      ["light-intensity", "intensity"],
+    ]) {
+      if (Number.isFinite(saved[key])) $(id).value = saved[key];
+    }
+  viewer.lighting({
+    direction: Number($("light-direction").value),
+    angle: Number($("light-angle").value),
+    intensity: Number($("light-intensity").value),
+  });
+} catch {}
+$("return-preview").onclick = () => schedulePreview(0);
 function processing(title, detail, retry = false) {
   $("canvas-message").hidden = false;
   $("canvas-message-title").textContent = title;
@@ -975,7 +1051,9 @@ async function openProject(id, reload = false, fresh = false) {
   state.readyModel = null;
   paramVersion++;
   previewSequence++;
-  clearTimeout(previewTimer);
+  cancelPreview();
+  renderedResolution = null;
+  inspecting = false;
   painting.clear();
   viewer.clear();
   $("preview-image").removeAttribute("src");
@@ -1031,7 +1109,6 @@ async function openProject(id, reload = false, fresh = false) {
         processing("Could not finish", e.message, true);
       }
     });
-  if (innerWidth <= 800) $("app-shell").classList.add("inspector-collapsed");
 }
 async function newProject() {
   try {
@@ -1046,7 +1123,9 @@ async function newProject() {
     viewer.clear();
     painting.clear();
     previewSequence++;
-    clearTimeout(previewTimer);
+    cancelPreview();
+    renderedResolution = null;
+    inspecting = false;
     syncProject();
     history.replaceState(null, "", location.pathname);
     try {
@@ -1631,8 +1710,9 @@ const stageNames = {
   "validating watertight": "Checking the solid",
   decimating: "Reducing triangles",
   "re-validating watertight": "Checking the simplified solid",
+  "preparing inspection": "Preparing export inspection",
 };
-$("export-build").onclick = async () => {
+async function createExport() {
   if (state.exporting || state.compare) return;
   const token = scope.capture(),
     name = state.project.name;
@@ -1640,7 +1720,8 @@ $("export-build").onclick = async () => {
     await flush();
     if (!scope.current(token)) return;
     await planExport();
-    if (!scope.current(token) || !state.plan?.allowed) return;
+    if (!scope.current(token) || !state.plan?.allowed || state.exporting)
+      return;
     const snapshot = JSON.parse(JSON.stringify(state.params)),
       key = JSON.stringify(snapshot) + ":" + state.editor.revision;
     if (state.lastExport?.key === key) {
@@ -1650,10 +1731,12 @@ $("export-build").onclick = async () => {
         $("download-mesh").hidden = false;
         $("export-result").textContent =
           "The existing export matches these saved settings.";
-        return;
+        $("inspect-completed-export").hidden = false;
+        return state.lastExport;
       }
     }
     state.exporting = { id: token.id };
+    updatePreviewQuality();
     $("export-build").disabled = true;
     $("export-progress").hidden = false;
     $("export-result").textContent = "";
@@ -1677,12 +1760,21 @@ $("export-build").onclick = async () => {
     } while (result.status === "processing");
     if (result.status === "error") throw new Error(result.error);
     if (scope.current(token)) {
-      state.lastExport = { key, id: job.job_id, url: result.download_url };
+      state.lastExport = {
+        key,
+        id: job.job_id,
+        url: result.download_url,
+        preview: result.preview_url,
+        resolution: snapshot.resolution,
+        triangles: result.triangles,
+      };
+      $("inspect-completed-export").hidden = false;
       $("download-mesh").href = result.download_url;
       $("download-mesh").hidden = false;
       $("export-result").textContent =
         `Export ready · ${result.triangles.toLocaleString()} triangles · ${bytes(result.file_bytes)}`;
       $("export-stage").textContent = "Complete";
+      return state.lastExport;
     } else
       toast(
         `“${name}” export is ready.`,
@@ -1699,9 +1791,65 @@ $("export-build").onclick = async () => {
     if (scope.current(token)) {
       $("export-progress").hidden = true;
       planExport();
+      updatePreviewQuality();
     }
   }
-};
+}
+$("export-build").onclick = createExport;
+async function inspectExport() {
+  if (state.compare || !state.ready || state.exporting) return;
+  const token = scope.capture();
+  try {
+    await flush();
+    if (!scope.current(token)) return;
+    await planExport();
+    if (!scope.current(token)) return;
+    if (!state.plan?.allowed) {
+      if (!$("export-dialog").open) modal("export-dialog");
+      return;
+    }
+    if (!$("export-dialog").open) modal("export-dialog");
+    const artifact = await createExport();
+    if (!artifact || !scope.current(token) || state.lastExport !== artifact)
+      return;
+    if (
+      artifact.key !==
+      JSON.stringify(state.params) + ":" + state.editor.revision
+    ) {
+      toast(
+        "Settings changed during export. Choose Inspect export again to inspect the new settings.",
+      );
+      return;
+    }
+    $("export-dialog").close();
+    setView("3d");
+    cancelPreview();
+    inspecting = true;
+    updatePreviewQuality();
+    const sequence = previewSequence,
+      current = () =>
+        scope.current(token) &&
+        previewSequence === sequence &&
+        inspecting &&
+        state.lastExport === artifact;
+    $("preview-busy").hidden = false;
+    $("preview-busy-label").textContent = "Loading actual exported mesh";
+    const buffer = await (await api(artifact.preview)).arrayBuffer();
+    if (!current()) return;
+    await viewer.load(buffer, false, current);
+    if (current()) {
+      viewer.visible(true);
+      $("preview-busy").hidden = true;
+    }
+  } catch (error) {
+    if (scope.current(token)) {
+      schedulePreview(0);
+      fail(error, inspectExport);
+    }
+  }
+}
+$("inspect-export").onclick = inspectExport;
+$("inspect-completed-export").onclick = inspectExport;
 
 $("open-settings").onclick = async () => {
   modal("settings-dialog");

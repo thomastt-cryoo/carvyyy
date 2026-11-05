@@ -29,6 +29,7 @@ class ExportJob:
     status: str = "processing"  # "processing" | "ready" | "error"
     error: str | None = None
     file_path: Path | None = None
+    preview_path: Path | None = None
     filename: str | None = None
     elapsed_s: float | None = None
     # Export summary (SPEC §5.4): triangle count, file size, physical dims.
@@ -130,14 +131,22 @@ def _run_export_leased(job: ExportJob, params: ReliefParams) -> None:
         out_path = session_dir(job.session_id) / "exports" / job.job_id / filename
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_bytes(data)
+        file_bytes = len(data)
+        del data
+        _set_progress(job, 0.95, "preparing inspection")
+        # Serialize the same validated, possibly simplified mesh: never resample
+        # the heightmap or rebuild from later project settings for inspection.
+        preview_path = out_path.with_name("inspection.glb")
+        preview_path.write_bytes(meshing.export_bytes(mesh, "glb"))
 
         with _lock:
             # Endpoint readers don't take this lock, so publish status *last*: they must
             # never observe "ready" while file_path/filename are still None.
+            job.preview_path = preview_path
             job.file_path = out_path
             job.filename = filename
             job.triangles = len(mesh.faces)
-            job.file_bytes = len(data)
+            job.file_bytes = file_bytes
             job.width_mm = params.total_width_mm
             job.height_mm = round(model_height_mm, 2)
             job.elapsed_s = round(time.monotonic() - started, 3)

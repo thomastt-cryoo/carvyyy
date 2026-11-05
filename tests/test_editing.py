@@ -301,6 +301,17 @@ def test_export_snapshot_roundtrip_after_import_mask_and_edit(document, format):
     )
     assert mesh.vertices[nearest, 2] > 8.5  # Imported+raised snapshot, despite later AI reset.
     assert "exports" in job.file_path.parts and job.job_id in job.file_path.parts
+    # Inspection is the actual validated/simplified export snapshot, not a new
+    # live preview. Later edits must not change either artifact.
+    inspection = trimesh.load(
+        io.BytesIO(job.preview_path.read_bytes()), file_type="glb"
+    ).to_geometry()
+    assert len(inspection.faces) == len(mesh.faces)
+    np.testing.assert_allclose(inspection.bounds, mesh.bounds, atol=0.0001)
+    assert inspection.is_watertight
+    original_inspection = job.preview_path.read_bytes()
+    editing.history_action(sid, configured.depth_model, "depth", "reset")
+    assert job.preview_path.read_bytes() == original_inspection
 
 
 def test_optional_segmentation_fallback_and_mask_persistence(document, monkeypatch):

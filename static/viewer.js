@@ -12,7 +12,9 @@ export function createViewer(element) {
     size,
     active = false,
     serial = 0,
-    dark = true;
+    dark = true,
+    keyLight,
+    light = { direction: 315, angle: 35, intensity: 1.8 };
   const material = new THREE.MeshStandardMaterial({
     color: 0xb8b4ad,
     roughness: 0.85,
@@ -35,9 +37,9 @@ export function createViewer(element) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.12;
     scene.add(new THREE.HemisphereLight(0xffffff, 0x606060, 0.65));
-    const key = new THREE.DirectionalLight(0xffffff, 2);
-    key.position.set(-220, 110, 160);
-    scene.add(key);
+    keyLight = new THREE.DirectionalLight(0xffffff, light.intensity);
+    scene.add(keyLight);
+    lighting(light);
     const fill = new THREE.DirectionalLight(0xffffff, 0.25);
     fill.position.set(200, 60, -100);
     scene.add(fill);
@@ -50,6 +52,18 @@ export function createViewer(element) {
         renderer.render(scene, camera);
       }
     });
+  }
+  function lighting(value) {
+    light = { ...light, ...value };
+    if (!keyLight) return;
+    const azimuth = THREE.MathUtils.degToRad(light.direction),
+      elevation = THREE.MathUtils.degToRad(light.angle);
+    keyLight.position.set(
+      Math.cos(azimuth) * Math.cos(elevation) * 300,
+      Math.sin(elevation) * 300,
+      Math.sin(azimuth) * Math.cos(elevation) * 300,
+    );
+    keyLight.intensity = light.intensity;
   }
   function resize() {
     if (!renderer) return;
@@ -98,13 +112,13 @@ export function createViewer(element) {
     camera.updateProjectionMatrix();
     controls.update();
   }
-  async function load(buffer, reset = false) {
+  async function load(buffer, reset = false, isCurrent = () => true) {
     init();
     const version = ++serial;
     const result = await new Promise((resolve, reject) =>
       new GLTFLoader().parse(buffer, "", resolve, reject),
     );
-    if (version !== serial) {
+    if (version !== serial || !isCurrent()) {
       result.scene.traverse((o) => o.geometry?.dispose());
       return;
     }
@@ -138,6 +152,10 @@ export function createViewer(element) {
   }
   return {
     load,
+    lighting,
+    cancelLoad: () => {
+      serial++;
+    },
     theme,
     fit,
     reset: () => fit(true),

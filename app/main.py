@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import numpy as np
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, Query, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
@@ -56,7 +56,7 @@ from app.sessions import (
 logger = logging.getLogger("photo2relief")
 
 PREVIEW_MAX_PX = 1024  # SPEC §4: preview PNG capped at ≤ 1024 px
-PREVIEW_MESH_MAX_PX = 256  # SPEC §4: 3D preview grid hard-capped at 256 (long side)
+PREVIEW_MESH_MAX_PX = 512  # Detailed preview; export inspection serves the validated job mesh.
 
 
 def _error(status_code: int, error: str, detail: str) -> JSONResponse:
@@ -312,20 +312,21 @@ async def list_models() -> ModelsResponse:
     "/api/sessions/{session_id}/preview/mesh",
     responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
 )
-def preview_mesh(session_id: str, params: ReliefParams, original: bool = False):
-    """Reduced-res relief as binary glTF for the three.js viewport (SPEC §4: grid long
-    side ≤ 256, includes base, target < 2 s CPU). Params come in the body -- unlike the
-    2D preview, this doesn't read params.json, so a slider drag can preview un-saved
-    values. No decimation and no watertight gate here: the preview never ships to CAM,
-    and skipping validation keeps the refresh snappy."""
+def preview_mesh(
+    session_id: str,
+    params: ReliefParams,
+    original: bool = False,
+    resolution: int = Query(256, ge=256, le=PREVIEW_MESH_MAX_PX),
+):
+    """Responsive 256/512 GLB. Export inspection uses the validated job artifact."""
+    if resolution not in (256, 512):
+        return _error(422, "invalid_resolution", "Preview resolution must be 256 or 512.")
     try:
         read_meta(session_id)
     except SessionNotFoundError:
         return _not_found(session_id)
 
-    h, image_shape = pipeline.render_heightmap(
-        session_id, params, PREVIEW_MESH_MAX_PX, original=original
-    )
+    h, image_shape = pipeline.render_heightmap(session_id, params, resolution, original=original)
     mesh = meshing.build_relief_mesh(h, params, image_shape=image_shape)
     return Response(content=meshing.export_bytes(mesh, "glb"), media_type="model/gltf-binary")
 
@@ -364,6 +365,7 @@ async def job_status(job_id: str):
         status=job.status,
         error=job.error,
         download_url=f"/api/jobs/{job_id}/download" if job.status == "ready" else None,
+        preview_url=f"/api/jobs/{job_id}/preview" if job.status == "ready" else None,
         progress=job.progress,
         stage=job.stage,
         triangles=job.triangles,
@@ -383,6 +385,14 @@ async def job_download(job_id: str):
         return _error(404, "not_found", f"No completed job {job_id}")
     media_type = "application/sla" if job.filename.endswith(".stl") else "model/obj"
     return FileResponse(path=job.file_path, media_type=media_type, filename=job.filename)
+
+
+@app.get("/api/jobs/{job_id}/preview")
+def job_preview(job_id: str):
+    job = jobs.get_job(job_id)
+    if job is None or job.status != "ready" or job.preview_path is None:
+        return _error(404, "not_found", f"No completed inspection for {job_id}")
+    return FileResponse(job.preview_path, media_type="model/gltf-binary")
 
 
 if STATIC_DIR.exists():

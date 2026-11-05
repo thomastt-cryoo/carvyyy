@@ -457,6 +457,7 @@ def test_export_full_flow_produces_downloadable_stl(portrait_jpeg_bytes: bytes) 
     params = client.get(f"/api/sessions/{session_id}/params").json()
     _write_fake_depth(session_id, params["depth_model"], shape=(96, 64))
     params["resolution"] = 512
+    params["decimate_ratio"] = 0.5
 
     res = client.post(f"/api/sessions/{session_id}/export", json=params)
     assert res.status_code == 200
@@ -483,6 +484,15 @@ def test_export_full_flow_produces_downloadable_stl(portrait_jpeg_bytes: bytes) 
 
     mesh = trimesh.load(io.BytesIO(download.content), file_type="stl")
     assert mesh.is_watertight
+    assert status["preview_url"] == f"/api/jobs/{job_id}/preview"
+    inspection = client.get(status["preview_url"])
+    assert inspection.status_code == 200
+    assert inspection.headers["content-type"] == "model/gltf-binary"
+    inspected_mesh = trimesh.load(io.BytesIO(inspection.content), file_type="glb").to_geometry()
+    assert len(inspected_mesh.faces) == len(mesh.faces) == status["triangles"]
+    assert len(mesh.faces) < 200_000  # The inspection includes the triangle reduction.
+    np.testing.assert_allclose(inspected_mesh.bounds, mesh.bounds, atol=0.0001)
+    assert inspected_mesh.is_watertight
 
 
 def test_export_obj_format_downloads_as_text(portrait_jpeg_bytes: bytes) -> None:
@@ -510,6 +520,7 @@ def test_job_status_404_for_unknown_job() -> None:
 def test_job_download_404_for_unknown_job() -> None:
     res = client.get("/api/jobs/deadbeef/download")
     assert res.status_code == 404
+    assert client.get("/api/jobs/deadbeef/preview").status_code == 404
 
 
 def test_job_download_404_while_still_processing() -> None:
@@ -520,3 +531,28 @@ def test_job_download_404_while_still_processing() -> None:
 
     res = client.get(f"/api/jobs/{job.job_id}/download")
     assert res.status_code == 404
+    assert client.get(f"/api/jobs/{job.job_id}/preview").status_code == 404
+
+
+@pytest.mark.parametrize("resolution", [256, 512])
+def test_preview_resolution_does_not_change_export_settings(portrait_jpeg_bytes, resolution):
+    import trimesh
+
+    sid = _create_session(portrait_jpeg_bytes)
+    params = client.get(f"/api/sessions/{sid}/params").json()
+    _write_fake_depth(sid, params["depth_model"], (96, 64))
+    response = client.post(f"/api/sessions/{sid}/preview/mesh?resolution={resolution}", json=params)
+    assert response.status_code == 200, response.text
+    mesh = trimesh.load(io.BytesIO(response.content), file_type="glb").to_geometry()
+    # Grids round up intervals so sampling never falls below the requested density.
+    short = int(np.ceil((resolution - 1) * 400 / 600)) + 1
+    assert len(mesh.vertices) == resolution * short + 2 * (resolution + short) - 3
+    assert client.get(f"/api/sessions/{sid}/params").json() == params
+    assert (
+        client.post(f"/api/sessions/{sid}/preview/mesh?resolution=300", json=params).status_code
+        == 422
+    )
+    assert (
+        client.post(f"/api/sessions/{sid}/preview/mesh?resolution=2048", json=params).status_code
+        == 422
+    )
