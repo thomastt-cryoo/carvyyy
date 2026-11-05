@@ -135,6 +135,10 @@ def decimate_mesh(mesh: trimesh.Trimesh, ratio: float) -> trimesh.Trimesh:
     points, faces = fast_simplification.simplify(
         mesh.vertices, mesh.faces, target_reduction=ratio, agg=DEFAULT_DECIMATE_AGGRESSIVENESS
     )
+    # Edge collapses can place vertices just outside the original stock. Keep
+    # simplification inside the measured footprint and above the flat backing.
+    bounds = mesh.bounds
+    np.clip(points, bounds[0], bounds[1], out=points)
     # Edge-collapse simplification preserves surviving faces' original (already-outward)
     # winding, so no fix_normals() pass is needed here either.
     return trimesh.Trimesh(vertices=points, faces=faces, process=True)

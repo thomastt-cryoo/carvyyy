@@ -1,0 +1,122 @@
+{
+  "freecad_version": [
+    "1",
+    "1",
+    "4",
+    "20260928 (Git shallow)",
+    "Unknown",
+    "2026/09/28 13:46:34",
+    "(HEAD detached at 4fd3bf320)",
+    "4fd3bf320d9566a27e60069fc8387448aaa3a094"
+  ],
+  "inputs": [
+    {
+      "file": "m4-tiger-512.stl",
+      "sha256": "511ad32092c4b634953e788ae9d601fbab9b2976625249d83406230a641fd21e",
+      "bytes": 1320984,
+      "type": "Mesh::Feature",
+      "facets": 26418,
+      "points": 13211,
+      "bounds_mm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          150.0,
+          150.0,
+          11.0
+        ]
+      ],
+      "is_solid": true,
+      "volume_mm3": 125518.2578125,
+      "import_seconds": 0.0178
+    },
+    {
+      "file": "m4-tiger-512.obj",
+      "sha256": "a7dded554252cd10e1f8c14e686ec6533ff3d826964d953e1b3959346971323f",
+      "bytes": 958655,
+      "type": "Mesh::Feature",
+      "facets": 26418,
+      "points": 13211,
+      "bounds_mm": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          150.0,
+          150.0,
+          11.0
+        ]
+      ],
+      "is_solid": true,
+      "volume_mm3": 125518.34375,
+      "import_seconds": 0.0772
+    }
+  ],
+  "stage": "cam_surface_attempt_complete",
+  "conversion": {
+    "sewing_tolerance_mm": 0.01,
+    "shells": 1,
+    "shape_seconds": 95.546,
+    "faces": 26418,
+    "closed": true,
+    "bounds_mm": [
+      [
+        -1.1102230246251565e-16,
+        0.0,
+        -4.440892098500626e-16
+      ],
+      [
+        150.0,
+        150.0,
+        11.0
+      ]
+    ],
+    "volume_mm3": 125518.56685922477,
+    "valid": true,
+    "validation_seconds": 6.129
+  },
+  "cam": {
+    "stock_bounds_mm": [
+      [
+        -2.0,
+        -2.0,
+        -1.0
+      ],
+      [
+        152.0,
+        152.0,
+        14.0
+      ]
+    ],
+    "tool": "3 mm ball end",
+    "tool_diameter_mm": 3.0,
+    "step_over_percent": 40.0,
+    "sample_interval_mm": 0.8,
+    "start_depth_mm": 11.0,
+    "final_depth_mm": 3.0,
+    "clearance_height_mm": 17.0,
+    "safe_height_mm": 15.0,
+    "scan": "Planar",
+    "boundary": "Stock",
+    "cut_pattern": "ZigZag",
+    "layer_mode": "Single-pass",
+    "opencamlib": "__init__.py",
+    "recompute_seconds": 10.65,
+    "toolpath_commands": 12537,
+    "cutting_moves_with_z": 11903,
+    "cutting_z_min_max_mm": [
+      3.0,
+      10.998572094970536
+    ],
+    "operation_state": [
+      "Up-to-date"
+    ],
+    "operation_status": "Valid",
+    "toolpath_created": true
+  }
+}

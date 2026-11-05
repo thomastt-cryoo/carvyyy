@@ -1,0 +1,80 @@
+[
+  {
+    "label": "Small",
+    "model": "da2-small",
+    "raw_sha256": "42125bc24f3f11292a84f2b8a2f3ed68e5b311652a3b12af7f017e0757c32eb4",
+    "params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "bounds_mm": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        225.82417582417582,
+        10.98278522491455
+      ]
+    ],
+    "mesh_seconds": 0.499,
+    "nose_minus_cheeks_mm": 1.924
+  },
+  {
+    "label": "DA3",
+    "model": "da3mono-large",
+    "raw_sha256": "88da84eb7a868e93631ee08dde1d1e18995fe92f9b714b990db0bb43fc0843d9",
+    "params": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da3mono-large",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "bounds_mm": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        225.82417582417582,
+        10.641546249389648
+      ]
+    ],
+    "mesh_seconds": 0.434,
+    "nose_minus_cheeks_mm": 0.323
+  }
+]

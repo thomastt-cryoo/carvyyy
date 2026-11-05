@@ -1,0 +1,42 @@
+{
+  "refinement": true,
+  "rapidSwitch": "Pet study",
+  "exportResult": "Export ready · 2,105,334 triangles · 100.4 MB",
+  "surface": "Surface check: steepest face 69.2°, 0.01% of the projected top at 60° or steeper. Actual thickness 11 mm. Check steep areas and small details with your cutter in CAM.",
+  "largeInspection": "Export mesh: 1024 · 2,105,334 triangles",
+  "returnToLive": "Preview: 512 · Export: 1024",
+  "narrow": {
+    "docWidth": 1024,
+    "height": 768,
+    "inspectorVisible": true,
+    "width": 1024
+  },
+  "purgeCancel": true,
+  "cacheCleanup": "Freed 0.0 MB.",
+  "offlinePreview": "Preview: 512 · Export: 1024",
+  "offlineConsole": [],
+  "laptop": {
+    "docWidth": 1366,
+    "height": 768,
+    "inspectorVisible": true,
+    "width": 1366
+  },
+  "freshUpload": {
+    "title": "tiger",
+    "preview": "Preview: 512 · Export: 1024"
+  },
+  "editViewport": {
+    "headerTop": 0,
+    "height": 720,
+    "rootHeight": 720,
+    "rootScroll": 0
+  },
+  "sculptUndo": true,
+  "sculptRedo": true,
+  "chrome": {
+    "preview": "Preview: 512 · Export: 1024",
+    "console": []
+  },
+  "memoryRefusal": "This export needs about 3911 MB of working memory; the current safety budget is 1536 MB. Choose a lower resolution or close other applications. Decimation reduces the file size, but still builds the full grid first.",
+  "finalConsole": []
+}

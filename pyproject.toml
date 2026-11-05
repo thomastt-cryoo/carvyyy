@@ -57,6 +57,7 @@ url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
 markers = [
     "slow: real-inference smoke tests (deselected by default)",
 ]

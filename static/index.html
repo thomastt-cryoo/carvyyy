@@ -9,7 +9,7 @@
     />
     <title>Photo Relief Studio</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/workspace.css?v=preview.3" />
+    <link rel="stylesheet" href="/workspace.css?v=m4.4" />
     <script type="importmap">
       { "imports": { "three": "/vendor/three/three.module.js" } }
     </script>
@@ -177,25 +177,37 @@
             <button id="return-preview" class="text-button" hidden>
               Return to live preview
             </button>
-            <label for="light-direction">Light direction</label>
-            <input
-              id="light-direction"
-              type="range"
-              min="0"
-              max="360"
-              value="315"
-            />
-            <label for="light-angle">Light angle</label>
-            <input id="light-angle" type="range" min="10" max="80" value="35" />
-            <label for="light-intensity">Brightness</label>
-            <input
-              id="light-intensity"
-              type="range"
-              min="0.3"
-              max="3"
-              step="0.1"
-              value="1.8"
-            />
+            <label class="preview-light">
+              Light direction
+              <input
+                id="light-direction"
+                type="range"
+                min="0"
+                max="360"
+                value="315"
+              />
+            </label>
+            <label class="preview-light">
+              Light angle
+              <input
+                id="light-angle"
+                type="range"
+                min="10"
+                max="80"
+                value="35"
+              />
+            </label>
+            <label class="preview-light">
+              Brightness
+              <input
+                id="light-intensity"
+                type="range"
+                min="0.3"
+                max="3"
+                step="0.1"
+                value="1.8"
+              />
+            </label>
           </div>
           <div id="comparison-note" class="comparison-note" hidden>
             Original AI · read-only comparison
@@ -381,6 +393,15 @@
               <fieldset id="shaping-fields" class="fields"></fieldset>
               <h3>Surface refinement</h3>
               <fieldset class="fields" id="quality-fields"></fieldset>
+              <label class="check-row">
+                <input type="checkbox" id="cnc-refinement" />
+                Soften fine ridges and grooves
+              </label>
+              <p class="hint" id="cnc-refinement-help">
+                Reduces narrow surface detail by up to 0.18 mm. Turn it off to
+                restore the original surface. Inspect fine details before
+                export.
+              </p>
               <h3>Depth model</h3>
               <div class="field">
                 <label for="depth_model">Model</label
@@ -543,8 +564,7 @@
       <details id="deleted-projects" hidden>
         <summary>Recently deleted</summary>
         <p class="hint">
-          Local recovery copies are kept until a future storage-management
-          release. Restoring does not change shared models.
+          Restore a project here, or remove a selected recovery copy in Storage.
         </p>
         <div id="deleted-project-list"></div>
       </details>
@@ -694,6 +714,8 @@
         </p>
       </div>
       <p id="export-result" role="status"></p>
+      <p id="export-inspection-note" class="hint" hidden></p>
+      <p id="export-surface" class="notice" hidden></p>
       <div class="dialog-actions">
         <button id="inspect-completed-export" class="button" hidden>
           Inspect this export
@@ -754,10 +776,16 @@
       </p>
       <h3>Storage</h3>
       <p id="storage-summary" class="hint"></p>
+      <button id="clear-duplicate-cache" class="button">
+        Clear duplicate depth cache
+      </button>
       <p class="hint">
-        Projects and deleted-project recovery copies are kept locally. Automatic
-        cleanup never removes your edited projects or AI model files.
+        Duplicate predictions can be regenerated. Project photos, saved depth
+        and edits, exports, and model files are kept.
       </p>
+      <div id="storage-deleted" class="dialog-section"></div>
+      <div id="storage-pending" class="dialog-section" hidden></div>
+      <p id="storage-result" class="hint" role="status"></p>
     </dialog>
     <dialog id="help-dialog" aria-labelledby="help-title">
       <div class="dialog-header">
@@ -796,6 +824,6 @@
         >All original parameter explanations</a
       >
     </dialog>
-    <script type="module" src="/workspace.js?v=preview.3"></script>
+    <script type="module" src="/workspace.js?v=m4.2"></script>
   </body>
 </html>

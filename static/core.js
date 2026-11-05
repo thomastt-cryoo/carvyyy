@@ -180,10 +180,15 @@ export function changeParam(params, id, value) {
     throw new Error("Far depth limit must be below the near depth limit.");
   return result;
 }
-export const bytes = (value) =>
-  value >= 1024 ** 3
-    ? `${(value / 1024 ** 3).toFixed(1)} GB`
-    : `${(value / 1024 ** 2).toFixed(1)} MB`;
+export function bytes(value) {
+  const units = ["B", "KiB", "MiB", "GiB"];
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value.toFixed(unit ? 1 : 0)} ${units[unit]}`;
+}
 export function chooseModel(models, preferred) {
   return (
     models.find((m) => m.model_id === preferred && m.selectable)?.model_id ||

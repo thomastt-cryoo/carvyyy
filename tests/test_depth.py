@@ -256,6 +256,17 @@ def test_run_inference_reuses_cache(monkeypatch, tmp_path) -> None:
     assert np.array_equal(d1, d3)
     assert depth.session_depth_path(info2.session_id, "da2-small").exists()
 
+    # A torn duplicate must be rejected before publishing any session copy.
+    depth._cache_path(info.image_hash, "da2-small").write_bytes(b"broken")
+    info3 = sessions.create_session(make_solid_image_bytes(size=(32, 32)), "third.png")
+    np.testing.assert_array_equal(depth.run_inference(info3.session_id, "da2-small"), fake)
+    assert calls["n"] == 2
+    original = depth.session_depth_path(info3.session_id, "da2-small")
+    original.write_bytes(b"protected damaged original")
+    with pytest.raises(depth.DepthInferenceError, match="original saved depth is damaged"):
+        depth.run_inference(info3.session_id, "da2-small")
+    assert original.read_bytes() == b"protected damaged original" and calls["n"] == 2
+
 
 def test_failed_job_writes_error_status(monkeypatch, tmp_path) -> None:
     """A failing inference must land the session at status=error, never stuck at
