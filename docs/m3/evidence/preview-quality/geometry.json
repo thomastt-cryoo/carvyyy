@@ -1,0 +1,22 @@
+{
+  "resolution": 1024,
+  "reduction": 0.15,
+  "triangles": 1789532,
+  "export_bytes": 74011129,
+  "inspection_bytes": 32212336,
+  "bounds_mm": [
+    [
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      150.0,
+      150.0,
+      11.0
+    ]
+  ],
+  "export_watertight": true,
+  "inspection_watertight": true,
+  "bounds_match_tolerance_mm": 0.0001
+}

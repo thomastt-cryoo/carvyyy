@@ -190,6 +190,7 @@ def public_state(sid: str, model_id: str) -> dict:
             result[channel + "_redo"] = history["cursor"] < len(history["operations"])
             result[channel + "_operations"] = history["cursor"]
         result["depth_orientation"] = "white is nearer / higher relief (before optional inversion)"
+        result["ai_available"] = depth.session_depth_path(sid, model_id).is_file()
         return result
 
 
@@ -509,8 +510,48 @@ def automatic_mask(
 ) -> dict:
     from app import segmentation
 
-    if method not in {"auto", "grabcut", "u2netp"}:
+    if method not in {"auto", "grabcut", "u2netp", "alpha"}:
         raise EditingError("Unknown automatic isolation method.")
+    alpha_path = session_dir(sid) / "source-alpha.png"
+    if method == "alpha" or (method == "auto" and alpha_path.is_file()):
+        if not alpha_path.is_file():
+            raise EditingError(
+                "This image has no original transparency mask. Choose another isolation method."
+            )
+        with lock_for(sid):
+            state = read_state(sid)
+            _check_revision(state, expected_revision)
+            raw = base_depth(sid, model_id, state)
+            with Image.open(alpha_path) as image:
+                mask = np.asarray(image.convert("L"), dtype=np.float32) / 255
+            mask = cv2.resize(mask, (raw.shape[1], raw.shape[0]), interpolation=cv2.INTER_LINEAR)
+            if rectangle is not None:
+                if len(rectangle) != 4 or not np.isfinite(rectangle).all():
+                    raise EditingError("Draw a valid subject rectangle.")
+                x0, y0, x1, y1 = np.clip(rectangle, 0, 1)
+                if x1 <= x0 or y1 <= y0:
+                    raise EditingError("Draw a valid subject rectangle.")
+                selection = np.zeros_like(mask)
+                selection[
+                    int(y0 * mask.shape[0]) : int(y1 * mask.shape[0]),
+                    int(x0 * mask.shape[1]) : int(x1 * mask.shape[1]),
+                ] = 1
+                mask *= selection
+            relative = f"masks/{uuid.uuid4().hex}.npy"
+            _save_array(_file(sid, relative), mask)
+            state["mask_enabled"] = True
+            _append(
+                sid,
+                state,
+                "mask",
+                {"kind": "replace", "file": relative, "method": "alpha", "rectangle": rectangle},
+            )
+            return {
+                "method": "Original image transparency",
+                "foreground_fraction": float(mask.mean()),
+                "note": "Used the cutout already present in your image. "
+                "Keep/remove brushes remain available.",
+            }
     use_model = method == "u2netp" or (method == "auto" and segmentation.status()["available"])
     if not use_model:
         result = _grabcut_mask(

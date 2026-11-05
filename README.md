@@ -7,6 +7,15 @@
 > [M1 foundation/provenance](docs/m1/REPORT.md) is preserved. The final interface
 > and production customer installer remain later milestones.
 
+> M3's redesigned dark workspace is implemented on `codex/m3-modern-workspace`.
+> The [M3 report](docs/m3/REPORT.md) records completed browser acceptance, local
+> regression results and the remaining production/quality limits.
+
+The workspace settings stay expanded and scrollable. The 3D preview uses 256 samples
+for quick adjustments, then 512 after a pause. Visible lighting controls help inspect
+the surface; **Inspect export** shows the actual validated mesh at the selected export
+resolution, including triangle reduction. See [preview quality verification](docs/m3/PREVIEW_QUALITY.md).
+
 Turn a single 2D photograph into a CNC-machinable 2.5D relief mesh. Locally hosted, Docker-based web app: upload a photo, tune the relief interactively with live 2D/3D previews, export a watertight binary STL (or OBJ) in millimeters, and import it straight into Autodesk Fusion for CAM.
 
 Under the hood: monocular depth estimation (Depth Anything family) → heightmap shaping → grid-triangulated solid mesh. No cloud, no accounts, no paid licenses. See `SPEC.md` for the full design; `CLAUDE.md` for build conventions and status.

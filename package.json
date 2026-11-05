@@ -1,0 +1,11 @@
+{
+  "name": "photo-relief-studio-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/frontend/workspace.test.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

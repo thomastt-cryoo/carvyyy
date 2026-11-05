@@ -111,6 +111,7 @@ class JobStatusResponse(BaseModel):
     status: str  # "processing" | "ready" | "error"
     error: str | None
     download_url: str | None
+    preview_url: str | None = None
     # Coarse stage-based progress while processing (SPEC §4's `progress?`).
     progress: float = 0.0  # 0..1
     stage: str | None = None
@@ -131,6 +132,12 @@ class ModelInfo(BaseModel):
     use_allowed: bool = True
     platform_available: bool = True
     availability_reason: str | None = None
+    setup_state: str = "unknown"
+    installed: bool = False
+    runtime_installed: bool = False
+    selectable: bool = False
+    setup_reason: str | None = None
+    activity: str | None = None
 
 
 class ModelsResponse(BaseModel):

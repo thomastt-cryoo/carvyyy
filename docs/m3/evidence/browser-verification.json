@@ -1,0 +1,240 @@
+{
+  "checks": [
+    {
+      "check": "reselect active model retains Export readiness",
+      "passed": true
+    },
+    {
+      "check": "2048 shows actual memory refusal without silent lowering",
+      "passed": true,
+      "message": "READY FOR THE NEXT STEP\n\nExport your relief\n\nExport the saved edited result as a solid mesh. Units: millimetres.\n\nFinished size\n150.0 × 150.0 × 11.0 mm\nMesh resolution\nStandard · 512\nHigh · 1024\nMaximum · 2048\n\nLong-side sample count, including the frame. Higher settings need more memory.\n\nTriangle reduction?\nFile format\nSTL\nOBJ\n\nSTL or OBJ. Import into your other software using millimetres.\n\nStandard = 512, High = 1024, Maximum = 2048. More samples can preserve detail but cannot recover missing geometry.\n\nThis export needs about 3911 MB of working memory; the current safety budget is 1536 MB. Choose a lower resolution or close other applications. Decimation reduces the file size, but still builds the full grid first.\n\nUse Standard quality · 512\n\nCreate export"
+    },
+    {
+      "check": "tiger STL creation and browser download",
+      "passed": true,
+      "download": "Fierce Tiger Mascot Emblem-Photoroom_150x150x11mm.stl"
+    },
+    {
+      "check": "full-grid tiger OBJ creation and download",
+      "passed": true,
+      "download": "Fierce Tiger Mascot Emblem-Photoroom_150x150x11mm.obj"
+    },
+    {
+      "check": "depth PNG16 and float32 browser downloads",
+      "passed": true,
+      "downloads": [
+        "depth-working (1).png",
+        "depth-working.npy"
+      ]
+    },
+    {
+      "check": "PNG16 imported through visible native chooser",
+      "passed": true
+    },
+    {
+      "check": "NPY imported through visible native chooser",
+      "passed": true
+    },
+    {
+      "check": "original AI workflow restored after imported version switching",
+      "passed": true
+    },
+    {
+      "check": "automatic alpha isolation uses cutout and enables mask",
+      "passed": true
+    },
+    {
+      "check": "Keep brush persisted",
+      "passed": true
+    },
+    {
+      "check": "manual keep/remove, keyboard undo and button redo, rectangle isolation and edge controls",
+      "passed": true
+    },
+    {
+      "check": "depth and mask checkpoints created; restored prior state archives current work",
+      "passed": true
+    },
+    {
+      "check": "comparison is read-only and blocks creating an export",
+      "passed": true
+    },
+    {
+      "check": "library filters saved projects",
+      "passed": true
+    },
+    {
+      "check": "rapid project switching ignores in-flight earlier previews",
+      "passed": true
+    },
+    {
+      "check": "all 15 geometry/shaping/model fields persist exact values",
+      "passed": true,
+      "evidence": "browser-advanced-result.json"
+    },
+    {
+      "check": "light appearance persists across page reload",
+      "passed": true
+    },
+    {
+      "check": "invalid upload explains recovery; choosing a real portrait generates a usable project",
+      "passed": true,
+      "projectUrl": "http://127.0.0.1:8098/?session=b7aa06a0621047648d25d1f11182c725"
+    },
+    {
+      "check": "cancel deletion preserves project",
+      "passed": true
+    },
+    {
+      "check": "deleted project restored from persistent Recently deleted list",
+      "passed": true
+    },
+    {
+      "check": "aspect mismatch rejected with explicit Stretch guidance",
+      "passed": true
+    },
+    {
+      "check": "exact 0.15 reduction exported through UI",
+      "passed": true,
+      "download": "Fierce Tiger Mascot Emblem-Photoroom_150x150x11mm (1).obj",
+      "actual_triangles": 449116,
+      "planned_triangles": 449118,
+      "verified_by": "Reimport of actual browser download; reduction target is approximate."
+    },
+    {
+      "check": "corrected aspect/orientation import clears its error and enables editing without installed models",
+      "passed": true,
+      "projectUrl": "http://127.0.0.1:8099/?session=22ce0041fc6c4520bb5f186cb05d656c"
+    },
+    {
+      "check": "project switch after corrected import is no longer blocked",
+      "passed": true
+    },
+    {
+      "check": "browser operates with CSP restricting all requests/assets to local origin; backend HF offline",
+      "passed": true,
+      "console": [],
+      "final_workspace_entry": "m3.4"
+    },
+    {
+      "check": "isolation method grabcut runs and can be undone",
+      "passed": true
+    },
+    {
+      "check": "isolation method u2netp runs and can be undone",
+      "passed": true
+    },
+    {
+      "check": "isolation method alpha runs and can be undone",
+      "passed": true
+    },
+    {
+      "check": "switching to installed DA3 while using imported depth keeps preview/export ready",
+      "passed": true
+    },
+    {
+      "check": "damaged metadata repair reopens a real relief",
+      "passed": true
+    },
+    {
+      "check": "opening the root resumes the last saved project in dark mode",
+      "passed": true
+    }
+  ],
+  "matrix": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "dark",
+      "scrollWidth": 1920,
+      "bodyScrollWidth": 1920,
+      "canvas": true,
+      "screenshot": "workspace-dark-1920.jpg"
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "scrollWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "canvas": true,
+      "screenshot": "workspace-dark-1440.jpg"
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "dark",
+      "scrollWidth": 1366,
+      "bodyScrollWidth": 1366,
+      "canvas": true,
+      "screenshot": "workspace-dark-1366.jpg"
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "scrollWidth": 1024,
+      "bodyScrollWidth": 1024,
+      "canvas": true,
+      "screenshot": "workspace-dark-1024.jpg"
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "scrollWidth": 1920,
+      "bodyScrollWidth": 1920,
+      "canvas": true,
+      "screenshot": "workspace-light-1920.jpg"
+    },
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "scrollWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "canvas": true,
+      "screenshot": "workspace-light-1440.jpg"
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "theme": "light",
+      "scrollWidth": 1366,
+      "bodyScrollWidth": 1366,
+      "canvas": true,
+      "screenshot": "workspace-light-1366.jpg"
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "scrollWidth": 1024,
+      "bodyScrollWidth": 1024,
+      "canvas": true,
+      "screenshot": "workspace-light-1024.jpg"
+    }
+  ],
+  "console": [],
+  "completedAt": "2026-11-05T04:52:50.719Z",
+  "status": "passed",
+  "actual_browser": "Windows ChatGPT in-app browser through CUA",
+  "browser_restoration": "Desktop restart restored browser authorization without network configuration changes.",
+  "original_ai_sha256": {
+    "tiger": "ee82db7a53e9bd809f555891dd887bbfa799f2f6e047c35ce2441f09cd62d2ee",
+    "face": "42125bc24f3f11292a84f2b8a2f3ed68e5b311652a3b12af7f017e0757c32eb4"
+  },
+  "metadata_repair": {
+    "ai_bytes_preserved": true,
+    "damaged_metadata_backup_exists": true
+  },
+  "import_only": {
+    "orientation": "white_is_far",
+    "alignment": "stretch",
+    "ai_available": false
+  },
+  "limits": [
+    "Native OS drag-and-drop and right-button pan gestures were not separately automated; file picker, orbit/scroll and all camera buttons were exercised.",
+    "Browser heap measurements were unavailable in the supported browser tool."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "tiger_stl": {
+    "faces": 528374,
+    "watertight": true,
+    "winding_consistent": true,
+    "volume": 131468.96782561287,
+    "bounds": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        150.0,
+        11.0
+      ]
+    ],
+    "bytes": 26418784,
+    "sha256": "5fc4eb13e43d98098d1b582952ed3276d86aa69f51e885bf66369a0fc6d7216c",
+    "note": "Standard STL vertex welding at reimport."
+  },
+  "tiger_obj_reduced": {
+    "faces": 449116,
+    "watertight": true,
+    "winding_consistent": true,
+    "volume": 130349.18179182317,
+    "bounds": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        150.0,
+        150.0,
+        11.0
+      ]
+    ],
+    "bytes": 18077285,
+    "sha256": "03566579aff4e5cb173d5bcea052e54506d3df396e89ea14343d16f40be8adde"
+  },
+  "decimation_ratio": 0.15,
+  "depth_formats": {
+    "png_bit_depth": 16,
+    "png_colour_type": 0,
+    "npy_dtype": "float32",
+    "npy_shape": [
+      1024,
+      1024
+    ],
+    "finite": true
+  }
+}

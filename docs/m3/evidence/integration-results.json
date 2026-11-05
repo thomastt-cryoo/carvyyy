@@ -1,0 +1,452 @@
+[
+  {
+    "case": "tiger",
+    "session_id": "1b3f58f1ae934eb9bf9acbe9993df2ed",
+    "ai_sha256": "ee82db7a53e9bd809f555891dd887bbfa799f2f6e047c35ce2441f09cd62d2ee",
+    "original_browser_parameters": {
+      "model_width_mm": 150.0,
+      "relief_height_mm": 8.0,
+      "base_thickness_mm": 3.0,
+      "border_frame_mm": 0.0,
+      "depth_model": "da2-small",
+      "invert_depth": false,
+      "gamma": 1.2,
+      "depth_floor": 0.0,
+      "depth_ceiling": 1.0,
+      "flatten_background": false,
+      "background_threshold": 0.15,
+      "smoothing": 2.5,
+      "edge_preserve": true,
+      "detail_blend": 0.12,
+      "edge_taper_mm": 0.0,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "operations": [
+      {
+        "tool": "raise",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.03073210000002291,
+          "baseline_rss_mb": 272.14453125,
+          "peak_rss_mb": 272.171875
+        }
+      },
+      {
+        "tool": "lower",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.029146400003810413,
+          "baseline_rss_mb": 272.703125,
+          "peak_rss_mb": 272.703125
+        }
+      },
+      {
+        "tool": "smooth",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.04116510000312701,
+          "baseline_rss_mb": 272.71875,
+          "peak_rss_mb": 272.71875
+        }
+      },
+      {
+        "tool": "flatten",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.04563090000010561,
+          "baseline_rss_mb": 272.765625,
+          "peak_rss_mb": 272.765625
+        }
+      }
+    ],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 2.2379676999989897,
+          "baseline_rss_mb": 285.3671875,
+          "peak_rss_mb": 499.859375
+        },
+        "watertight": true,
+        "consistent_winding": true,
+        "triangles": 528374,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            150.0,
+            11.0
+          ]
+        ],
+        "bytes": 26418784,
+        "sha256": "d40248af15abf9564201a20bdb1ac5723c0b23525a574fbb7ce1d49f74a177b4"
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 3.94412839999859,
+          "baseline_rss_mb": 424.734375,
+          "peak_rss_mb": 794.5625
+        },
+        "watertight": true,
+        "consistent_winding": true,
+        "triangles": 449116,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            150.0,
+            11.0
+          ]
+        ],
+        "bytes": 18079259,
+        "sha256": "09172784976210a104a653afdfec3a58130298ccf48e6ac3d6e344a9ab9f9d15"
+      }
+    ],
+    "alpha_isolation": {
+      "result": {
+        "method": "Original image transparency",
+        "foreground_fraction": 0.6572504043579102,
+        "note": "Used the cutout already present in your image. Keep/remove brushes remain available."
+      },
+      "timing": {
+        "wall_s": 0.08827130000281613,
+        "baseline_rss_mb": 269.49609375,
+        "peak_rss_mb": 283.58203125
+      }
+    },
+    "png16_max_error": 7.659196853637695e-06,
+    "original_preview_timing": {
+      "wall_s": 0.37233869999909075,
+      "baseline_rss_mb": 274.765625,
+      "peak_rss_mb": 311.44921875
+    },
+    "original_glb_timing": {
+      "wall_s": 0.25594249999994645,
+      "baseline_rss_mb": 275.08984375,
+      "peak_rss_mb": 302.13671875
+    },
+    "edited_preview_timing": {
+      "wall_s": 0.653156599997601,
+      "baseline_rss_mb": 284.078125,
+      "peak_rss_mb": 332.01953125
+    },
+    "edited_glb_timing": {
+      "wall_s": 0.6258531000057701,
+      "baseline_rss_mb": 284.31640625,
+      "peak_rss_mb": 323.66796875
+    },
+    "original_comparison_readonly": true,
+    "original_ai_unchanged": true,
+    "maximum_resource_plan": {
+      "grid": {
+        "rows": 2048,
+        "columns": 2048,
+        "image_width_mm": 150.0,
+        "image_height_mm": 150.0,
+        "frame_mm": 0.0,
+        "width_mm": 150.0,
+        "height_mm": 150.0
+      },
+      "triangles": 8404982,
+      "output_triangles_estimate": 8404982,
+      "output_bytes_estimate": 420249184,
+      "memory_bytes_estimate": 4101500704,
+      "memory_budget_bytes": 648400896,
+      "allowed": false,
+      "message": "This export needs about 3911 MB of working memory; the current safety budget is 618 MB. Choose a lower resolution or close other applications. Decimation reduces the file size, but still builds the full grid first."
+    },
+    "editor": {
+      "version": 1,
+      "revision": 27,
+      "depth_source": "ai",
+      "imported": {
+        "id": "b5ff7fb44f33438cb52479866bfa704b",
+        "filename": "AI exchange.png",
+        "original_shape": [
+          1024,
+          1024
+        ],
+        "working_shape": [
+          1024,
+          1024
+        ],
+        "working_file": "imports/b5ff7fb44f33438cb52479866bfa704b.npy",
+        "white_is_far": false,
+        "alignment": "match",
+        "sha256": "a3b2c4831460c2bd59c161934530a4b3fe27e096dd98a27d4f342a3b11743edc"
+      },
+      "imports": [
+        {
+          "id": "b5ff7fb44f33438cb52479866bfa704b",
+          "filename": "AI exchange.png",
+          "original_shape": [
+            1024,
+            1024
+          ],
+          "working_shape": [
+            1024,
+            1024
+          ],
+          "working_file": "imports/b5ff7fb44f33438cb52479866bfa704b.npy",
+          "white_is_far": false,
+          "alignment": "match",
+          "sha256": "a3b2c4831460c2bd59c161934530a4b3fe27e096dd98a27d4f342a3b11743edc"
+        }
+      ],
+      "mask_enabled": true,
+      "mask_feather_mm": 0.8,
+      "mask_transition_mm": 4.0,
+      "sculpt_strength": 0.0,
+      "texture_guard": 0.3,
+      "depth_undo": true,
+      "depth_redo": true,
+      "depth_operations": 1,
+      "mask_undo": true,
+      "mask_redo": false,
+      "mask_operations": 4,
+      "depth_orientation": "white is nearer / higher relief (before optional inversion)",
+      "ai_available": true
+    },
+    "inference_elapsed_s": 21.672
+  },
+  {
+    "case": "face",
+    "session_id": "dfde6a13cb0f4d73a9b19cfb8e2cfbaf",
+    "ai_sha256": "42125bc24f3f11292a84f2b8a2f3ed68e5b311652a3b12af7f017e0757c32eb4",
+    "original_browser_parameters": {
+      "model_width_mm": 160.125,
+      "relief_height_mm": 9.25,
+      "base_thickness_mm": 4.5,
+      "border_frame_mm": 2.5,
+      "depth_model": "da2-small",
+      "invert_depth": true,
+      "gamma": 1.35,
+      "depth_floor": 0.03,
+      "depth_ceiling": 0.94,
+      "flatten_background": true,
+      "background_threshold": 0.78,
+      "smoothing": 1.6,
+      "edge_preserve": false,
+      "detail_blend": 0.09,
+      "edge_taper_mm": 2.25,
+      "resolution": 1024,
+      "decimate_ratio": 0.0,
+      "output_format": "stl"
+    },
+    "operations": [
+      {
+        "tool": "raise",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.033868900005472824,
+          "baseline_rss_mb": 411.9296875,
+          "peak_rss_mb": 411.9296875
+        }
+      },
+      {
+        "tool": "lower",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.0367880999983754,
+          "baseline_rss_mb": 411.9296875,
+          "peak_rss_mb": 411.9296875
+        }
+      },
+      {
+        "tool": "smooth",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.039037799993820954,
+          "baseline_rss_mb": 411.9296875,
+          "peak_rss_mb": 411.9296875
+        }
+      },
+      {
+        "tool": "flatten",
+        "changed": true,
+        "undo_redo_exact": true,
+        "timing": {
+          "wall_s": 0.03247209999972256,
+          "baseline_rss_mb": 411.9296875,
+          "peak_rss_mb": 411.9296875
+        }
+      }
+    ],
+    "exports": [
+      {
+        "format": "stl",
+        "timing": {
+          "wall_s": 1.1060830999995233,
+          "baseline_rss_mb": 418.4921875,
+          "peak_rss_mb": 537.33984375
+        },
+        "watertight": true,
+        "consistent_winding": true,
+        "triangles": 351558,
+        "bounds_mm": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            225.8241729736328,
+            10.991748809814453
+          ]
+        ],
+        "bytes": 17577984,
+        "sha256": "2fe8024dec3d0131892eb4bd68c0ab04ae9c17120b27dc7c62044ab5eb619016"
+      },
+      {
+        "format": "obj",
+        "timing": {
+          "wall_s": 2.4734874999994645,
+          "baseline_rss_mb": 511.03125,
+          "peak_rss_mb": 668.515625
+        },
+        "watertight": true,
+        "consistent_winding": true,
+        "triangles": 298824,
+        "bounds_mm": [
+          [
+            -5e-08,
+            0.0,
+            0.0
+          ],
+          [
+            150.0,
+            225.82417582,
+            10.99174929
+          ]
+        ],
+        "bytes": 11841602,
+        "sha256": "c879561da9cca9633fb8876bed95861e427bf0d7f17eab8c3f250b2f32d475ae"
+      }
+    ],
+    "alpha_isolation": {
+      "result": {
+        "method": "Original image transparency",
+        "foreground_fraction": 0.7884427309036255,
+        "note": "Used the cutout already present in your image. Keep/remove brushes remain available."
+      },
+      "timing": {
+        "wall_s": 0.0840710999982548,
+        "baseline_rss_mb": 701.015625,
+        "peak_rss_mb": 706.3359375
+      }
+    },
+    "png16_max_error": 7.659196853637695e-06,
+    "original_preview_timing": {
+      "wall_s": 0.2407459000023664,
+      "baseline_rss_mb": 411.9296875,
+      "peak_rss_mb": 441.23046875
+    },
+    "original_glb_timing": {
+      "wall_s": 0.17466459999559447,
+      "baseline_rss_mb": 411.94140625,
+      "peak_rss_mb": 428.9296875
+    },
+    "edited_preview_timing": {
+      "wall_s": 0.5822822000045562,
+      "baseline_rss_mb": 417.62890625,
+      "peak_rss_mb": 443.875
+    },
+    "edited_glb_timing": {
+      "wall_s": 0.5224424000043655,
+      "baseline_rss_mb": 414.5859375,
+      "peak_rss_mb": 442.71484375
+    },
+    "original_comparison_readonly": true,
+    "original_ai_unchanged": true,
+    "maximum_resource_plan": {
+      "grid": {
+        "rows": 2048,
+        "columns": 1361,
+        "image_width_mm": 150.0,
+        "image_height_mm": 225.82417582417582,
+        "frame_mm": 0.0,
+        "width_mm": 150.0,
+        "height_mm": 225.82417582417582
+      },
+      "triangles": 5588282,
+      "output_triangles_estimate": 5588282,
+      "output_bytes_estimate": 279414184,
+      "memory_bytes_estimate": 2749484704,
+      "memory_budget_bytes": 702067097,
+      "allowed": false,
+      "message": "This export needs about 2622 MB of working memory; the current safety budget is 670 MB. Choose a lower resolution or close other applications. Decimation reduces the file size, but still builds the full grid first."
+    },
+    "editor": {
+      "version": 1,
+      "revision": 31,
+      "depth_source": "ai",
+      "imported": {
+        "id": "c93a0e0022c34e3ea8bc1bbb6fb7eec3",
+        "filename": "AI exchange.png",
+        "original_shape": [
+          1024,
+          680
+        ],
+        "working_shape": [
+          1024,
+          680
+        ],
+        "working_file": "imports/c93a0e0022c34e3ea8bc1bbb6fb7eec3.npy",
+        "white_is_far": false,
+        "alignment": "match",
+        "sha256": "889fcb2b2909e815264f6ed8f93c7a6c232230f89532b5d785f59a58049efdca"
+      },
+      "imports": [
+        {
+          "id": "c93a0e0022c34e3ea8bc1bbb6fb7eec3",
+          "filename": "AI exchange.png",
+          "original_shape": [
+            1024,
+            680
+          ],
+          "working_shape": [
+            1024,
+            680
+          ],
+          "working_file": "imports/c93a0e0022c34e3ea8bc1bbb6fb7eec3.npy",
+          "white_is_far": false,
+          "alignment": "match",
+          "sha256": "889fcb2b2909e815264f6ed8f93c7a6c232230f89532b5d785f59a58049efdca"
+        }
+      ],
+      "mask_enabled": true,
+      "mask_feather_mm": 0.8,
+      "mask_transition_mm": 4.0,
+      "sculpt_strength": 0.25,
+      "texture_guard": 0.85,
+      "depth_undo": true,
+      "depth_redo": true,
+      "depth_operations": 2,
+      "mask_undo": true,
+      "mask_redo": false,
+      "mask_operations": 4,
+      "depth_orientation": "white is nearer / higher relief (before optional inversion)",
+      "ai_available": true
+    },
+    "inference_elapsed_s": 6.562
+  }
+]

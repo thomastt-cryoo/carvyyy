@@ -28,7 +28,7 @@ class HistoryAction(BaseModel):
 
 
 class AutoMask(BaseModel):
-    method: Literal["auto", "grabcut", "u2netp"] = "auto"
+    method: Literal["auto", "grabcut", "u2netp", "alpha"] = "auto"
     rectangle: list[float] | None = Field(None, min_length=4, max_length=4)
     expected_revision: int | None = Field(None, ge=0)
 
@@ -51,7 +51,10 @@ def storage_info():
 @router.get("/segmentation")
 def segmentation_status(sid: str):
     read_meta(sid)
-    return segmentation.status()
+    return {
+        **segmentation.status(),
+        "source_alpha": (session_dir(sid) / "source-alpha.png").is_file(),
+    }
 
 
 @maintenance_router.post("/cleanup")

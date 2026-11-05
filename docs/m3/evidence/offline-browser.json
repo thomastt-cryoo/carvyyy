@@ -1,0 +1,210 @@
+{
+  "origin": "http://127.0.0.1:8100",
+  "method": "Loopback proxy with enforced browser CSP; upstream HF and Transformers offline",
+  "policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob:; font-src 'self'; worker-src 'self' blob:; object-src 'none'; frame-src 'none'; base-uri 'self'",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/?session=dfde6a13cb0f4d73a9b19cfb8e2cfbaf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workspace.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/appearance.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/workspace.js?v=m3.4",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/core.js?v=m3.3",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/icons.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/viewer.js?v=m3.4",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/painting.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vendor/three/OrbitControls.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vendor/three/GLTFLoader.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vendor/three/three.module.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vendor/utils/SkeletonUtils.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vendor/utils/BufferGeometryUtils.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/vendor/three/three.core.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/models",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects/dfde6a13cb0f4d73a9b19cfb8e2cfbaf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/params",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/editor",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/segmentation",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/source",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/1b3f58f1ae934eb9bf9acbe9993df2ed/source",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/status",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/export-plan",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/preview/mesh?original=false",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/params",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects/dfde6a13cb0f4d73a9b19cfb8e2cfbaf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/editor",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/export-plan",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/preview/mesh?original=false",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/params",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects/dfde6a13cb0f4d73a9b19cfb8e2cfbaf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/editor",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/export-plan",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/preview/mesh?original=false",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/preview/heightmap?grayscale=true&original=false",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/dfde6a13cb0f4d73a9b19cfb8e2cfbaf/preview/mesh?original=false",
+      "status": 200
+    }
+  ],
+  "console": [],
+  "final_preview": true,
+  "size": "150.0 × 225.8 × 11.0 mm"
+}

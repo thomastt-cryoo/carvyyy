@@ -1,0 +1,74 @@
+[
+  {
+    "width": 1920,
+    "height": 1080,
+    "theme": "dark",
+    "scrollWidth": 1920,
+    "bodyScrollWidth": 1920,
+    "canvas": true,
+    "screenshot": "workspace-dark-1920.jpg"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "dark",
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "canvas": true,
+    "screenshot": "workspace-dark-1440.jpg"
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "theme": "dark",
+    "scrollWidth": 1366,
+    "bodyScrollWidth": 1366,
+    "canvas": true,
+    "screenshot": "workspace-dark-1366.jpg"
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "theme": "dark",
+    "scrollWidth": 1024,
+    "bodyScrollWidth": 1024,
+    "canvas": true,
+    "screenshot": "workspace-dark-1024.jpg"
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "theme": "light",
+    "scrollWidth": 1920,
+    "bodyScrollWidth": 1920,
+    "canvas": true,
+    "screenshot": "workspace-light-1920.jpg"
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "light",
+    "scrollWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "canvas": true,
+    "screenshot": "workspace-light-1440.jpg"
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "theme": "light",
+    "scrollWidth": 1366,
+    "bodyScrollWidth": 1366,
+    "canvas": true,
+    "screenshot": "workspace-light-1366.jpg"
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "theme": "light",
+    "scrollWidth": 1024,
+    "bodyScrollWidth": 1024,
+    "canvas": true,
+    "screenshot": "workspace-light-1024.jpg"
+  }
+]
