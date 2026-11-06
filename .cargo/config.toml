@@ -1,0 +1,3 @@
+[target.x86_64-pc-windows-msvc]
+# The small launcher must start before any redistributable runtime is installed.
+rustflags = ["-C", "target-feature=+crt-static"]

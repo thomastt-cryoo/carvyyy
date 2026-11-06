@@ -1,23 +1,28 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>Photo Relief Studio — Setup proof</title>
+<title>Photo Relief Studio · Setup</title>
 <style>
-body{font:16px system-ui,sans-serif;color:#222;background:#fff;margin:10vh auto;padding:24px;max-width:620px}
-h1{font-size:26px;font-weight:600}p{line-height:1.6}progress{width:100%;height:12px}small{color:#666}a{color:inherit}
+:root{color-scheme:dark;font:15px system-ui,sans-serif;background:#0c0c0c;color:#eee}body{max-width:560px;margin:12vh auto;padding:32px}header{display:flex;gap:12px;align-items:center}header span{font-size:26px}h1{font-size:22px;font-weight:600}h2{font-size:18px;margin-top:48px}p{line-height:1.65;color:#a4a4a4}progress{width:100%;height:7px;accent-color:#dedede;margin:20px 0 8px}button{font:inherit;border:1px solid #404040;border-radius:7px;padding:10px 18px;background:#eee;color:#111;cursor:pointer}button.secondary{background:#181818;color:#ccc;margin-left:8px}small{color:#888}#error{color:#e6b9b9;white-space:pre-wrap}footer{border-top:1px solid #252525;margin-top:48px;padding-top:18px}[hidden]{display:none!important}
 </style>
-<h1>Photo Relief Studio</h1><p id="stage">Preparing local setup…</p>
-<progress id="progress"></progress><p id="bytes"></p><p id="error" role="alert"></p>
-<p><small>M1 engineering proof. Initial setup needs internet; installed components run locally.</small></p>
+<header><span aria-hidden="true">◇</span><h1>Photo Relief Studio</h1></header>
+<h2 id="stage" aria-live="polite">Preparing installation</h2>
+<p>Your studio is being set up on this computer. Keep this page open while the application and AI model download.</p>
+<progress id="progress" aria-label="Installation progress"></progress><p id="bytes"></p>
+<p id="error" role="alert"></p><button id="retry" hidden>Retry setup</button><button id="cancel" class="secondary">Cancel setup</button>
+<footer><small>Internet is needed for initial setup. Once installed, your photographs, projects and AI processing stay on this computer. Reopen the launcher to resume an interrupted setup.</small></footer>
 <script>
-const poll = setInterval(async () => {
-  try {
-    const s = await (await fetch('/status', {cache:'no-store'})).json();
-    document.getElementById('stage').textContent = s.stage;
-    const progress = document.getElementById('progress');
-    if (s.total) { progress.max = s.total; progress.value = s.downloaded; }
-    document.getElementById('bytes').textContent = s.total ? `${s.downloaded.toLocaleString()} / ${s.total.toLocaleString()} bytes` : '';
-    document.getElementById('error').textContent = s.error || '';
-    if(s.app_url) { clearInterval(poll); location.replace(s.app_url); }
-  } catch { document.getElementById('stage').textContent = 'Setup is no longer running. Reopen the launcher to retry.'; }
-}, 250);
+const element = id => document.getElementById(id);
+async function action(name){await fetch(name,{method:'POST'});}
+element('retry').onclick=()=>action('retry');element('cancel').onclick=()=>action('cancel');
+const poll=setInterval(async()=>{
+try{
+ const s=await(await fetch('status',{cache:'no-store'})).json();
+ element('stage').textContent=s.stage||'Preparing installation';
+ const progress=element('progress');
+ if(s.total){progress.max=s.total;progress.value=s.downloaded;}else{progress.removeAttribute('value');}
+ element('bytes').textContent=s.total?`${s.downloaded.toLocaleString()} of ${s.total.toLocaleString()} bytes`:'';
+ element('error').textContent=s.error||'';element('retry').hidden=!s.error;element('cancel').hidden=!!s.error;
+ if(s.app_url){clearInterval(poll);location.replace(s.app_url);}
+}catch{element('stage').textContent='Setup has stopped';element('error').textContent='Reopen Photo Relief Studio to continue. Your saved projects are safe.';}
+},500);
 </script></html>

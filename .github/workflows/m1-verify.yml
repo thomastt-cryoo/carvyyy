@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'bootstrapper/**'
+      - '.cargo/**'
       - 'tools/m1/bootstrap_smoke.py'
       - '.github/workflows/m1-verify.yml'
   workflow_dispatch:
@@ -15,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-14]
+        os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
