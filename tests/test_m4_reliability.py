@@ -19,6 +19,29 @@ from tests.test_editing import document as document
 client = TestClient(app)
 
 
+def test_project_settings_retry_transient_windows_file_lock(tmp_path, monkeypatch):
+    path = tmp_path / "params.json"
+    sessions.atomic_json(path, {"output_format": "stl"})
+    original_replace = Path.replace
+    attempts = 0
+
+    def replace_while_reader_closes(source, target):
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            assert path.read_text() == '{\n  "output_format": "stl"\n}'
+            locked = PermissionError("Windows file in use")
+            locked.winerror = 5
+            raise locked
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", replace_while_reader_closes)
+    sessions.atomic_json(path, {"output_format": "obj"})
+    assert attempts == 2
+    assert path.read_text() == '{\n  "output_format": "obj"\n}'
+    assert list(tmp_path.iterdir()) == [path]
+
+
 def test_reviewed_purge_removes_only_selected_deleted_project(document, tmp_path, monkeypatch):
     sid, _, _, original = document
     monkeypatch.setattr(settings, "models_dir", tmp_path / "models")

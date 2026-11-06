@@ -10,7 +10,9 @@ import hashlib
 import io
 import json
 import re
+import time
 import uuid
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -120,8 +122,21 @@ def write_params(session_id: str, params: ReliefParams) -> None:
 
 def atomic_json(path: Path, value: dict) -> None:
     temporary = path.with_name(f".{uuid.uuid4().hex}.tmp")
-    temporary.write_text(json.dumps(value, indent=2, allow_nan=False), encoding="utf-8")
-    temporary.replace(path)
+    try:
+        temporary.write_text(json.dumps(value, indent=2, allow_nan=False), encoding="utf-8")
+        # Windows can deny replacement while a concurrent reader or scanner
+        # briefly holds the old file open without sharing deletion.
+        for delay in (0.01, 0.02, 0.04, 0.08, 0.16, None):
+            try:
+                temporary.replace(path)
+                return
+            except PermissionError as error:
+                if delay is None or getattr(error, "winerror", None) not in (5, 32, 33):
+                    raise
+                time.sleep(delay)
+    finally:
+        with suppress(OSError):
+            temporary.unlink(missing_ok=True)
 
 
 def create_session(image_bytes: bytes, filename: str) -> SessionInfo:

@@ -1,0 +1,120 @@
+name: M6 release verification
+on:
+  pull_request:
+    branches: [codex/m5-production-launcher]
+    paths:
+      - 'bootstrapper/**'
+      - 'app/**'
+      - 'static/**'
+      - 'tools/m5/**'
+      - 'docs/m6/**'
+      - '.github/workflows/m6-release.yml'
+  workflow_dispatch:
+    inputs:
+      distribution:
+        description: Use controlled downloads or publish and verify on the R2 custom domain
+        type: choice
+        options: [controlled, r2]
+        default: controlled
+permissions:
+  contents: read
+concurrency:
+  group: m6-release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  candidate:
+    environment: ${{ inputs.distribution == 'r2' && 'r2-release' || 'm6-verification' }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    env:
+      HF_HOME: ${{ github.workspace }}/data/m6/models
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      PYTHONUTF8: '1'
+      RELEASE_VERSION: 1.1.1-m6-${{ github.run_id }}-${{ github.run_attempt }}
+      DISTRIBUTION: ${{ inputs.distribution || 'controlled' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Prepare build environment and default model
+        run: |
+          uv sync --frozen --extra cpu
+          uv run --no-sync python -c "from huggingface_hub import snapshot_download; snapshot_download('depth-anything/Depth-Anything-V2-Small-hf', revision='5426e4f0f36572d16453bbda7a8389317b1bef99')"
+      - name: Build independent components and pinned launcher
+        env:
+          PUBLIC_BASE: ${{ vars.R2_PUBLIC_BASE_URL }}
+        shell: bash
+        run: |
+          base=http://127.0.0.1:18155
+          guide=docs/m6/CONTROLLED-TEST.md
+          public=()
+          if [ "$DISTRIBUTION" = r2 ]; then
+            [[ "$PUBLIC_BASE" == https://* ]] || { echo 'Configure R2_PUBLIC_BASE_URL in the r2-release environment.'; exit 1; }
+            base="$PUBLIC_BASE"
+            guide=docs/m6/CUSTOMER-GUIDE.md
+            public+=(--public)
+          fi
+          uv run --no-sync python tools/m5/package_runtime.py --uv "$(command -v uv)" --output data/m6/release --model-cache data/m6/models --base-url "$base" --version "$RELEASE_VERSION"
+          export P2R_MANIFEST_SHA256="$(cat data/m6/release/release.sha256)"
+          cargo build --release --locked --manifest-path bootstrapper/Cargo.toml
+          cargo test --locked --manifest-path bootstrapper/Cargo.toml
+          binary=bootstrapper/target/release/relief-bootstrap
+          if [ "$RUNNER_OS" = Windows ]; then binary="$binary.exe"; fi
+          uv run --no-sync python tools/m5/package_launcher.py --binary "$binary" --release data/m6/release --guide "$guide" "${public[@]}"
+      - name: Upload and verify immutable R2 components
+        if: github.event_name == 'workflow_dispatch' && inputs.distribution == 'r2'
+        env:
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ vars.R2_PUBLIC_BASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: uv run --no-sync --with "boto3>=1.36" python tools/m5/publish_r2.py data/m6/release
+      - name: Extract the actual Windows ZIP
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = Get-ChildItem -Path 'data/m6/release/Photo-Relief-Studio-*.zip'
+          Expand-Archive -LiteralPath $archive.FullName -DestinationPath 'data/m6/customer ZIP'
+      - name: Extract the actual Mac ZIP
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          ditto -x -k data/m6/release/Photo-Relief-Studio-*.zip 'data/m6/customer ZIP'
+          test -x 'data/m6/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio'
+          file 'data/m6/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio' | grep -F arm64
+      - name: Qualify the extracted customer candidate
+        shell: bash
+        run: |
+          launcher='data/m6/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio'
+          if [ "$RUNNER_OS" = Windows ]; then launcher='data/m6/customer ZIP/Photo Relief Studio.exe'; fi
+          public=()
+          if [ "$DISTRIBUTION" = r2 ]; then public+=(--public); fi
+          uv run --no-sync python tools/m5/verify_runtime.py --launcher "$launcher" --release data/m6/release --root 'data/m6/clean install' --source docs/m3/evidence/inputs/tiger.png --packaged --repair "${public[@]}"
+          uv run --no-sync python tools/m5/offline_probe.py --installed "data/m6/clean install/versions/$RELEASE_VERSION" --output data/m6/strict-offline --source docs/m3/evidence/inputs/tiger.png
+          if [ "$DISTRIBUTION" = controlled ]; then
+            uv run --no-sync python tools/m5/verify_failures.py --launcher "$launcher" --release data/m6/release --output data/m6/network-recovery --packaged
+          fi
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: m6-${{ matrix.os }}-${{ env.DISTRIBUTION }}
+          compression-level: 0
+          path: |
+            data/m6/release/*.zip
+            data/m6/release/*.json
+            data/m6/release/*.sha256
+            data/m6/clean install/acceptance.json
+            data/m6/clean install/backend.log
+            data/m6/strict-offline/results.json
+            data/m6/network-recovery/results.json
+          if-no-files-found: error

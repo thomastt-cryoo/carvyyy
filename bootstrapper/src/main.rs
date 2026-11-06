@@ -44,6 +44,7 @@ struct Progress {
     total: u64,
     app_url: Option<String>,
     error: Option<String>,
+    can_cancel: bool,
     #[serde(skip)]
     cancel: bool,
     #[serde(skip)]
@@ -179,11 +180,21 @@ fn remove_staging(path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn sha_file(path: &Path) -> Result<String> {
+fn check_cancel(state: &State) -> Result<()> {
+    if state.lock().unwrap().cancel {
+        return Err("Setup canceled. Choose Retry setup to continue.".into());
+    }
+    Ok(())
+}
+
+fn sha_file(path: &Path, state: Option<&State>) -> Result<String> {
     let mut file = File::open(path)?;
     let mut digest = Sha256::new();
     let mut buffer = [0u8; 65536];
     loop {
+        if let Some(state) = state {
+            check_cancel(state)?;
+        }
         let count = file.read(&mut buffer)?;
         if count == 0 {
             break;
@@ -229,7 +240,7 @@ fn download(
     plain_path(root, &partial)?;
     if final_path.exists()
         && final_path.metadata()?.len() == item.size_bytes
-        && sha_file(&final_path)? == item.sha256
+        && sha_file(&final_path, Some(state))? == item.sha256
     {
         return Ok(final_path);
     }
@@ -243,21 +254,28 @@ fn download(
         if offset > 0 {
             request = request.header("Range", format!("bytes={offset}-"));
         }
-        let mut response = request.send()?.error_for_status()?;
+        let mut response = request
+            .send()
+            .map_err(|_| "Could not connect to the download server. Check your connection and choose Retry setup.")?;
+        if !response.status().is_success() {
+            return Err(format!(
+                "The download server returned HTTP {}. Choose Retry setup to try again.",
+                response.status().as_u16()
+            )
+            .into());
+        }
         // A server ignoring Range is legal: restart, never append a complete response.
         if offset > 0 && response.status().as_u16() == 200 {
             offset = 0;
         } else if response.status().as_u16() == 206 {
-            let expected = format!("bytes {offset}-");
+            let expected = format!("bytes {offset}-{}/{}", item.size_bytes - 1, item.size_bytes);
             let content_range = response
                 .headers()
                 .get("content-range")
                 .and_then(|h| h.to_str().ok())
                 .unwrap_or("");
-            if !content_range.starts_with(&expected)
-                || !content_range.ends_with(&format!("/{}", item.size_bytes))
-            {
-                return Err("invalid resumed Content-Range".into());
+            if content_range != expected {
+                return Err("The download server returned an invalid resume range. Choose Retry setup to try again.".into());
             }
         } else if response.status().as_u16() != 200 {
             return Err("unexpected download response".into());
@@ -276,10 +294,10 @@ fn download(
         }
         let mut buffer = [0u8; 65536];
         loop {
-            if state.lock().unwrap().cancel {
-                return Err("Setup canceled. Reopen the launcher to resume.".into());
-            }
-            let count = response.read(&mut buffer)?;
+            check_cancel(state)?;
+            let count = response.read(&mut buffer).map_err(
+                |_| "The download was interrupted. Check your connection and choose Retry setup.",
+            )?;
             if count == 0 {
                 break;
             }
@@ -293,7 +311,9 @@ fn download(
         output.sync_all()?;
     }
     stage(state, "Verifying SHA-256");
-    if partial.metadata()?.len() != item.size_bytes || sha_file(&partial)? != item.sha256 {
+    if partial.metadata()?.len() != item.size_bytes
+        || sha_file(&partial, Some(state))? != item.sha256
+    {
         // Preserve interrupted bytes for retry; discard a complete corrupt payload.
         if partial.metadata()?.len() == item.size_bytes {
             fs::remove_file(&partial)?;
@@ -309,9 +329,7 @@ fn extract(archive: &Path, dest: &Path, limit: u64, state: &State) -> Result<()>
     let mut total = 0u64;
     let mut checked = std::collections::HashSet::new();
     for index in 0..zip.len() {
-        if state.lock().unwrap().cancel {
-            return Err("Setup canceled. Reopen to resume.".into());
-        }
+        check_cancel(state)?;
         let mut entry = zip.by_index(index)?;
         // Reject links and path traversal before writing any member.
         if entry
@@ -353,17 +371,25 @@ fn extract(archive: &Path, dest: &Path, limit: u64, state: &State) -> Result<()>
     Ok(())
 }
 
-fn verify_installed(manifest: &Manifest, installed: &Path, cache: &Path) -> Result<()> {
+fn verify_installed(
+    manifest: &Manifest,
+    installed: &Path,
+    cache: &Path,
+    state: &State,
+) -> Result<()> {
     // The local completion marker is not a trust root. Revalidate installed bytes
     // against the archives authenticated by the pinned manifest before execution.
     let mut checked = std::collections::HashSet::new();
     for item in &manifest.components {
         let archive = cache.join(format!("{}.zip", item.sha256));
-        if archive.metadata()?.len() != item.size_bytes || sha_file(&archive)? != item.sha256 {
+        if archive.metadata()?.len() != item.size_bytes
+            || sha_file(&archive, Some(state))? != item.sha256
+        {
             return Err("cached component failed verification".into());
         }
         let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
         for index in 0..zip.len() {
+            check_cancel(state)?;
             let mut entry = zip.by_index(index)?;
             if entry.is_dir() {
                 continue;
@@ -379,17 +405,27 @@ fn verify_installed(manifest: &Manifest, installed: &Path, cache: &Path) -> Resu
             let mut expected = Sha256::new();
             let mut buffer = [0u8; 65536];
             loop {
+                check_cancel(state)?;
                 let count = entry.read(&mut buffer)?;
                 if count == 0 {
                     break;
                 }
                 expected.update(&buffer[..count]);
             }
-            if sha_file(&path)? != format!("{:x}", expected.finalize()) {
+            if sha_file(&path, Some(state))? != format!("{:x}", expected.finalize()) {
                 return Err("installed component SHA-256 mismatch; not executed".into());
             }
         }
     }
+    Ok(())
+}
+
+fn finish_cancellable_setup(state: &State) -> Result<()> {
+    let mut progress = state.lock().unwrap();
+    if progress.cancel {
+        return Err("Setup canceled. Choose Retry setup to continue.".into());
+    }
+    progress.can_cancel = false;
     Ok(())
 }
 
@@ -491,11 +527,15 @@ fn setup_server(state: State) -> Result<String> {
             let path = &request.url()[prefix.len()..];
             if request.method().as_str() == "POST" && matches!(path, "retry" | "cancel") {
                 let mut progress = state.lock().unwrap();
-                if path == "cancel" {
+                if path == "cancel" && progress.can_cancel {
                     progress.cancel = true;
+                    progress.can_cancel = false;
                     progress.stage = "Stopping setup safely".into();
-                } else {
+                } else if path == "retry" && progress.error.is_some() {
                     progress.retry = true;
+                } else {
+                    let _ = request.respond(Response::empty(409));
+                    continue;
                 }
                 let _ = request.respond(Response::empty(204));
                 continue;
@@ -562,11 +602,19 @@ fn run(
     plain_path(root, &installed)?;
     let manifest_bytes = serde_json::to_vec(&manifest)?;
     let marker = installed.join("verified-manifest.json");
-    let valid_install = marker.exists() && fs::read(&marker)? == manifest_bytes;
-    if valid_install && manifest.schema_version == 1 {
-        verify_installed(&manifest, &installed, &cache)?;
-    }
-    let valid_install = valid_install && verify_installed(&manifest, &installed, &cache).is_ok();
+    let valid_install = if marker.exists() && fs::read(&marker)? == manifest_bytes {
+        stage(state, "Verifying installed files");
+        let verification = verify_installed(&manifest, &installed, &cache, state);
+        check_cancel(state)?;
+        if manifest.schema_version == 1 {
+            verification?;
+            true
+        } else {
+            verification.is_ok()
+        }
+    } else {
+        false
+    };
     if !valid_install {
         let staging = root.join("staging").join(&manifest.version);
         plain_path(root, &staging)?;
@@ -596,24 +644,28 @@ fn run(
             stage(state, &format!("Extracting verified {}", item.id));
             extract(&archive, &staging, item.unpacked_limit_bytes, state)?;
         }
-        if state.lock().unwrap().cancel {
-            return Err("Setup canceled before activation.".into());
-        }
+        check_cancel(state)?;
         if !staging.join(&executable).is_file() {
             return Err("manifest executable is missing from verified components".into());
         }
         fs::write(staging.join("verified-manifest.json"), manifest_bytes)?;
         fs::create_dir_all(installed.parent().ok_or("no version parent")?)?;
         stage(state, "Verifying installed files");
-        verify_installed(&manifest, &staging, &cache)?;
+        verify_installed(&manifest, &staging, &cache, state)?;
+        finish_cancellable_setup(state)?;
         if installed.exists() {
             let previous =
-                root.join("versions")
-                    .join(format!("{}-repair-{}", manifest.version, secret()?));
-            fs::rename(&installed, previous)?;
+                installed.with_file_name(format!("{}-repair-{}", manifest.version, secret()?));
+            fs::rename(&installed, &previous)?;
+            if let Err(error) = fs::rename(staging, &installed) {
+                fs::rename(previous, &installed)?;
+                return Err(error.into());
+            }
+        } else {
+            fs::rename(staging, &installed)?;
         }
-        fs::rename(staging, &installed)?;
     }
+    finish_cancellable_setup(state)?;
     // The cached install or staged replacement has already passed byte verification.
     if install_only {
         stage(state, "Verified installation ready");
@@ -774,7 +826,7 @@ fn main() {
             }
         }
         #[cfg(target_os = "macos")]
-        {
+        if !env::args().any(|a| a == "--no-browser") {
             let escaped = error
                 .to_string()
                 .replace('&', "&amp;")
@@ -847,7 +899,7 @@ fn entry() -> Result<()> {
         Some(pin) => pin.to_owned(),
         None => value("--manifest-sha256")?,
     };
-    if sha_file(&manifest_path)? != pinned {
+    if sha_file(&manifest_path, None)? != pinned {
         return Err("manifest SHA-256 does not match trusted pin".into());
     }
     let manifest: Manifest = serde_json::from_slice(&fs::read(&manifest_path)?)?;
@@ -868,6 +920,7 @@ fn entry() -> Result<()> {
         {
             let mut progress = state.lock().unwrap();
             progress.error = None;
+            progress.can_cancel = true;
             progress.cancel = false;
             progress.retry = false;
         }
@@ -885,6 +938,7 @@ fn entry() -> Result<()> {
             let mut progress = state.lock().unwrap();
             progress.stage = "Setup stopped".into();
             progress.total = 0;
+            progress.can_cancel = false;
             progress.error = Some(attempt.as_ref().unwrap_err().to_string());
         }
         fs::write(
@@ -995,7 +1049,7 @@ mod tests {
         zip.write_all(b"verified application").unwrap();
         zip.finish().unwrap();
         let bytes = fs::read(&payload).unwrap();
-        let digest = sha_file(&payload).unwrap();
+        let digest = sha_file(&payload, None).unwrap();
         let length = bytes.len() as u64;
         let server = Server::http("127.0.0.1:0").unwrap();
         let url = format!("http://{}/payload.zip", server.server_addr());
@@ -1023,6 +1077,21 @@ mod tests {
         run(manifest.clone(), &root, &state, true, true).unwrap();
         handle.join().unwrap();
         let installed = root.join("versions/repair-test/application/backend");
+        state.lock().unwrap().cancel = true;
+        let canceled = run(manifest.clone(), &root, &state, true, true).unwrap_err();
+        assert!(canceled.to_string().contains("Setup canceled"));
+        assert_eq!(fs::read(&installed).unwrap(), b"verified application");
+        state.lock().unwrap().cancel = false;
+
+        // The new version gets its own staging and cannot replace the old release.
+        let mut upgrade = manifest.clone();
+        upgrade.version = "failed-upgrade".into();
+        upgrade.executable = "application/missing".into();
+        assert!(run(upgrade, &root, &state, true, true).is_err());
+        assert!(!root.join("versions/failed-upgrade").exists());
+        run(manifest.clone(), &root, &state, true, true).unwrap();
+        assert_eq!(fs::read(&installed).unwrap(), b"verified application");
+
         fs::write(&installed, b"damage").unwrap();
         fs::create_dir_all(root.join("staging/repair-test")).unwrap();
         fs::write(root.join("staging/repair-test/partial"), b"interrupted").unwrap();
