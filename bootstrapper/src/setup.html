@@ -8,7 +8,7 @@
 <h2 id="stage" aria-live="polite">Preparing installation</h2>
 <p>Your studio is being set up on this computer. Keep this page open while the application and AI model download.</p>
 <progress id="progress" aria-label="Installation progress"></progress><p id="bytes"></p>
-<p id="error" role="alert"></p><button id="retry" hidden>Retry setup</button><button id="cancel" class="secondary">Cancel setup</button>
+<p id="error" role="alert"></p><button id="retry" hidden>Retry setup</button><button id="cancel" class="secondary" hidden>Cancel setup</button>
 <footer><small>Internet is needed for initial setup. Once installed, your photographs, projects and AI processing stay on this computer. Reopen the launcher to resume an interrupted setup.</small></footer>
 <script>
 const element = id => document.getElementById(id);
@@ -21,7 +21,7 @@ try{
  const progress=element('progress');
  if(s.total){progress.max=s.total;progress.value=s.downloaded;}else{progress.removeAttribute('value');}
  element('bytes').textContent=s.total?`${s.downloaded.toLocaleString()} of ${s.total.toLocaleString()} bytes`:'';
- element('error').textContent=s.error||'';element('retry').hidden=!s.error;element('cancel').hidden=!!s.error;
+ element('error').textContent=s.error||'';element('retry').hidden=!s.error;element('cancel').hidden=!s.can_cancel;
  if(s.app_url){clearInterval(poll);location.replace(s.app_url);}
 }catch{element('stage').textContent='Setup has stopped';element('error').textContent='Reopen Photo Relief Studio to continue. Your saved projects are safe.';}
 },500);
