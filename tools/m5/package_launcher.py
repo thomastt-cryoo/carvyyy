@@ -11,12 +11,15 @@ import shutil
 import subprocess
 import zipfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--binary", type=Path, required=True)
     parser.add_argument("--release", type=Path, required=True)
+    parser.add_argument("--guide", type=Path)
+    parser.add_argument("--public", action="store_true", help="Package for HTTPS distribution")
     args = parser.parse_args()
     release = args.release.resolve()
     manifest = release / "release.json"
@@ -24,7 +27,12 @@ def main():
     # A pinned build must contain the exact compiled-in root for this manifest.
     if pin.encode() not in args.binary.read_bytes():
         raise SystemExit("Build the launcher with P2R_MANIFEST_SHA256 matching this manifest.")
-    target = json.loads(manifest.read_text())["platform"]
+    document = json.loads(manifest.read_text())
+    target = document["platform"]
+    if args.public and any(
+        urlparse(item["url"]).scheme != "https" for item in document["components"]
+    ):
+        raise SystemExit("Public launcher components must use HTTPS.")
     staging = release / "launcher"
     staging.mkdir(exist_ok=False)
     if target == "windows-x86_64" and platform.system() == "Windows":
@@ -84,9 +92,10 @@ def main():
             if file.is_file():
                 notices.append(file.read_text(encoding="utf-8", errors="replace") + "\n")
     (staging / "DEPENDENCY-NOTICES.txt").write_text("".join(notices), encoding="utf-8")
-    guide = Path(__file__).resolve().parents[2] / "docs/m5/CUSTOMER-GUIDE.md"
+    guide = args.guide or repository / "docs/m5/CUSTOMER-GUIDE.md"
     shutil.copy2(guide, staging / "Start here.txt")
-    archive = release / f"Photo-Relief-Studio-{target}-TEST.zip"
+    suffix = "" if args.public else "-TEST"
+    archive = release / f"Photo-Relief-Studio-{target}{suffix}.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for path in sorted(staging.rglob("*")):
             z.write(path, path.relative_to(staging).as_posix())
@@ -98,7 +107,8 @@ def main():
         "bytes": size,
         "sha256": hashlib.file_digest(archive.open("rb"), "sha256").hexdigest(),
         "manifest_sha256": pin,
-        "signing": "unsigned test candidate",
+        "signing": "unsigned" if args.public else "unsigned test candidate",
+        "distribution": "public HTTPS" if args.public else "controlled test",
     }
     (release / "launcher-checksums.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import http.cookiejar
 import json
+import os
 import subprocess
 import threading
 import time
@@ -20,6 +21,9 @@ def main():
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--packaged", action="store_true", help="Use the ZIP's adjacent manifest")
+    parser.add_argument("--public", action="store_true", help="Use real manifest HTTPS URLs")
+    parser.add_argument("--repair", action="store_true", help="Verify cached repair after reopen")
     args = parser.parse_args()
     release = args.release.resolve()
     root = args.root.resolve()
@@ -52,25 +56,45 @@ def main():
                 while chunk := stream.read(1024 * 1024):
                     self.wfile.write(chunk)
 
-    server = ThreadingHTTPServer(("127.0.0.1", 18155), Handler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
+    server = None
+    if not args.public:
+        server = ThreadingHTTPServer(("127.0.0.1", 18155), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
     command = [
         str(args.launcher.resolve()),
         "--root",
         str(root),
-        "--manifest",
-        str(release / "release.json"),
-        "--manifest-sha256",
-        (release / "release.sha256").read_text().strip(),
-        "--allow-local-http",
         "--no-browser",
     ]
-    process = subprocess.Popen(command)
+    if not args.packaged:
+        command += [
+            "--manifest",
+            str(release / "release.json"),
+            "--manifest-sha256",
+            (release / "release.sha256").read_text().strip(),
+        ]
+    if not args.public:
+        command.append("--allow-local-http")
+    launch_env = os.environ.copy()
+    if args.packaged:
+        for key in ("VIRTUAL_ENV", "PYTHONPATH", "PYTHONHOME", "UV_PROJECT_ENVIRONMENT"):
+            launch_env.pop(key, None)
+        system_root = launch_env.get("SystemRoot", r"C:\Windows")
+        launch_env["PATH"] = (
+            os.pathsep.join([os.path.join(system_root, "System32"), system_root])
+            if os.name == "nt"
+            else "/usr/bin:/bin"
+        )
+    process = subprocess.Popen(command, env=launch_env)
     started = time.monotonic()
     opener = urllib.request.build_opener(
         urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
     )
-    result = {"runtime": str(release.name)}
+    result = {
+        "runtime": str(release.name),
+        "adjacent_manifest_and_minimal_path": args.packaged,
+        "distribution": "public_https" if args.public else "controlled_loopback",
+    }
     try:
         while time.monotonic() - started < 600:
             running = root / "running.json"
@@ -84,7 +108,7 @@ def main():
             raise TimeoutError("Packaged application did not become ready")
         ready_path = root / "backend-ready.json"
         original_pid = json.loads(ready_path.read_text())["pid"]
-        assert subprocess.run(command, timeout=10).returncode == 0
+        assert subprocess.run(command, env=launch_env, timeout=10).returncode == 0
         assert json.loads(ready_path.read_text())["pid"] == original_pid
         result["duplicate_launcher_reused_backend"] = True
         url = info["app_url"]
@@ -109,7 +133,10 @@ def main():
                 raise AssertionError("Unauthorized packaged API access succeeded")
         result["unauthenticated_and_cross_origin_refused"] = True
         result["setup_seconds"] = round(time.monotonic() - started, 2)
-        server.shutdown()  # Component downloads are unavailable for the following checks.
+        if server:
+            server.shutdown()
+            server.server_close()
+            server = None  # Controlled component downloads are unavailable from here.
 
         def call(path, data=None, method=None, content_type="application/json"):
             request = urllib.request.Request(
@@ -170,7 +197,7 @@ def main():
         process.wait(timeout=30)
         assert process.returncode == 0
         running.unlink()
-        process = subprocess.Popen(command)
+        process = subprocess.Popen(command, env=launch_env)
         restart = time.monotonic()
         while time.monotonic() - restart < 300:
             if running.exists():
@@ -184,15 +211,37 @@ def main():
         base = info["app_url"].split("/?")[0]
         opener.open(info["app_url"]).read()
         assert call("/api/projects/" + sid)["id"] == sid
-        result["offline_reopen_seconds"] = round(time.monotonic() - restart, 2)
+        reopen_metric = "reopen_seconds" if args.public else "offline_reopen_seconds"
+        result[reopen_metric] = round(time.monotonic() - restart, 2)
         result["project_preserved"] = True
         call("/api/launcher/shutdown", b"")
         process.wait(timeout=30)
         assert process.returncode == 0
+        if args.repair:
+            manifest = json.loads((release / "release.json").read_text())
+            installed = root / "versions" / manifest["version"]
+            asset = installed / "application/static/index.html"
+            original = asset.read_bytes()
+            asset.write_bytes(bytes([original[0] ^ 1]) + original[1:])
+            stale = root / "staging" / manifest["version"] / "interrupted"
+            stale.parent.mkdir(parents=True)
+            stale.write_text("unfinished install", encoding="utf-8")
+            assert (
+                subprocess.run([*command, "--install-only"], env=launch_env, timeout=600).returncode
+                == 0
+            )
+            assert asset.read_bytes() == original
+            assert not stale.exists()
+            assert any(installed.parent.glob(f"{manifest['version']}-repair-*"))
+            assert (root / "data" / "sessions" / sid).is_dir()
+            result["same_size_corruption_repaired_from_cache"] = True
+            result["interrupted_staging_recovered_and_project_preserved"] = True
         (root / "acceptance.json").write_text(json.dumps(result, indent=2))
         print(json.dumps(result, indent=2))
     finally:
-        server.server_close()
+        if server:
+            server.shutdown()
+            server.server_close()
         if process.poll() is None:
             process.terminate()
 

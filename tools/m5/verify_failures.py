@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--launcher", type=Path, required=True)
     parser.add_argument("--release", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--packaged", action="store_true", help="Use the ZIP's adjacent manifest")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -66,17 +67,33 @@ def main():
         str(args.launcher.resolve()),
         "--root",
         str(root),
-        "--manifest",
-        str(release / "release.json"),
-        "--manifest-sha256",
-        (release / "release.sha256").read_text().strip(),
         "--allow-local-http",
         "--no-browser",
         "--install-only",
     ]
+    if not args.packaged:
+        command += [
+            "--manifest",
+            str(release / "release.json"),
+            "--manifest-sha256",
+            (release / "release.sha256").read_text().strip(),
+        ]
     try:
+        if args.packaged:
+            adjacent = args.launcher.resolve().with_name("release.json")
+            original = adjacent.read_bytes()
+            try:
+                # Equivalent JSON with different bytes must fail the compiled pin.
+                adjacent.write_bytes(original + b"\n")
+                assert subprocess.run(command, timeout=30).returncode != 0
+                assert not (root / "setup-url.txt").exists()
+                assert not controls["ranges"]
+            finally:
+                adjacent.write_bytes(original)
         first = subprocess.run(command, timeout=120)
         assert first.returncode != 0
+        failure = json.loads((root / "result.json").read_text())["error"]
+        assert "download was interrupted" in failure and "Retry setup" in failure
         partial = downloads / (app["sha256"] + ".part")
         assert 0 < partial.stat().st_size < app["size_bytes"]
         assert not (root / "versions").exists()
@@ -91,6 +108,7 @@ def main():
         assert third.returncode == 0
         assert (root / "data/project-sentinel").read_bytes() == b"preserve customer work"
         record = {
+            "altered_adjacent_manifest_refused": args.packaged,
             "interrupted_download_preserved": True,
             "http_range_used": True,
             "complete_corruption_rejected_and_discarded": True,
