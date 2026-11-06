@@ -1,0 +1,69 @@
+name: M5 native installation candidates
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'bootstrapper/**'
+      - 'tools/m5/**'
+      - 'app/packaged.py'
+      - 'app/local_security.py'
+      - '.github/workflows/m5-verify.yml'
+permissions:
+  contents: read
+concurrency:
+  group: m5-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    env:
+      HF_HOME: ${{ github.workspace }}/data/m5/models
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install locked build environment
+        run: uv sync --frozen --extra cpu
+      - name: Acquire default licensed Small model
+        run: uv run --no-sync python -c "from huggingface_hub import snapshot_download; snapshot_download('depth-anything/Depth-Anything-V2-Small-hf')"
+      - name: Construct independent relocatable runtime
+        shell: bash
+        run: |
+          uv run --no-sync python tools/m5/package_runtime.py --uv "$(command -v uv)" --output data/m5/release --model-cache data/m5/models --base-url http://127.0.0.1:18155
+      - name: Compile pinned native launcher
+        shell: bash
+        run: |
+          export P2R_MANIFEST_SHA256="$(cat data/m5/release/release.sha256)"
+          cargo build --release --locked --manifest-path bootstrapper/Cargo.toml
+          cargo test --locked --manifest-path bootstrapper/Cargo.toml
+      - name: Packaged real inference and STL OBJ
+        shell: bash
+        run: |
+          binary=bootstrapper/target/release/relief-bootstrap
+          if [ "$RUNNER_OS" = Windows ]; then binary="$binary.exe"; fi
+          uv run --no-sync python tools/m5/verify_runtime.py --launcher "$binary" --release data/m5/release --root data/m5/clean-install --source docs/m3/evidence/inputs/tiger.png
+          uv run --no-sync python tools/m5/package_launcher.py --binary "$binary" --release data/m5/release
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m5-${{ matrix.os }}
+          compression-level: 0
+          path: |
+            data/m5/release/*.zip
+            data/m5/release/*.json
+            data/m5/release/*.sha256
+            data/m5/clean-install/acceptance.json
+            data/m5/clean-install/backend.log
+          if-no-files-found: warn

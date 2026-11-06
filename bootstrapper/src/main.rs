@@ -1,4 +1,4 @@
-//! M1 feasibility proof; intentionally not a production installer.
+//! Native installer and offline application supervisor.
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 use reqwest::blocking::Client;
@@ -44,6 +44,10 @@ struct Progress {
     total: u64,
     app_url: Option<String>,
     error: Option<String>,
+    #[serde(skip)]
+    cancel: bool,
+    #[serde(skip)]
+    retry: bool,
 }
 
 type State = Arc<Mutex<Progress>>;
@@ -58,7 +62,121 @@ fn safe_relative(path: &str) -> Result<PathBuf> {
     {
         return Err("unsafe relative path".into());
     }
+    for name in path.components() {
+        let name = name.as_os_str().to_string_lossy();
+        let base = name.split('.').next().unwrap_or("").to_ascii_uppercase();
+        if name.ends_with(['.', ' '])
+            || matches!(
+                base.as_str(),
+                "CON"
+                    | "PRN"
+                    | "AUX"
+                    | "NUL"
+                    | "COM1"
+                    | "COM2"
+                    | "COM3"
+                    | "COM4"
+                    | "COM5"
+                    | "COM6"
+                    | "COM7"
+                    | "COM8"
+                    | "COM9"
+                    | "LPT1"
+                    | "LPT2"
+                    | "LPT3"
+                    | "LPT4"
+                    | "LPT5"
+                    | "LPT6"
+                    | "LPT7"
+                    | "LPT8"
+                    | "LPT9"
+            )
+        {
+            return Err("unsafe platform filename".into());
+        }
+    }
     Ok(path.to_path_buf())
+}
+
+fn secret() -> Result<String> {
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).map_err(|e| format!("Cannot create launch credential: {e}"))?;
+    Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
+}
+
+fn plain_path(root: &Path, target: &Path) -> Result<()> {
+    if !target.starts_with(root) {
+        return Err("Path escapes installation".into());
+    }
+    let mut current = root.to_path_buf();
+    let mut paths = vec![current.clone()];
+    for part in target.strip_prefix(root)?.components() {
+        current.push(part);
+        paths.push(current.clone());
+    }
+    for path in paths {
+        if let Ok(meta) = fs::symlink_metadata(path) {
+            if meta.file_type().is_symlink() {
+                return Err("Linked installation path refused".into());
+            }
+            #[cfg(windows)]
+            {
+                use std::os::windows::fs::MetadataExt;
+                if meta.file_attributes() & 0x400 != 0 {
+                    return Err("Reparse installation path refused".into());
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn plain_member(
+    root: &Path,
+    target: &Path,
+    checked: &mut std::collections::HashSet<PathBuf>,
+) -> Result<()> {
+    let parent = target.parent().ok_or("missing parent")?;
+    if !checked.contains(parent) {
+        plain_path(root, parent)?;
+        checked.insert(parent.to_path_buf());
+    }
+    if let Ok(meta) = fs::symlink_metadata(target) {
+        if meta.file_type().is_symlink() {
+            return Err("Linked component file refused".into());
+        }
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::MetadataExt;
+            if meta.file_attributes() & 0x400 != 0 {
+                return Err("Reparse component file refused".into());
+            }
+        }
+    }
+    Ok(())
+}
+
+fn remove_staging(path: &Path) -> Result<()> {
+    let meta = fs::symlink_metadata(path)?;
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        if meta.file_attributes() & 0x400 != 0 {
+            return Err("Linked staging path refused".into());
+        }
+    }
+    if meta.file_type().is_symlink() {
+        return Err("Linked staging path refused".into());
+    }
+    if meta.is_dir() {
+        for child in fs::read_dir(path)? {
+            remove_staging(&child?.path())?;
+        }
+        fs::remove_dir(path)?;
+    } else {
+        fs::remove_file(path)?;
+    }
+    Ok(())
 }
 
 fn sha_file(path: &Path) -> Result<String> {
@@ -76,7 +194,10 @@ fn sha_file(path: &Path) -> Result<String> {
 }
 
 fn stage(state: &State, message: &str) {
-    state.lock().unwrap().stage = message.into();
+    let mut progress = state.lock().unwrap();
+    progress.stage = message.into();
+    progress.total = 0;
+    progress.downloaded = 0;
 }
 
 fn verify_url(url: &str, allow_local: bool) -> Result<()> {
@@ -101,8 +222,11 @@ fn download(
     if item.sha256.len() != 64 || !item.sha256.bytes().all(|b| b.is_ascii_hexdigit()) {
         return Err("invalid SHA-256".into());
     }
+    plain_path(root, root)?;
     let final_path = root.join(format!("{}.zip", item.sha256));
     let partial = root.join(format!("{}.part", item.sha256));
+    plain_path(root, &final_path)?;
+    plain_path(root, &partial)?;
     if final_path.exists()
         && final_path.metadata()?.len() == item.size_bytes
         && sha_file(&final_path)? == item.sha256
@@ -152,6 +276,9 @@ fn download(
         }
         let mut buffer = [0u8; 65536];
         loop {
+            if state.lock().unwrap().cancel {
+                return Err("Setup canceled. Reopen the launcher to resume.".into());
+            }
             let count = response.read(&mut buffer)?;
             if count == 0 {
                 break;
@@ -177,10 +304,14 @@ fn download(
     Ok(final_path)
 }
 
-fn extract(archive: &Path, dest: &Path, limit: u64) -> Result<()> {
+fn extract(archive: &Path, dest: &Path, limit: u64, state: &State) -> Result<()> {
     let mut zip = zip::ZipArchive::new(File::open(archive)?)?;
     let mut total = 0u64;
+    let mut checked = std::collections::HashSet::new();
     for index in 0..zip.len() {
+        if state.lock().unwrap().cancel {
+            return Err("Setup canceled. Reopen to resume.".into());
+        }
         let mut entry = zip.by_index(index)?;
         // Reject links and path traversal before writing any member.
         if entry
@@ -199,13 +330,19 @@ fn extract(archive: &Path, dest: &Path, limit: u64) -> Result<()> {
             return Err("archive exceeds unpacked size limit".into());
         }
         let target = dest.join(enclosed);
+        plain_member(dest, &target, &mut checked)?;
         if entry.is_dir() {
             fs::create_dir_all(&target)?;
         } else {
             fs::create_dir_all(target.parent().ok_or("no parent")?)?;
             let mut out = File::create(&target)?;
-            std::io::copy(&mut entry, &mut out)?;
-            out.sync_all()?;
+            let expected = entry.size();
+            let copied =
+                std::io::copy(&mut (&mut entry).take(expected.saturating_add(1)), &mut out)?;
+            if copied != expected {
+                return Err("archive member size mismatch".into());
+            }
+            out.flush()?;
             #[cfg(unix)]
             if let Some(mode) = entry.unix_mode() {
                 use std::os::unix::fs::PermissionsExt;
@@ -219,6 +356,7 @@ fn extract(archive: &Path, dest: &Path, limit: u64) -> Result<()> {
 fn verify_installed(manifest: &Manifest, installed: &Path, cache: &Path) -> Result<()> {
     // The local completion marker is not a trust root. Revalidate installed bytes
     // against the archives authenticated by the pinned manifest before execution.
+    let mut checked = std::collections::HashSet::new();
     for item in &manifest.components {
         let archive = cache.join(format!("{}.zip", item.sha256));
         if archive.metadata()?.len() != item.size_bytes || sha_file(&archive)? != item.sha256 {
@@ -232,6 +370,7 @@ fn verify_installed(manifest: &Manifest, installed: &Path, cache: &Path) -> Resu
             }
             let relative = entry.enclosed_name().ok_or("unsafe archive member")?;
             let path = installed.join(relative);
+            plain_member(installed, &path, &mut checked)?;
             if fs::symlink_metadata(&path)?.file_type().is_symlink()
                 || path.metadata()?.len() != entry.size()
             {
@@ -269,16 +408,48 @@ const PAGE: &str = include_str!("setup.html");
 
 fn setup_server(state: State) -> Result<String> {
     let server = Server::http("127.0.0.1:0")?;
-    let url = format!("http://{}/", server.server_addr());
+    let secret = secret()?;
+    let authority = server.server_addr().to_string();
+    let prefix = format!("/{secret}/");
+    let url = format!("http://{authority}{prefix}");
     thread::spawn(move || {
         for request in server.incoming_requests() {
+            let host = request
+                .headers()
+                .iter()
+                .find(|h| h.field.equiv("Host"))
+                .map(|h| h.value.as_str())
+                .unwrap_or("");
+            let origin = request
+                .headers()
+                .iter()
+                .find(|h| h.field.equiv("Origin"))
+                .map(|h| h.value.as_str());
+            if host != authority
+                || origin.is_some_and(|o| o != format!("http://{authority}"))
+                || !request.url().starts_with(&prefix)
+            {
+                let _ = request.respond(Response::empty(403));
+                continue;
+            }
+            let path = &request.url()[prefix.len()..];
+            if request.method().as_str() == "POST" && matches!(path, "retry" | "cancel") {
+                let mut progress = state.lock().unwrap();
+                if path == "cancel" {
+                    progress.cancel = true;
+                } else {
+                    progress.retry = true;
+                }
+                let _ = request.respond(Response::empty(204));
+                continue;
+            }
             if request.method().as_str() != "GET" {
                 let _ = request.respond(Response::empty(405));
                 continue;
             }
-            let (body, content_type) = match request.url() {
-                "/" => (PAGE.to_owned(), "text/html; charset=utf-8"),
-                "/status" => (
+            let (body, content_type) = match path {
+                "" => (PAGE.to_owned(), "text/html; charset=utf-8"),
+                "status" => (
                     serde_json::to_string(&*state.lock().unwrap()).unwrap(),
                     "application/json",
                 ),
@@ -307,10 +478,19 @@ fn run(
     local: bool,
     install_only: bool,
 ) -> Result<()> {
-    if manifest.schema_version != 1 || manifest.platform != platform_id() {
+    if !matches!(manifest.schema_version, 1 | 2) || manifest.platform != platform_id() {
         return Err("unsupported manifest schema or platform".into());
     }
     safe_relative(&manifest.version)?;
+    if manifest.components.is_empty() || manifest.components.len() > 16 {
+        return Err("invalid component count".into());
+    }
+    let mut ids = std::collections::HashSet::new();
+    for item in &manifest.components {
+        if !ids.insert(&item.id) || item.size_bytes == 0 || item.unpacked_limit_bytes == 0 {
+            return Err("invalid component metadata".into());
+        }
+    }
     let executable = safe_relative(&manifest.executable)?;
     let client = Client::builder()
         .connect_timeout(Duration::from_secs(20))
@@ -318,16 +498,36 @@ fn run(
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
     let cache = root.join("downloads");
+    plain_path(root, &cache)?;
     fs::create_dir_all(&cache)?;
     let installed = root.join("versions").join(&manifest.version);
+    plain_path(root, &installed)?;
     let manifest_bytes = serde_json::to_vec(&manifest)?;
     let marker = installed.join("verified-manifest.json");
     let valid_install = marker.exists() && fs::read(&marker)? == manifest_bytes;
+    if valid_install && manifest.schema_version == 1 {
+        verify_installed(&manifest, &installed, &cache)?;
+    }
+    let valid_install = valid_install && verify_installed(&manifest, &installed, &cache).is_ok();
     if !valid_install {
         let staging = root.join("staging").join(&manifest.version);
-        // Never recursively replace an existing installation in this M1 proof.
-        if staging.exists() || installed.exists() {
-            return Err("staging/version already exists; use a new test root or version".into());
+        plain_path(root, &staging)?;
+        if staging.exists() {
+            remove_staging(&staging)?;
+        }
+        let required = manifest
+            .components
+            .iter()
+            .try_fold(0u64, |sum, item| {
+                sum.checked_add(item.size_bytes)?
+                    .checked_add(item.unpacked_limit_bytes)
+            })
+            .ok_or("component sizes overflow")?;
+        if fs2::available_space(root)? < required.saturating_add(256 * 1024 * 1024) {
+            return Err(
+                "There is not enough free disk space to install safely. Free space and retry."
+                    .into(),
+            );
         }
         let mut archives = Vec::new();
         for item in &manifest.components {
@@ -336,27 +536,46 @@ fn run(
         fs::create_dir_all(&staging)?;
         for (archive, item) in archives {
             stage(state, &format!("Extracting verified {}", item.id));
-            extract(&archive, &staging, item.unpacked_limit_bytes)?;
+            extract(&archive, &staging, item.unpacked_limit_bytes, state)?;
+        }
+        if state.lock().unwrap().cancel {
+            return Err("Setup canceled before activation.".into());
         }
         if !staging.join(&executable).is_file() {
             return Err("manifest executable is missing from verified components".into());
         }
         fs::write(staging.join("verified-manifest.json"), manifest_bytes)?;
         fs::create_dir_all(installed.parent().ok_or("no version parent")?)?;
+        stage(state, "Verifying installed files");
+        verify_installed(&manifest, &staging, &cache)?;
+        if installed.exists() {
+            let previous =
+                root.join("versions")
+                    .join(format!("{}-repair-{}", manifest.version, secret()?));
+            fs::rename(&installed, previous)?;
+        }
         fs::rename(staging, &installed)?;
     }
-    stage(state, "Verifying installed components");
-    verify_installed(&manifest, &installed, &cache)?;
+    // The cached install or staged replacement has already passed byte verification.
     if install_only {
         stage(state, "Verified installation ready");
         return Ok(());
     }
     stage(state, "Starting local application");
-    // Reserve a loopback port; production needs a child handshake to eliminate this race.
-    let socket = std::net::TcpListener::bind("127.0.0.1:0")?;
-    let port = socket.local_addr()?.port();
-    drop(socket);
-    let app_url = format!("http://127.0.0.1:{port}/");
+    let token = secret()?;
+    let ready = root.join("backend-ready.json");
+    if ready.exists() {
+        fs::remove_file(&ready)?;
+    }
+    let legacy_listener = if manifest.schema_version == 1 {
+        Some(std::net::TcpListener::bind("127.0.0.1:0")?)
+    } else {
+        None
+    };
+    let legacy_port = legacy_listener
+        .as_ref()
+        .map(|l| l.local_addr().unwrap().port());
+    drop(legacy_listener);
     let log = File::create(root.join("backend.log"))?;
     let mut command = Command::new(installed.join(executable));
     command
@@ -364,10 +583,24 @@ fn run(
             manifest
                 .arguments
                 .iter()
-                .map(|a| a.replace("{port}", &port.to_string())),
+                .map(|a| a.replace("{port}", &legacy_port.unwrap_or(0).to_string())),
         )
-        .current_dir(&installed)
+        .current_dir(if manifest.schema_version == 2 {
+            installed.join("application")
+        } else {
+            installed.clone()
+        })
         .env("P2R_DATA_DIR", root.join("data"))
+        .env("P2R_LAUNCH_TOKEN", &token)
+        .env("P2R_READY_FILE", &ready)
+        .env("P2R_MODELS_DIR", installed.join("models"))
+        .env("HF_HOME", installed.join("models"))
+        .env("P2R_DEFAULT_MODEL_ID", "da2-small")
+        .env("P2R_DEVICE", "cpu")
+        .env("PYTHONNOUSERSITE", "1")
+        .env("PYTHONDONTWRITEBYTECODE", "1")
+        .env_remove("PYTHONPATH")
+        .env_remove("PYTHONHOME")
         .env("HF_HUB_OFFLINE", "1")
         .env("TRANSFORMERS_OFFLINE", "1")
         .env("HF_HUB_DISABLE_TELEMETRY", "1")
@@ -385,8 +618,25 @@ fn run(
         if child.try_wait()?.is_some() {
             return Err("backend exited before readiness; see backend.log".into());
         }
+        let port = legacy_port.map(u64::from).or_else(|| {
+            fs::read(&ready)
+                .ok()
+                .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+                .and_then(|v| v["port"].as_u64())
+                .filter(|p| *p > 0 && *p <= 65535)
+        });
+        let Some(port) = port else {
+            thread::sleep(Duration::from_millis(100));
+            continue;
+        };
+        let app_url = if manifest.schema_version == 1 {
+            format!("http://127.0.0.1:{port}/")
+        } else {
+            format!("http://127.0.0.1:{port}/?launch={token}")
+        };
         if client
-            .get(format!("{app_url}api/health"))
+            .get(format!("http://127.0.0.1:{port}/api/health"))
+            .header("X-Relief-Token", &token)
             .timeout(Duration::from_secs(1))
             .send()
             .map(|r| r.status().is_success())
@@ -434,6 +684,31 @@ fn demo_backend(port: &str) -> Result<()> {
 fn main() {
     if let Err(error) = entry() {
         eprintln!("{error}");
+        #[cfg(windows)]
+        if !env::args().any(|a| a == "--no-browser") {
+            #[link(name = "user32")]
+            unsafe extern "system" {
+                fn MessageBoxW(
+                    window: *mut std::ffi::c_void,
+                    text: *const u16,
+                    title: *const u16,
+                    flags: u32,
+                ) -> i32;
+            }
+            let text: Vec<u16> = format!(
+                "Photo Relief Studio could not start.\n\n{error}\n\nReopen the launcher to retry."
+            )
+            .encode_utf16()
+            .chain(Some(0))
+            .collect();
+            let title: Vec<u16> = "Photo Relief Studio"
+                .encode_utf16()
+                .chain(Some(0))
+                .collect();
+            unsafe {
+                MessageBoxW(std::ptr::null_mut(), text.as_ptr(), title.as_ptr(), 0x10);
+            }
+        }
         std::process::exit(1);
     }
 }
@@ -457,8 +732,29 @@ fn entry() -> Result<()> {
             .to_path_buf(),
     };
     fs::create_dir_all(&root)?;
-    let manifest_path = PathBuf::from(value("--manifest")?);
-    let pinned = value("--manifest-sha256")?;
+    plain_path(&root, &root)?;
+    let root = root.canonicalize()?;
+    let _lock = OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(root.join("launcher.lock"))?;
+    if fs2::FileExt::try_lock_exclusive(&_lock).is_err() {
+        if let Ok(url) = fs::read_to_string(root.join("setup-url.txt")) {
+            if !args.iter().any(|a| a == "--no-browser") {
+                open_browser(&url)?;
+            }
+        }
+        return Ok(());
+    }
+    let manifest_path = value("--manifest")
+        .map(PathBuf::from)
+        .unwrap_or(env::current_exe()?.with_file_name("release.json"));
+    let pinned = match option_env!("P2R_MANIFEST_SHA256") {
+        Some(pin) => pin.to_owned(),
+        None => value("--manifest-sha256")?,
+    };
     if sha_file(&manifest_path)? != pinned {
         return Err("manifest SHA-256 does not match trusted pin".into());
     }
@@ -469,18 +765,44 @@ fn entry() -> Result<()> {
     if !args.iter().any(|a| a == "--no-browser") {
         open_browser(&setup_url)?;
     }
-    let outcome = run(
-        manifest,
-        &root,
-        &state,
-        args.iter().any(|a| a == "--allow-local-http"),
-        args.iter().any(|a| a == "--install-only"),
-    );
-    if let Err(ref error) = outcome {
-        let mut progress = state.lock().unwrap();
-        progress.stage = "Setup stopped".into();
-        progress.error = Some(error.to_string());
-    }
+    let interactive = !args.iter().any(|a| a == "--no-browser");
+    let outcome = loop {
+        {
+            let mut progress = state.lock().unwrap();
+            progress.error = None;
+            progress.cancel = false;
+            progress.retry = false;
+        }
+        let attempt = run(
+            manifest.clone(),
+            &root,
+            &state,
+            args.iter().any(|a| a == "--allow-local-http"),
+            args.iter().any(|a| a == "--install-only"),
+        );
+        if attempt.is_ok() {
+            break attempt;
+        }
+        {
+            let mut progress = state.lock().unwrap();
+            progress.stage = "Setup stopped".into();
+            progress.total = 0;
+            progress.error = Some(attempt.as_ref().unwrap_err().to_string());
+        }
+        fs::write(
+            root.join("result.json"),
+            serde_json::to_vec(&*state.lock().unwrap())?,
+        )?;
+        if !interactive {
+            break attempt;
+        }
+        loop {
+            if state.lock().unwrap().retry {
+                break;
+            }
+            thread::sleep(Duration::from_millis(200));
+        }
+    };
     fs::write(
         root.join("result.json"),
         serde_json::to_vec(&*state.lock().unwrap())?,
@@ -504,6 +826,10 @@ mod tests {
             "a\\..\\b",
             "",
             "a/../b",
+            "CON",
+            "test.",
+            "AUX.log",
+            "a/b ",
         ] {
             assert!(safe_relative(path).is_err(), "{path}");
         }
@@ -515,5 +841,124 @@ mod tests {
         assert!(verify_url("http://example.com/file.zip", true).is_err());
         assert!(verify_url("http://127.0.0.1/file.zip", false).is_err());
         assert!(verify_url("http://127.0.0.1/file.zip", true).is_ok());
+    }
+    #[test]
+    fn rejects_traversal_and_oversized_extraction() {
+        use zip::write::SimpleFileOptions;
+        for (name, limit) in [("../outside.txt", 4096), ("safe/file.txt", 2)] {
+            let root = env::temp_dir().join(format!("relief-test-{}", secret().unwrap()));
+            fs::create_dir_all(&root).unwrap();
+            let file = root.join("payload.zip");
+            let mut zip = zip::ZipWriter::new(File::create(&file).unwrap());
+            zip.start_file(name, SimpleFileOptions::default()).unwrap();
+            zip.write_all(b"verified fixture").unwrap();
+            zip.finish().unwrap();
+            let output = root.join("staging");
+            fs::create_dir(&output).unwrap();
+            let state = Arc::new(Mutex::new(Progress::default()));
+            assert!(extract(&file, &output, limit, &state).is_err());
+            assert!(!root.join("outside.txt").exists());
+            remove_staging(&root).unwrap();
+        }
+    }
+
+    #[test]
+    fn canceled_extraction_preserves_existing_files() {
+        let root = env::temp_dir().join(format!("relief-test-{}", secret().unwrap()));
+        fs::create_dir_all(&root).unwrap();
+        let archive = root.join("payload.zip");
+        let mut zip = zip::ZipWriter::new(File::create(&archive).unwrap());
+        zip.start_file("file.txt", zip::write::SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(b"new").unwrap();
+        zip.finish().unwrap();
+        let output = root.join("staging");
+        fs::create_dir(&output).unwrap();
+        fs::write(output.join("file.txt"), b"original").unwrap();
+        let state = Arc::new(Mutex::new(Progress {
+            cancel: true,
+            ..Default::default()
+        }));
+        assert!(extract(&archive, &output, 100, &state).is_err());
+        assert_eq!(fs::read(output.join("file.txt")).unwrap(), b"original");
+        remove_staging(&root).unwrap();
+    }
+    #[test]
+    fn installation_repairs_from_verified_cache_and_keeps_projects() {
+        let root = env::temp_dir().join(format!("relief-test-{}", secret().unwrap()));
+        fs::create_dir_all(&root).unwrap();
+        let payload = root.join("payload.zip");
+        let mut zip = zip::ZipWriter::new(File::create(&payload).unwrap());
+        zip.start_file(
+            "application/backend",
+            zip::write::SimpleFileOptions::default(),
+        )
+        .unwrap();
+        zip.write_all(b"verified application").unwrap();
+        zip.finish().unwrap();
+        let bytes = fs::read(&payload).unwrap();
+        let digest = sha_file(&payload).unwrap();
+        let length = bytes.len() as u64;
+        let server = Server::http("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/payload.zip", server.server_addr());
+        let handle = thread::spawn(move || {
+            let request = server.recv().unwrap();
+            request.respond(Response::from_data(bytes)).unwrap();
+        });
+        let manifest = Manifest {
+            schema_version: 2,
+            version: "repair-test".into(),
+            platform: platform_id(),
+            components: vec![Artifact {
+                id: "application".into(),
+                url,
+                size_bytes: length,
+                unpacked_limit_bytes: 100,
+                sha256: digest,
+            }],
+            executable: "application/backend".into(),
+            arguments: vec![],
+        };
+        let state = Arc::new(Mutex::new(Progress::default()));
+        fs::create_dir(root.join("data")).unwrap();
+        fs::write(root.join("data/photo"), b"customer work").unwrap();
+        run(manifest.clone(), &root, &state, true, true).unwrap();
+        handle.join().unwrap();
+        let installed = root.join("versions/repair-test/application/backend");
+        fs::write(&installed, b"damage").unwrap();
+        fs::create_dir_all(root.join("staging/repair-test")).unwrap();
+        fs::write(root.join("staging/repair-test/partial"), b"interrupted").unwrap();
+        run(manifest, &root, &state, true, true).unwrap();
+        assert_eq!(fs::read(installed).unwrap(), b"verified application");
+        assert_eq!(fs::read(root.join("data/photo")).unwrap(), b"customer work");
+        remove_staging(&root).unwrap();
+    }
+
+    #[test]
+    fn insufficient_space_is_refused_before_download() {
+        let root = env::temp_dir().join(format!("relief-test-{}", secret().unwrap()));
+        fs::create_dir_all(&root).unwrap();
+        let manifest = Manifest {
+            schema_version: 2,
+            version: "space-test".into(),
+            platform: platform_id(),
+            components: vec![Artifact {
+                id: "runtime".into(),
+                url: "http://127.0.0.1:1/file.zip".into(),
+                size_bytes: 1,
+                unpacked_limit_bytes: u64::MAX / 2,
+                sha256: "0".repeat(64),
+            }],
+            executable: "runtime/python".into(),
+            arguments: vec![],
+        };
+        let state = Arc::new(Mutex::new(Progress::default()));
+        assert!(
+            run(manifest, &root, &state, true, true)
+                .unwrap_err()
+                .to_string()
+                .contains("disk space")
+        );
+        remove_staging(&root).unwrap();
     }
 }

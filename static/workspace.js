@@ -2025,12 +2025,21 @@ $("open-settings").onclick = async () => {
   modal("settings-dialog");
   $("storage-result").textContent = "";
   try {
-    const [models] = await Promise.all([json("/api/models"), refreshStorage()]);
+    const [models, runtime] = await Promise.all([json("/api/models"), json("/api/launcher/status"), refreshStorage()]);
+    $("quit-studio").hidden = !runtime.can_shutdown;
     state.models = models.models;
     renderModels();
   } catch (e) {
     $("storage-summary").textContent = e.message;
   }
+};
+$("quit-studio").onclick = async () => {
+  try {
+    await flush();
+    await json("/api/launcher/shutdown", { method: "POST" });
+    $("settings-dialog").close();
+    toast("Photo Relief Studio has stopped. Reopen the launcher to return.");
+  } catch (e) { fail(e); }
 };
 $("open-help").onclick = () => modal("help-dialog");
 function renderModels() {

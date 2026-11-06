@@ -23,6 +23,11 @@ _SID = re.compile(r"^[0-9a-f]{32}$")
 _CACHE = re.compile(r"^raw_depth_(da2-small|da2-large|da3mono-large)_[0-9]+\.npy$")
 
 
+def has_active_work() -> bool:
+    with _activity_lock:
+        return any(_leases.values())
+
+
 def touch_session(sid: str) -> None:
     with _activity_lock:
         now = time.monotonic()

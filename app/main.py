@@ -150,6 +150,11 @@ def _torch_info() -> tuple[bool, bool, str | None]:
     return torch.cuda.is_available(), depth._mps_available(torch), torch.__version__
 
 
+@app.get("/api/launcher/status")
+async def launcher_status():
+    return {"can_shutdown": False}
+
+
 @app.get("/api/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     cuda_available, mps_available, torch_version = _torch_info()
