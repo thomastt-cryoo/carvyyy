@@ -82,6 +82,11 @@ def main():
             time.sleep(0.2)
         else:
             raise TimeoutError("Packaged application did not become ready")
+        ready_path = root / "backend-ready.json"
+        original_pid = json.loads(ready_path.read_text())["pid"]
+        assert subprocess.run(command, timeout=10).returncode == 0
+        assert json.loads(ready_path.read_text())["pid"] == original_pid
+        result["duplicate_launcher_reused_backend"] = True
         url = info["app_url"]
         base = url.split("/?")[0]
         opener.open(url).read()

@@ -8,6 +8,7 @@ import json
 import platform
 import plistlib
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -44,13 +45,45 @@ def main():
                     "CFBundleName": "Photo Relief Studio",
                     "CFBundlePackageType": "APPL",
                     "CFBundleShortVersionString": "1.1.1",
-                    "LSMinimumSystemVersion": "14.0",
+                    "LSMinimumSystemVersion": "15.0",
                     "LSUIElement": True,
                 }
             )
         )
     else:
         raise SystemExit("Build native launchers only on the matching supported architecture.")
+    repository = Path(__file__).resolve().parents[2]
+    metadata = json.loads(
+        subprocess.check_output(
+            [
+                "cargo",
+                "metadata",
+                "--format-version",
+                "1",
+                "--locked",
+                "--manifest-path",
+                str(repository / "bootstrapper/Cargo.toml"),
+            ],
+            cwd=repository,
+        )
+    )
+    notices = ["Photo Relief Studio native launcher dependency notices\n"]
+    for package in sorted(metadata["packages"], key=lambda item: item["name"]):
+        notices.append(f"\n{package['name']} {package['version']} ({package.get('license')})\n")
+        if package.get("repository"):
+            notices.append(package["repository"] + "\n")
+        folder = Path(package["manifest_path"]).parent
+        license_files = (
+            set(folder.glob("LICENSE*"))
+            | set(folder.glob("NOTICE*"))
+            | set(folder.glob("COPYRIGHT*"))
+        )
+        if package.get("license_file"):
+            license_files.add(folder / package["license_file"])
+        for file in sorted(license_files):
+            if file.is_file():
+                notices.append(file.read_text(encoding="utf-8", errors="replace") + "\n")
+    (staging / "DEPENDENCY-NOTICES.txt").write_text("".join(notices), encoding="utf-8")
     guide = Path(__file__).resolve().parents[2] / "docs/m5/CUSTOMER-GUIDE.md"
     shutil.copy2(guide, staging / "Start here.txt")
     archive = release / f"Photo-Relief-Studio-{target}-TEST.zip"

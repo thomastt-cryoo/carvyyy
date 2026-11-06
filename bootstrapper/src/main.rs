@@ -393,6 +393,62 @@ fn verify_installed(manifest: &Manifest, installed: &Path, cache: &Path) -> Resu
     Ok(())
 }
 
+struct BackendProcess {
+    child: std::process::Child,
+}
+
+impl Drop for BackendProcess {
+    fn drop(&mut self) {
+        if matches!(self.child.try_wait(), Ok(None)) {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+        }
+    }
+}
+
+fn existing_application(root: &Path) -> Option<String> {
+    let state: serde_json::Value =
+        serde_json::from_slice(&fs::read(root.join("running.json")).ok()?).ok()?;
+    let address = state.get("app_url")?.as_str()?;
+    let url = reqwest::Url::parse(address).ok()?;
+    if url.scheme() != "http"
+        || url.host_str() != Some("127.0.0.1")
+        || url.path() != "/"
+        || url.port().is_none()
+    {
+        return None;
+    }
+    let token = url
+        .query_pairs()
+        .find(|(key, _)| key == "launch")?
+        .1
+        .into_owned();
+    if token.len() != 64 || !token.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    let mut health = url.clone();
+    health.set_query(None);
+    health.set_path("/api/health");
+    let client = Client::builder()
+        .no_proxy()
+        .timeout(Duration::from_secs(2))
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .ok()?;
+    if client
+        .get(health)
+        .header("X-Relief-Token", token)
+        .send()
+        .ok()?
+        .status()
+        .is_success()
+    {
+        Some(address.to_owned())
+    } else {
+        None
+    }
+}
+
 fn open_browser(url: &str) -> Result<()> {
     #[cfg(windows)]
     let mut command = Command::new("explorer.exe");
@@ -437,6 +493,7 @@ fn setup_server(state: State) -> Result<String> {
                 let mut progress = state.lock().unwrap();
                 if path == "cancel" {
                     progress.cancel = true;
+                    progress.stage = "Stopping setup safely".into();
                 } else {
                     progress.retry = true;
                 }
@@ -494,7 +551,8 @@ fn run(
     let executable = safe_relative(&manifest.executable)?;
     let client = Client::builder()
         .connect_timeout(Duration::from_secs(20))
-        .timeout(Duration::from_secs(1800))
+        // Blocking reqwest applies this timeout to each network operation.
+        .timeout(Duration::from_secs(15))
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
     let cache = root.join("downloads");
@@ -612,10 +670,16 @@ fn run(
         use std::os::windows::process::CommandExt;
         command.creation_flags(0x08000000);
     }
-    let mut child = command.spawn()?;
+    let local_client = Client::builder()
+        .no_proxy()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+    let mut backend = BackendProcess {
+        child: command.spawn()?,
+    };
     let started = Instant::now();
     while started.elapsed() < Duration::from_secs(90) {
-        if child.try_wait()?.is_some() {
+        if backend.child.try_wait()?.is_some() {
             return Err("backend exited before readiness; see backend.log".into());
         }
         let port = legacy_port.map(u64::from).or_else(|| {
@@ -634,7 +698,7 @@ fn run(
         } else {
             format!("http://127.0.0.1:{port}/?launch={token}")
         };
-        if client
+        if local_client
             .get(format!("http://127.0.0.1:{port}/api/health"))
             .header("X-Relief-Token", &token)
             .timeout(Duration::from_secs(1))
@@ -650,7 +714,7 @@ fn run(
                 root.join("running.json"),
                 serde_json::to_vec(&*state.lock().unwrap())?,
             )?;
-            let status = child.wait()?;
+            let status = backend.child.wait()?;
             if !status.success() {
                 return Err("backend exited with an error".into());
             }
@@ -658,7 +722,7 @@ fn run(
         }
         thread::sleep(Duration::from_millis(100));
     }
-    child.kill()?;
+    backend.child.kill()?;
     Err("backend readiness timed out".into())
 }
 
@@ -709,6 +773,26 @@ fn main() {
                 MessageBoxW(std::ptr::null_mut(), text.as_ptr(), title.as_ptr(), 0x10);
             }
         }
+        #[cfg(target_os = "macos")]
+        {
+            let escaped = error
+                .to_string()
+                .replace('&', "&amp;")
+                .replace('<', "&lt;")
+                .replace('>', "&gt;");
+            let path = env::temp_dir().join(format!(
+                "relief-startup-{}.html",
+                secret().unwrap_or_else(|_| "error".into())
+            ));
+            let html = format!(
+                "<!doctype html><meta charset=utf-8><title>Photo Relief Studio</title><style>body{{font:16px system-ui;background:#111;color:#eee;margin:10vh auto;max-width:600px;padding:24px}}p{{line-height:1.6}}</style><h1>Photo Relief Studio could not start</h1><p>{escaped}</p><p>Reopen the launcher to retry. Your projects stay on this computer.</p>"
+            );
+            if fs::write(&path, html).is_ok() {
+                if let Ok(url) = reqwest::Url::from_file_path(path) {
+                    let _ = open_browser(url.as_str());
+                }
+            }
+        }
         std::process::exit(1);
     }
 }
@@ -716,6 +800,9 @@ fn main() {
 fn entry() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.get(1).map(String::as_str) == Some("--demo-backend") {
+        if option_env!("P2R_MANIFEST_SHA256").is_some() {
+            return Err("The engineering proof backend is unavailable in a pinned build.".into());
+        }
         return demo_backend(args.get(2).ok_or("missing demo port")?);
     }
     let value = |key: &str| -> Result<String> {
@@ -734,6 +821,11 @@ fn entry() -> Result<()> {
     fs::create_dir_all(&root)?;
     plain_path(&root, &root)?;
     let root = root.canonicalize()?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&root, fs::Permissions::from_mode(0o700))?;
+    }
     let _lock = OpenOptions::new()
         .create(true)
         .truncate(false)
@@ -759,6 +851,12 @@ fn entry() -> Result<()> {
         return Err("manifest SHA-256 does not match trusted pin".into());
     }
     let manifest: Manifest = serde_json::from_slice(&fs::read(&manifest_path)?)?;
+    if let Some(address) = existing_application(&root) {
+        if !args.iter().any(|a| a == "--no-browser") {
+            open_browser(&address)?;
+        }
+        return Ok(());
+    }
     let state: State = Arc::new(Mutex::new(Progress::default()));
     let setup_url = setup_server(state.clone())?;
     fs::write(root.join("setup-url.txt"), &setup_url)?;
@@ -960,5 +1058,25 @@ mod tests {
                 .contains("disk space")
         );
         remove_staging(&root).unwrap();
+    }
+    #[test]
+    fn unsupported_manifest_platform_is_refused_before_installation() {
+        let root = env::temp_dir().join(format!("relief-test-{}", secret().unwrap()));
+        let manifest = Manifest {
+            schema_version: 2,
+            version: "platform-test".into(),
+            platform: "unsupported-architecture".into(),
+            components: vec![],
+            executable: "runtime/python".into(),
+            arguments: vec![],
+        };
+        let state = Arc::new(Mutex::new(Progress::default()));
+        assert!(
+            run(manifest, &root, &state, false, true)
+                .unwrap_err()
+                .to_string()
+                .contains("platform")
+        );
+        assert!(!root.exists());
     }
 }

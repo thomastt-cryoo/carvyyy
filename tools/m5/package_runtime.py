@@ -5,14 +5,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import platform
 import re
 import shutil
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+SMALL_REVISION = "5426e4f0f36572d16453bbda7a8389317b1bef99"
 
 
 def archive(source: Path, output: Path, prefix: str, version: str = "1.1.1-m5") -> dict:
@@ -74,6 +77,8 @@ def main():
             "--frozen",
             "--extra",
             "cpu",
+            "--extra",
+            "segmentation",
             "--no-dev",
             "--no-emit-project",
             "--output-file",
@@ -123,17 +128,38 @@ def main():
     cache = args.model_cache.resolve() / "hub/models--depth-anything--Depth-Anything-V2-Small-hf"
     model = work / "models/hub/models--depth-anything--Depth-Anything-V2-Small-hf"
     shutil.copytree(
-        cache,
-        model,
+        cache / "snapshots" / SMALL_REVISION,
+        model / "snapshots" / SMALL_REVISION,
         symlinks=False,
-        ignore=shutil.ignore_patterns(".locks", "*.incomplete", "blobs"),
+    )
+    (model / "refs").mkdir()
+    (model / "refs/main").write_text(SMALL_REVISION)
+    build_env = os.environ | {
+        "P2R_MODELS_DIR": str(args.model_cache.resolve()),
+        "P2R_DATA_DIR": str(work / "build-data"),
+    }
+    subprocess.run(
+        [sys.executable, str(ROOT / "tools/m2/install_segmentation.py")],
+        env=build_env,
+        check=True,
+    )
+    segmentation = work / "models/segmentation"
+    segmentation.mkdir()
+    shutil.copy2(
+        args.model_cache.resolve() / "segmentation/u2netp.onnx", segmentation / "u2netp.onnx"
+    )
+    (segmentation / "NOTICE.txt").write_text(
+        "U2NETP from the Apache-2.0 U-2-Net project.\n"
+        "https://github.com/xuebinqin/U-2-Net\n"
+        "ONNX artifact https://github.com/danielgatis/rembg/releases/tag/v0.0.0\n"
+        "SHA-256 309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8\n"
     )
     shutil.copy2(ROOT / "LICENSE", work / "models/APACHE-2.0.txt")
     (work / "models/MODEL-NOTICE.txt").write_text(
         "Depth Anything V2 Small, depth-anything/Depth-Anything-V2-Small-hf.\n"
         "Source https://huggingface.co/depth-anything/Depth-Anything-V2-Small-hf\n"
-        "License Apache-2.0. This archive contains only Small model weights.\n"
-        "Model snapshot " + (cache / "refs/main").read_text().strip() + "\n"
+        "License Apache-2.0. Default depth model is Small.\n"
+        "Model snapshot " + SMALL_REVISION + "\n"
     )
     components = []
     for name, folder in [
@@ -149,7 +175,11 @@ def main():
         "schema_version": 2,
         "version": version,
         "platform": target,
-        "compatibility": {"python": "3.12", "device": "cpu"},
+        "compatibility": {
+            "python": "3.12",
+            "device": "cpu",
+            "small_model_revision": SMALL_REVISION,
+        },
         "components": components,
         "executable": "runtime/python.exe"
         if target.startswith("windows")

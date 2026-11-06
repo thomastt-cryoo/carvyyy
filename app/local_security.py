@@ -14,6 +14,8 @@ class LocalAccess:
         self.authority = f"127.0.0.1:{port}"
         self.origin = f"http://{self.authority}"
         self.shutdown = None
+        self.active_requests = 0
+        self.stopping = False
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -60,6 +62,9 @@ class LocalAccess:
             credential = headers.get(b"x-relief-token", credential.encode()).decode("latin1")
         if not secrets.compare_digest(credential.encode(), self.token.encode()):
             return await self.reject(send)
+        if self.stopping:
+            await send({"type": "http.response.start", "status": 503, "headers": []})
+            return await send({"type": "http.response.body", "body": b"Studio is shutting down."})
         if scope["path"] == "/api/launcher/status":
             await send(
                 {
@@ -74,7 +79,7 @@ class LocalAccess:
             return await send({"type": "http.response.body", "body": b'{"can_shutdown":true}'})
         if scope["path"] == "/api/launcher/shutdown" and scope["method"] == "POST":
             if self.shutdown is not None:
-                if not self.shutdown():
+                if self.active_requests or not self.shutdown():
                     await send(
                         {
                             "type": "http.response.start",
@@ -90,6 +95,7 @@ class LocalAccess:
                             "body": b'{"detail":"Work is running. Try quitting again shortly."}',
                         }
                     )
+                self.stopping = True
                 await send(
                     {
                         "type": "http.response.start",
@@ -98,7 +104,11 @@ class LocalAccess:
                     }
                 )
                 return await send({"type": "http.response.body", "body": b'{"stopping":true}'})
-        await self.app(scope, receive, send)
+        self.active_requests += 1
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            self.active_requests -= 1
 
     @staticmethod
     async def reject(send):

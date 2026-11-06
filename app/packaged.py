@@ -25,7 +25,17 @@ def main() -> None:
     from app.storage import has_active_work
 
     protected = LocalAccess(app, token=token, port=port)
-    server = uvicorn.Server(uvicorn.Config(protected, log_level="warning", access_log=False))
+    server = uvicorn.Server(
+        uvicorn.Config(
+            protected,
+            # Uvicorn selects its own loop factory, independently of the Python
+            # event-loop policy. This server needs socket support on Windows.
+            loop="asyncio:SelectorEventLoop" if os.name == "nt" else "auto",
+            log_level="warning",
+            access_log=False,
+            timeout_graceful_shutdown=15,
+        )
+    )
 
     def shutdown():
         if has_active_work():
