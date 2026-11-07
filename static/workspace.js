@@ -33,6 +33,7 @@ const state = {
   flattenLevel: 0.5,
   compare: false,
   saving: false,
+  replaying: false,
   segmentation: null,
   exporting: null,
   lastExport: null,
@@ -348,6 +349,13 @@ for (const layer of ["mask", "depth"])
       toolButton(tool, label),
     );
 function syncTools() {
+  const projectHistory = state.editor?.project_history;
+  $("canvas-undo").disabled =
+    !state.editor || state.compare || queued > 0 ||
+    !(projectHistory?.undo || paramTimer !== null);
+  $("canvas-redo").disabled =
+    !state.editor || state.compare || state.saving ||
+    !projectHistory?.redo;
   $("inline-tools").replaceChildren(
     ...tools[state.layer].map(([t, l]) => toolButton(t, l, true)),
   );
@@ -387,7 +395,7 @@ function syncParams() {
     const input = $(field.id);
     if (!input) continue;
     input.disabled =
-      state.compare ||
+      state.compare || state.replaying ||
       (field.id === "depth_model" && (state.saving || !state.ready));
     if (field.type === "checkbox") input.checked = state.params[field.id];
     else input.value = state.params[field.id];
@@ -395,11 +403,11 @@ function syncParams() {
     if (number) {
       if (document.activeElement !== number)
         number.value = state.params[field.id];
-      number.disabled = state.compare;
+      number.disabled = state.compare || state.replaying;
     }
   }
   $("export-quality").value = state.params.resolution;
-  $("export-quality").disabled = state.compare;
+  $("export-quality").disabled = state.compare || state.replaying;
   updatePreviewQuality();
   const meta = state.project?.image;
   if (meta?.w && meta?.h) {
@@ -1257,6 +1265,8 @@ $("rename-form").onsubmit = async (event) => {
       });
     if (!scope.current(token)) return;
     state.project = project;
+    state.editor = await json(`/api/sessions/${token.id}/editor`);
+    if (!scope.current(token)) return;
     $("project-dialog").close();
     syncProject();
     refreshLibrary();
@@ -1475,21 +1485,61 @@ $("sculpt-undo").onclick = () => historyAction("depth", "undo");
 $("sculpt-redo").onclick = () => historyAction("depth", "redo");
 $("reset-depth").onclick = () => historyAction("depth", "reset");
 $("reset-mask").onclick = () => historyAction("mask", "reset");
+async function projectHistoryAction(direction) {
+  if (!state.id || !state.editor || state.compare || state.replaying) return;
+  state.replaying = true;
+  syncParams();
+  try {
+    await flush();
+    await action(async (token) => {
+      const result = await json(`/api/projects/${token.id}/history`, {
+        method: "POST",
+        json: { action: direction, expected_token: state.editor.project_history.token },
+      });
+      if (!scope.current(token)) return;
+      Object.assign(state, result);
+      state.ready =
+        state.editor.depth_source === "imported" || state.editor.ai_available;
+      paramVersion++;
+      invalidateExport();
+      syncProject();
+      if (state.ready) {
+        $("canvas-message").hidden = true;
+        schedulePreview(0);
+      } else {
+        processing(
+          "This project needs a depth source",
+          "Import a depth map or redo your last change.",
+          true,
+        );
+      }
+      planExport();
+      refreshLibrary();
+    });
+  } catch (error) {
+    fail(error, () => reloadProject());
+  } finally {
+    state.replaying = false;
+    syncParams();
+    syncTools();
+  }
+}
+$("canvas-undo").onclick = () => projectHistoryAction("undo");
+$("canvas-redo").onclick = () => projectHistoryAction("redo");
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     painting.cancel();
     message("Stroke cancelled.");
   }
   if (
-    state.view !== "edit" ||
     document.querySelector("dialog[open]") ||
     ["INPUT", "SELECT", "TEXTAREA"].includes(event.target.tagName)
   )
     return;
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+  if ((event.ctrlKey || event.metaKey) && ["z", "y"].includes(event.key.toLowerCase())) {
     event.preventDefault();
-    if (!state.compare && !state.saving)
-      historyAction(state.layer, event.shiftKey ? "redo" : "undo");
+    if (!state.compare && queued === 0)
+      projectHistoryAction(event.shiftKey || event.key.toLowerCase() === "y" ? "redo" : "undo");
   }
 });
 $("camera-fit").onclick = () => viewer.fit();
@@ -2045,12 +2095,10 @@ $("open-help").onclick = () => modal("help-dialog");
 function renderModels() {
   const labels = {
     "da2-small": "Depth Anything V2 Small",
-    "da2-large": "Depth Anything V2 Large",
-    "da3mono-large": "Depth Anything 3 Mono Large",
   };
   $("depth_model").replaceChildren();
   $("setup-models").replaceChildren();
-  for (const model of state.models) {
+  for (const model of state.models.filter(model => model.model_id === "da2-small")) {
     const label = labels[model.model_id] || model.model_id;
     const option = new Option(
       `${label}${model.selectable ? "" : ` · ${model.setup_state.replaceAll("_", " ")}`}`,

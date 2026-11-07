@@ -39,19 +39,13 @@
       </p>
 
       <h2>Depth model</h2>
-      <p class="param-meta">Dropdown, top of the parameter panel. Switching re-runs depth once (then it's cached); all your other settings are kept.</p>
+      <p>Depth Anything V2 Small is the installed depth model. Its prediction is cached so shaping changes remain responsive.</p>
       <table>
         <tr><th>Model</th><th>Character</th><th>Use when</th></tr>
-        <tr><td><code>da3mono-large</code> (default)</td><td>Direct depth &mdash; true-to-life proportions, smooth gradations from near to far.</td><td>You want geometric accuracy; scenes with real depth ranges.</td></tr>
-        <tr><td><code>da2-large</code></td><td>Disparity-style &mdash; exaggerates the near field and squashes the background into a thin range.</td><td>Portrait-style bas relief where you want the subject to "pop". Often the more <em>artistic</em> look.</td></tr>
-        <tr><td><code>da2-small</code></td><td>Same flavor as da2-large, lower fidelity, very fast, runs fine on CPU.</td><td>Quick drafts, or no GPU.</td></tr>
+        <tr><td>Depth Anything V2 Small</td><td>Local depth estimation with CPU support.</td><td>Generate a starting depth map, then refine the relief with shaping and painting tools.</td></tr>
       </table>
-      <div class="figrow">
-        <figure><img src="/help/img/baseline_gray.png" alt="da3mono-large heightmap" /><figcaption>da3mono-large: smooth near&rarr;far gradation</figcaption></figure>
-        <figure><img src="/help/img/model_da2_gray.png" alt="da2-large heightmap" /><figcaption>da2-large: subject bright, background crushed dark</figcaption></figure>
-      </div>
       <div class="tip">
-        Because the two families distribute depth so differently, <strong>clip and threshold values do not transfer between models</strong>. On da2-* the whole background may live below 0.1 (use small thresholds like 0.02&ndash;0.08); on da3mono the same background can span 0.2&ndash;0.5.
+        Use the left and right arrows on the canvas to undo and redo project changes. Each click steps through settings, masks and depth edits in order. Making a new change after undo starts a new direction in your history.
       </div>
 
       <h2 id="size">Size tab</h2>
@@ -112,12 +106,7 @@
       <h3>Flatten background + threshold</h3>
       <p class="param-meta">off by default &middot; threshold 0&ndash;1, useful values are model-dependent</p>
       <p>Hard-zeros every pixel below the threshold, giving a perfectly flat field around the subject &mdash; ideal when you want the subject floating on a clean plane rather than a fading room. Unlike the depth floor (which re-stretches), flatten leaves everything above the threshold untouched.</p>
-      <p>The right threshold depends on the photo <em>and the model</em> (see the tip above): on <code>da2-*</code> try 0.02&ndash;0.08; on <code>da3mono</code> try 0.2&ndash;0.5. Watch the grayscale preview: the flattened region goes pure black.</p>
-      <div class="figrow">
-        <figure><img src="/help/img/flatten_030.png" alt="flatten 0.30 on da3" /><figcaption>da3mono, threshold 0.30</figcaption></figure>
-        <figure><img src="/help/img/flatten_050.png" alt="flatten 0.50 on da3" /><figcaption>da3mono, threshold 0.50</figcaption></figure>
-        <figure><img src="/help/img/flatten_da2.png" alt="flatten on da2" /><figcaption>da2-large, floor 0.36 + threshold 0.06</figcaption></figure>
-      </div>
+      <p>The right threshold depends on the photo. Begin with a low threshold and watch the grayscale preview as you adjust it. The flattened region goes pure black.</p>
 
       <h2>Shaping tab — surface</h2>
 
@@ -169,7 +158,7 @@
 
       <h2>A suggested order of operations</h2>
       <ol>
-        <li><strong>Pick the depth model</strong> first (geometric da3mono vs artistic da2) &mdash; every threshold below depends on it.</li>
+        <li><strong>Inspect the initial depth</strong> first, then adjust clipping and shaping for your photo.</li>
         <li><strong>Isolate the subject</strong>: raise the depth floor and/or enable flatten-background until the room is gone.</li>
         <li><strong>Balance the range</strong>: gamma up to make the subject pop; ceiling down if one near feature dominates.</li>
         <li><strong>Dress the surface</strong>: a little smoothing, bilateral if the silhouette suffers, detail blend for fur/hair.</li>

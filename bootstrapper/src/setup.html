@@ -6,10 +6,10 @@
 </style>
 <header><span aria-hidden="true">◇</span><h1>Photo Relief Studio</h1></header>
 <h2 id="stage" aria-live="polite">Preparing installation</h2>
-<p>Your studio is being set up on this computer. Keep this page open while the application and AI model download.</p>
+<p>Your studio is being set up on this computer. Keep this page open while the application and model download.</p>
 <progress id="progress" aria-label="Installation progress"></progress><p id="bytes"></p>
 <p id="error" role="alert"></p><button id="retry" hidden>Retry setup</button><button id="cancel" class="secondary" hidden>Cancel setup</button>
-<footer><small>Internet is needed for initial setup. Once installed, your photographs, projects and AI processing stay on this computer. Reopen the launcher to resume an interrupted setup.</small></footer>
+<footer><small>Internet is needed for initial setup. Once installed, your photographs, projects and processing stay on this computer. Reopen the launcher to resume an interrupted setup.</small></footer>
 <script>
 const element = id => document.getElementById(id);
 async function action(name){await fetch(name,{method:'POST'});}

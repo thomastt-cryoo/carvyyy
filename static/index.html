@@ -9,7 +9,7 @@
     />
     <title>Photo Relief Studio</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/workspace.css?v=m4.4" />
+    <link rel="stylesheet" href="/workspace.css?v=canvas-history-1" />
     <script type="importmap">
       { "imports": { "three": "/vendor/three/three.module.js" } }
     </script>
@@ -241,6 +241,12 @@
             </div>
           </div>
           <div class="canvas-stage" id="canvas-stage">
+            <div class="canvas-history" role="group" aria-label="Project undo and redo">
+              <button id="canvas-undo" class="icon-button" aria-label="Undo last change"
+                title="Undo last change (Ctrl/Cmd Z)" data-icon="undo" disabled></button>
+              <button id="canvas-redo" class="icon-button" aria-label="Redo last change"
+                title="Redo last change (Ctrl/Cmd Shift Z)" data-icon="redo" disabled></button>
+            </div>
             <div id="viewer" class="viewer"></div>
             <div id="image-pane" class="image-pane" hidden>
               <img id="preview-image" alt="Original photograph" />
@@ -812,7 +818,7 @@
       <h3>Correct the subject or the depth</h3>
       <p>
         Background tools paint what belongs to the subject. Sculpt tools raise,
-        lower, smooth or flatten depth. Ctrl/Cmd Z undoes the selected layer;
+        lower, smooth or flatten depth. Ctrl/Cmd Z undoes the latest project change;
         Shift adds redo. Escape closes dialogs or cancels a stroke.
       </p>
       <h3>Keep expectations grounded</h3>
@@ -825,6 +831,6 @@
         >All original parameter explanations</a
       >
     </dialog>
-    <script type="module" src="/workspace.js?v=m4.2"></script>
+    <script type="module" src="/workspace.js?v=canvas-history-1"></script>
   </body>
 </html>

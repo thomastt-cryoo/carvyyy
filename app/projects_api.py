@@ -8,7 +8,7 @@ from typing import Literal
 from fastapi import APIRouter, UploadFile
 from pydantic import BaseModel, Field, field_validator
 
-from app import depth, editing, jobs, project_store, sessions, storage
+from app import depth, editing, history, jobs, project_store, sessions, storage
 from app.config import MODEL_REGISTRY, resolve_default_model, settings
 from app.model_status import availability
 from app.path_safety import UnsafePathError, contained_path
@@ -69,6 +69,8 @@ def deleted_projects():
 
 @router.post("/upload")
 async def upload_project(image: UploadFile, model_id: str | None = None):
+    if model_id not in (None, "da2-small"):
+        raise editing.EditingError("Choose Depth Anything V2 Small.")
     if model_id is not None and model_id not in MODEL_REGISTRY:
         raise editing.EditingError("Unknown depth model.")
     if model_id is not None and not availability(model_id)["selectable"]:
@@ -125,7 +127,7 @@ def retry(sid: str):
 
 @router.post("/{sid}/preset")
 def apply_preset(sid: str, request: Preset):
-    with editing.lock_for(sid):
+    with history.record(sid):
         state = editing.read_state(sid)
         editing._check_revision(state, request.expected_revision)
         saved = project_store.read(sid)
@@ -153,7 +155,7 @@ def apply_preset(sid: str, request: Preset):
 
 @router.post("/{sid}/undo-preset")
 def undo_preset(sid: str):
-    with editing.lock_for(sid):
+    with history.record(sid):
         saved = project_store.read(sid)
         previous = saved.get("preset_undo")
         if not previous:
@@ -162,6 +164,21 @@ def undo_preset(sid: str):
         editing.update_settings(sid, editing.EditorSettings(**previous["editor"]))
         saved.update(preset="Custom", preset_undo=None)
         project_store.write(sid, saved)
+    return {
+        "project": project(sid),
+        "params": sessions.read_params(sid),
+        "editor": editing.public_state(sid, sessions.read_params(sid).depth_model),
+    }
+
+
+class ProjectHistoryAction(BaseModel):
+    action: Literal["undo", "redo"]
+    expected_token: str = Field(min_length=1, max_length=64)
+
+
+@router.post("/{sid}/history")
+def project_history(sid: str, request: ProjectHistoryAction):
+    history.move(sid, request.action, request.expected_token)
     return {
         "project": project(sid),
         "params": sessions.read_params(sid),
