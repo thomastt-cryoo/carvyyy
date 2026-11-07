@@ -778,6 +778,7 @@ details {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.canvas-history,
 .camera-tools {
   position: absolute;
   right: 20px;
@@ -789,6 +790,21 @@ details {
   border: 1px solid var(--line);
   border-radius: 5px;
   padding: 3px;
+}
+.canvas-history {
+  left: 20px;
+  right: auto;
+  top: 20px;
+  bottom: auto;
+  z-index: 2;
+}
+.canvas-history .icon-button {
+  width: 36px;
+  height: 36px;
+}
+.canvas-history svg {
+  width: 19px;
+  height: 19px;
 }
 .camera-tools > span {
   height: 18px;

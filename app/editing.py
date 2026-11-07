@@ -122,6 +122,9 @@ def _save_array(path: Path, array: np.ndarray) -> None:
 
 
 def read_state(sid: str) -> dict:
+    from app.history import recover
+
+    recover(sid)
     path = _file(sid, "state.json")
     if not path.exists():
         return {
@@ -172,8 +175,11 @@ def _check_revision(state: dict, expected: int | None) -> None:
 
 
 def _commit(sid: str, state: dict) -> None:
-    state["revision"] += 1
-    _atomic_json(_file(sid, "state.json"), state)
+    from app.history import record
+
+    with record(sid):
+        state["revision"] += 1
+        _atomic_json(_file(sid, "state.json"), state)
 
 
 def _append(sid: str, state: dict, key: str, operation: dict) -> None:
@@ -199,6 +205,9 @@ def public_state(sid: str, model_id: str) -> dict:
             result[channel + "_operations"] = history["cursor"]
         result["depth_orientation"] = "white is nearer / higher relief (before optional inversion)"
         result["ai_available"] = depth.session_depth_path(sid, model_id).is_file()
+        from app.history import status
+
+        result["project_history"] = status(sid)
         return result
 
 

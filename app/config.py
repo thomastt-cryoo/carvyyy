@@ -121,12 +121,11 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
 def resolve_default_model(device: str) -> str:
     """The model auto-selected when the user hasn't chosen one.
 
-    GPU (cuda) → the SPEC default (``da3mono-large``, overridable via P2R_DEFAULT_MODEL_ID),
-    falling back to ``da2-small`` in commercial builds if unavailable/restricted.
-    Apple-Silicon (mps) → Apache-licensed ``da2-small`` for commercial builds;
-    research mode retains ``da2-large`` (DA3's worker does not install on arm64 Mac).
-    CPU → ``da2-small`` (the fast Apache-licensed fallback), per SPEC §5.1.1.
+    The commercial application selects Small on every supported device.
+    Legacy research configurations retain their internal model resolution.
     """
+    if settings.commercial_build:
+        return "da2-small"
     if device == "mps":
         return "da2-small" if settings.commercial_build else "da2-large"
     if device != "cuda":

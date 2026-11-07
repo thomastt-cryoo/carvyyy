@@ -83,8 +83,7 @@ def test_commercial_defaults_and_restricted_adapter_are_preserved(monkeypatch):
     with pytest.raises(depth.BackendUnavailableError, match="authorization"):
         depth._ensure_backend("da2-large")
     response = TestClient(app).get("/api/models").json()
-    large = next(row for row in response["models"] if row["model_id"] == "da2-large")
-    assert large["authorization_required"] and not large["use_allowed"]
+    assert [row["model_id"] for row in response["models"]] == ["da2-small"]
     monkeypatch.setattr(settings, "authorized_models", ("da2-large",))
     assert model_use_allowed("da2-large")
     monkeypatch.setattr(settings, "authorized_models", ())

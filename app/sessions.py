@@ -108,6 +108,9 @@ def read_params(session_id: str) -> ReliefParams:
     """Load persisted params, or the schema defaults if none have been saved yet."""
     if not session_dir(session_id).exists():
         raise SessionNotFoundError(session_id)
+    from app.history import recover
+
+    recover(session_id)
     path = params_path(session_id)
     if not path.exists():
         return ReliefParams()
@@ -117,7 +120,10 @@ def read_params(session_id: str) -> ReliefParams:
 def write_params(session_id: str, params: ReliefParams) -> None:
     if not session_dir(session_id).exists():
         raise SessionNotFoundError(session_id)
-    atomic_json(params_path(session_id), params.model_dump())
+    from app.history import record
+
+    with record(session_id):
+        atomic_json(params_path(session_id), params.model_dump())
 
 
 def atomic_json(path: Path, value: dict) -> None:

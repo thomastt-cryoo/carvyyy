@@ -1,7 +1,7 @@
 name: M6 release verification
 on:
   pull_request:
-    branches: [codex/m5-production-launcher]
+    branches: [codex/m5-production-launcher, codex/m6-release-verification]
     paths:
       - 'bootstrapper/**'
       - 'app/**'

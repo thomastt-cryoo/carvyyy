@@ -116,8 +116,16 @@ def read(sid: str) -> dict:
 
 
 def write(sid: str, value: dict) -> None:
-    value["updated_at"] = timestamp()
-    atomic_json(sessions.session_file(sid, "project.json"), value)
+    from app.history import record
+
+    path = sessions.session_file(sid, "project.json")
+    if not path.exists():
+        value["updated_at"] = timestamp()
+        atomic_json(path, value)
+        return
+    with record(sid):
+        value["updated_at"] = timestamp()
+        atomic_json(path, value)
 
 
 def all_projects() -> list[dict]:
@@ -133,12 +141,13 @@ def all_projects() -> list[dict]:
 
 
 def repair(sid: str, reset_settings: bool = False) -> dict:
+    from app import history
     from app.config import resolve_default_model
     from app.depth import select_device
     from app.schemas import ReliefParams
 
     document(sid)  # Validate directory containment and existence.
-    with editing.lock_for(sid):
+    with history.repair(sid):
         try:
             with Image.open(sessions.session_file(sid, sessions.SOURCE_IMAGE_NAME)) as photo:
                 photo.verify()

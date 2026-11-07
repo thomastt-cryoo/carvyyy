@@ -83,8 +83,7 @@ def test_registry_has_three_models() -> None:
 
 def test_resolve_default_model() -> None:
     assert resolve_default_model("cpu") == "da2-small"
-    # M2.5: the SPEC default is back in effect on GPU.
-    assert resolve_default_model("cuda") == "da3mono-large"
+    assert resolve_default_model("cuda") == "da2-small"
     # Apple-Silicon: best model that runs on MPS (DA3 can't install on arm64 Mac).
     assert resolve_default_model("mps") == "da2-small"  # M2 commercial-safe default
 

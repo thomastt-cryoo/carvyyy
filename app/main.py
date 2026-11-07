@@ -269,6 +269,8 @@ async def put_params(session_id: str, params: ReliefParams):
             "model_authorization_required",
             "This model needs separate commercial authorization. Choose DA2 Small.",
         )
+    if params.depth_model != "da2-small" and params.depth_model != meta.get("model_id"):
+        return _error(422, "model_unavailable", "Choose Depth Anything V2 Small.")
     write_params(session_id, params)
     # Changing the depth model requires (cached) re-inference; everything else in
     # ReliefParams is a cheap heightmap re-run and needs no backend work here.
@@ -313,7 +315,7 @@ def preview_heightmap(session_id: str, grayscale: bool = False, original: bool =
 @app.get("/api/models", response_model=ModelsResponse)
 async def list_models() -> ModelsResponse:
     """Registry contents for the UI's depth-model dropdown (SPEC §5.1.1)."""
-    default_model = resolve_default_model(depth.select_device())
+    default_model = "da2-small"
     return ModelsResponse(
         models=[
             ModelInfo(
@@ -333,6 +335,7 @@ async def list_models() -> ModelsResponse:
                 **availability(s.model_id),
             )
             for s in MODEL_REGISTRY.values()
+            if s.model_id == "da2-small"
         ],
         default_model=default_model,
         default_params=ReliefParams(depth_model=default_model),

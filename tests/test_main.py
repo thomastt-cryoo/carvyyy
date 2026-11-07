@@ -234,32 +234,28 @@ def test_put_params_rejects_bad_depth_window(portrait_jpeg_bytes: bytes) -> None
     assert res.status_code == 422
 
 
-def test_put_params_switching_model_triggers_new_inference_job(
+def test_put_params_removed_model_is_rejected_without_inference(
     portrait_jpeg_bytes: bytes, _stub_inference
 ) -> None:
     from app.config import MODEL_REGISTRY
 
     session_id = _create_session(portrait_jpeg_bytes)
-    # The session's default model depends on the host device (cpu/cuda/mps), so pick a
-    # target that's guaranteed *different* from whatever it seeded, to force a real switch.
+    # An internal legacy adapter must not become a new user-selectable model.
     current_model = client.get(f"/api/sessions/{session_id}/params").json()["depth_model"]
     other_model = next(m for m in MODEL_REGISTRY if m != current_model)
     _stub_inference.clear()  # drop the creation-time call, only care about the switch
     res = client.put(f"/api/sessions/{session_id}/params", json={"depth_model": other_model})
-    assert res.status_code == 200
-    assert (session_id, other_model) in _stub_inference
+    assert res.status_code == 422
+    assert _stub_inference == []
 
 
 def test_put_params_same_model_does_not_retrigger_inference(
     portrait_jpeg_bytes: bytes, _stub_inference
 ) -> None:
     session_id = _create_session(portrait_jpeg_bytes)
-    from app.config import MODEL_REGISTRY
-
-    current_model = next(iter(MODEL_REGISTRY))
-    client.put(f"/api/sessions/{session_id}/params", json={"depth_model": current_model})
+    params = client.get(f"/api/sessions/{session_id}/params").json()
     _stub_inference.clear()
-    client.put(f"/api/sessions/{session_id}/params", json={"gamma": 1.5})
+    client.put(f"/api/sessions/{session_id}/params", json=params | {"gamma": 1.5})
     assert _stub_inference == []
 
 
@@ -324,7 +320,7 @@ def test_models_endpoint_lists_registry() -> None:
     res = client.get("/api/models")
     assert res.status_code == 200
     body = res.json()
-    assert {m["model_id"] for m in body["models"]} == set(MODEL_REGISTRY)
+    assert {m["model_id"] for m in body["models"]} == {"da2-small"}
     assert body["default_model"] in MODEL_REGISTRY
     for m in body["models"]:
         assert m["role"] and m["license"]
