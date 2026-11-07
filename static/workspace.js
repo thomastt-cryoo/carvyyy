@@ -33,6 +33,7 @@ const state = {
   flattenLevel: 0.5,
   compare: false,
   saving: false,
+  replaying: false,
   segmentation: null,
   exporting: null,
   lastExport: null,
@@ -394,7 +395,7 @@ function syncParams() {
     const input = $(field.id);
     if (!input) continue;
     input.disabled =
-      state.compare ||
+      state.compare || state.replaying ||
       (field.id === "depth_model" && (state.saving || !state.ready));
     if (field.type === "checkbox") input.checked = state.params[field.id];
     else input.value = state.params[field.id];
@@ -402,11 +403,11 @@ function syncParams() {
     if (number) {
       if (document.activeElement !== number)
         number.value = state.params[field.id];
-      number.disabled = state.compare;
+      number.disabled = state.compare || state.replaying;
     }
   }
   $("export-quality").value = state.params.resolution;
-  $("export-quality").disabled = state.compare;
+  $("export-quality").disabled = state.compare || state.replaying;
   updatePreviewQuality();
   const meta = state.project?.image;
   if (meta?.w && meta?.h) {
@@ -1485,7 +1486,9 @@ $("sculpt-redo").onclick = () => historyAction("depth", "redo");
 $("reset-depth").onclick = () => historyAction("depth", "reset");
 $("reset-mask").onclick = () => historyAction("mask", "reset");
 async function projectHistoryAction(direction) {
-  if (!state.id || !state.editor || state.compare) return;
+  if (!state.id || !state.editor || state.compare || state.replaying) return;
+  state.replaying = true;
+  syncParams();
   try {
     await flush();
     await action(async (token) => {
@@ -1513,7 +1516,13 @@ async function projectHistoryAction(direction) {
       planExport();
       refreshLibrary();
     });
-  } catch (error) { fail(error, () => reloadProject()); }
+  } catch (error) {
+    fail(error, () => reloadProject());
+  } finally {
+    state.replaying = false;
+    syncParams();
+    syncTools();
+  }
 }
 $("canvas-undo").onclick = () => projectHistoryAction("undo");
 $("canvas-redo").onclick = () => projectHistoryAction("redo");
