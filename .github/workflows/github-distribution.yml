@@ -1,0 +1,153 @@
+name: GitHub customer distribution
+on:
+  push:
+    branches: [codex/github-release-distribution]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: github-distribution-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  RELEASE_VERSION: 1.1.2-gh-${{ github.run_id }}-${{ github.run_attempt }}
+  PYTHONUTF8: '1'
+jobs:
+  build:
+    if: github.repository == 'thomastt-cryoo/carvyyy'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    env:
+      HF_HOME: ${{ github.workspace }}/data/github/models
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test and prepare licensed dependencies
+        shell: bash
+        run: |
+          uv sync --frozen --extra cpu
+          uv run --no-sync ruff check .
+          uv run --no-sync ruff format --check .
+          uv run --no-sync pytest -m 'not slow'
+          uv run --no-sync python -c "from huggingface_hub import snapshot_download; snapshot_download('depth-anything/Depth-Anything-V2-Small-hf', revision='5426e4f0f36572d16453bbda7a8389317b1bef99')"
+      - name: Build components and bundled-application Etsy ZIP
+        shell: bash
+        run: |
+          base="https://github.com/$GITHUB_REPOSITORY/releases/download/components-$RELEASE_VERSION"
+          uv run --no-sync python tools/m5/package_runtime.py --uv "$(command -v uv)" --output data/github/release --model-cache data/github/models --base-url "$base" --version "$RELEASE_VERSION" --bundle-application
+          export P2R_MANIFEST_SHA256="$(cat data/github/release/release.sha256)"
+          cargo test --locked --manifest-path bootstrapper/Cargo.toml
+          cargo build --release --locked --manifest-path bootstrapper/Cargo.toml
+          binary=bootstrapper/target/release/relief-bootstrap
+          if [ "$RUNNER_OS" = Windows ]; then binary="$binary.exe"; fi
+          uv run --no-sync python tools/m5/package_launcher.py --binary "$binary" --release data/github/release --guide docs/releases/CUSTOMER-GUIDE.md --public
+      - name: Stage only public dependencies
+        shell: bash
+        run: |
+          mkdir -p data/github/public
+          cp data/github/release/runtime-*.zip data/github/release/models-*.zip data/github/public/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-dependencies-${{ matrix.os }}
+          path: data/github/public/*.zip
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: etsy-candidate-${{ matrix.os }}
+          path: |
+            data/github/release/Photo-Relief-Studio-*.zip
+            data/github/release/application-*.zip
+            data/github/release/*.json
+            data/github/release/*.sha256
+          compression-level: 0
+          if-no-files-found: error
+  publish-dependencies:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_url: ${{ steps.publish.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: public-dependencies-*
+          path: data/github/public
+          merge-multiple: true
+      - name: Publish immutable dependency-only release
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python tools/releases/github_release.py --assets data/github/public --version "$RELEASE_VERSION" --repository "$GITHUB_REPOSITORY" --output data/github/published.json
+          python -c "import json,os; d=json.load(open('data/github/published.json')); open(os.environ['GITHUB_OUTPUT'],'a').write('url='+d['url']+'\n')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: published-dependency-inventory
+          path: data/github/published.json
+  qualify:
+    needs: publish-dependencies
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - run: uv sync --frozen --extra cpu
+      - uses: actions/download-artifact@v4
+        with:
+          name: etsy-candidate-${{ matrix.os }}
+          path: data/github/release
+      - name: Verify real anonymous HTTPS downloads and Range
+        run: uv run --no-sync python tools/releases/verify_public.py --release data/github/release --output data/github/anonymous-downloads.json
+      - name: Extract actual Windows customer ZIP
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $customerZip = Get-ChildItem 'data/github/release/Photo-Relief-Studio-*.zip'
+          Expand-Archive -LiteralPath $customerZip.FullName -DestinationPath 'data/github/customer ZIP'
+      - name: Extract actual Apple Silicon customer ZIP
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          ditto -x -k data/github/release/Photo-Relief-Studio-*.zip 'data/github/customer ZIP'
+          test -x 'data/github/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio'
+          file 'data/github/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio' | grep -F arm64
+      - name: Fresh public installation, offline use and cached repair
+        shell: bash
+        run: |
+          launcher='data/github/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio'
+          if [ "$RUNNER_OS" = Windows ]; then launcher='data/github/customer ZIP/Photo Relief Studio.exe'; fi
+          uv run --no-sync python tools/m5/verify_runtime.py --launcher "$launcher" --release data/github/release --root 'data/github/clean install' --source docs/m3/evidence/inputs/tiger.png --packaged --repair --public
+          uv run --no-sync python tools/m5/offline_probe.py --installed "data/github/clean install/versions/$RELEASE_VERSION" --output data/github/strict-offline --source docs/m3/evidence/inputs/tiger.png
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: verified-etsy-${{ matrix.os }}
+          path: |
+            data/github/release/Photo-Relief-Studio-*.zip
+            data/github/release/launcher-checksums.json
+            data/github/release/release.json
+            data/github/anonymous-downloads.json
+            data/github/clean install/acceptance.json
+            data/github/strict-offline/results.json
+          if-no-files-found: error

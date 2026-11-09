@@ -31,7 +31,10 @@ struct Manifest {
 #[derive(Clone, Deserialize, Serialize)]
 struct Artifact {
     id: String,
+    #[serde(default)]
     url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    bundled_path: Option<String>,
     size_bytes: u64,
     unpacked_limit_bytes: u64,
     sha256: String,
@@ -213,12 +216,88 @@ fn stage(state: &State, message: &str) {
 
 fn verify_url(url: &str, allow_local: bool) -> Result<()> {
     let url = reqwest::Url::parse(url)?;
+    if !url.username().is_empty() || url.password().is_some() {
+        return Err("download URLs must not contain credentials".into());
+    }
     if url.scheme() != "https"
         && !(allow_local && url.scheme() == "http" && url.host_str() == Some("127.0.0.1"))
     {
         return Err("components require HTTPS (test HTTP is restricted to 127.0.0.1)".into());
     }
     Ok(())
+}
+
+fn download_client(allow_local: bool) -> Result<Client> {
+    Ok(Client::builder()
+        .user_agent("PhotoReliefStudio/1.1.2")
+        .connect_timeout(Duration::from_secs(20))
+        .timeout(Duration::from_secs(30))
+        .redirect(reqwest::redirect::Policy::custom(move |attempt| {
+            if attempt.previous().len() >= 10 {
+                attempt.error("Too many download redirects")
+            } else if verify_url(attempt.url().as_str(), allow_local).is_err() {
+                attempt.error("Insecure download redirect refused")
+            } else {
+                attempt.follow()
+            }
+        }))
+        .build()?)
+}
+
+fn bundled_archive(item: &Artifact, bundle: &Path, cache: &Path, state: &State) -> Result<PathBuf> {
+    if !item.url.is_empty() || item.id != "application" {
+        return Err("Only the application may use a bundled archive, with no download URL".into());
+    }
+    let relative = safe_relative(item.bundled_path.as_deref().ok_or("missing bundled path")?)?;
+    if item.sha256.len() != 64 || !item.sha256.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err("invalid SHA-256".into());
+    }
+    let target = cache.join(format!("{}.zip", item.sha256));
+    plain_path(cache, &target)?;
+    if target.is_file()
+        && target.metadata()?.len() == item.size_bytes
+        && sha_file(&target, Some(state))? == item.sha256
+    {
+        return Ok(target);
+    }
+    let source = bundle.join(relative);
+    plain_path(bundle, &source)?;
+    stage(state, "Verifying bundled application");
+    if !source.is_file()
+        || source.metadata()?.len() != item.size_bytes
+        || sha_file(&source, Some(state))? != item.sha256
+    {
+        return Err("The bundled application is missing or damaged. Extract the complete ZIP again and choose Retry setup.".into());
+    }
+    let partial = cache.join(format!("{}.part", item.sha256));
+    plain_path(cache, &partial)?;
+    let mut input = File::open(source)?;
+    let mut output = File::create(&partial)?;
+    let mut buffer = [0u8; 65536];
+    let mut copied = 0u64;
+    loop {
+        check_cancel(state)?;
+        let count = input.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        copied += count as u64;
+        if copied > item.size_bytes {
+            return Err("Bundled application changed while copying".into());
+        }
+        output.write_all(&buffer[..count])?;
+    }
+    output.sync_all()?;
+    drop(output);
+    if copied != item.size_bytes || sha_file(&partial, Some(state))? != item.sha256 {
+        return Err("Bundled application failed SHA-256 verification; not executed".into());
+    }
+    // Windows rename cannot replace an existing corrupt cache entry.
+    if target.exists() {
+        fs::remove_file(&target)?;
+    }
+    fs::rename(partial, &target)?;
+    Ok(target)
 }
 
 fn download(
@@ -589,12 +668,7 @@ fn run(
         }
     }
     let executable = safe_relative(&manifest.executable)?;
-    let client = Client::builder()
-        .connect_timeout(Duration::from_secs(20))
-        // Blocking reqwest applies this timeout to each network operation.
-        .timeout(Duration::from_secs(15))
-        .redirect(reqwest::redirect::Policy::none())
-        .build()?;
+    let client = download_client(local)?;
     let cache = root.join("downloads");
     plain_path(root, &cache)?;
     fs::create_dir_all(&cache)?;
@@ -636,8 +710,29 @@ fn run(
             );
         }
         let mut archives = Vec::new();
-        for item in &manifest.components {
-            archives.push((download(&client, item, &cache, state, local)?, item));
+        for item in manifest
+            .components
+            .iter()
+            .filter(|item| item.bundled_path.is_some())
+            .chain(
+                manifest
+                    .components
+                    .iter()
+                    .filter(|item| item.bundled_path.is_none()),
+            )
+        {
+            let archive = if item.bundled_path.is_some() {
+                let executable = env::current_exe()?;
+                bundled_archive(
+                    item,
+                    executable.parent().ok_or("missing launcher folder")?,
+                    &cache,
+                    state,
+                )?
+            } else {
+                download(&client, item, &cache, state, local)?
+            };
+            archives.push((archive, item));
         }
         fs::create_dir_all(&staging)?;
         for (archive, item) in archives {
@@ -993,6 +1088,111 @@ mod tests {
         assert!(verify_url("http://example.com/file.zip", true).is_err());
         assert!(verify_url("http://127.0.0.1/file.zip", false).is_err());
         assert!(verify_url("http://127.0.0.1/file.zip", true).is_ok());
+        assert!(verify_url("https://private:token@example.com/file.zip", false).is_err());
+    }
+    #[test]
+    fn bundled_application_is_authenticated_and_recovers_from_cache() {
+        let root = env::temp_dir().join(format!("relief-bundle-{}", secret().unwrap()));
+        let cache = root.join("cache");
+        fs::create_dir_all(&cache).unwrap();
+        let source = root.join("application.zip");
+        fs::write(&source, b"bundled paid application").unwrap();
+        let mut item = Artifact {
+            id: "application".into(),
+            url: "".into(),
+            bundled_path: Some("application.zip".into()),
+            size_bytes: 24,
+            unpacked_limit_bytes: 100,
+            sha256: sha_file(&source, None).unwrap(),
+        };
+        item.size_bytes = source.metadata().unwrap().len();
+        let state = Arc::new(Mutex::new(Progress::default()));
+        fs::write(&source, b"damaged").unwrap();
+        assert!(bundled_archive(&item, &root, &cache, &state).is_err());
+        fs::write(&source, b"bundled paid application").unwrap();
+        let verified = bundled_archive(&item, &root, &cache, &state).unwrap();
+        assert_eq!(fs::read(&verified).unwrap(), b"bundled paid application");
+        fs::remove_file(&source).unwrap();
+        assert_eq!(
+            bundled_archive(&item, &root, &cache, &state).unwrap(),
+            verified
+        );
+        item.bundled_path = Some("../escape.zip".into());
+        assert!(bundled_archive(&item, &root, &cache, &state).is_err());
+        item.bundled_path = Some("application.zip".into());
+        item.url = "https://example.com/application.zip".into();
+        assert!(bundled_archive(&item, &root, &cache, &state).is_err());
+        remove_staging(&root).unwrap();
+    }
+    #[test]
+    fn interrupted_redirected_download_resumes_and_verifies() {
+        use std::net::{Shutdown, TcpListener};
+        let root = env::temp_dir().join(format!("relief-resume-{}", secret().unwrap()));
+        fs::create_dir_all(&root).unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let handle = thread::spawn(move || {
+            for index in 0..4 {
+                let (mut stream, _) = listener.accept().unwrap();
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(10)))
+                    .unwrap();
+                let mut request = Vec::new();
+                while !request.ends_with(b"\r\n\r\n") {
+                    let mut b = [0];
+                    if stream.read(&mut b).unwrap() == 0 {
+                        break;
+                    }
+                    request.push(b[0]);
+                }
+                let text = String::from_utf8(request).unwrap().to_ascii_lowercase();
+                if index >= 2 {
+                    assert!(text.contains("range: bytes=3-"), "{text}");
+                }
+                let response = match index {
+                    0 | 2 => format!("HTTP/1.1 302 Found\r\nLocation: http://{address}/payload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"),
+                    1 => "HTTP/1.1 200 OK\r\nContent-Length: 9\r\nConnection: close\r\n\r\nabc".into(),
+                    _ => "HTTP/1.1 206 Partial Content\r\nContent-Length: 6\r\nContent-Range: bytes 3-8/9\r\nConnection: close\r\n\r\ndefghi".into(),
+                };
+                stream.write_all(response.as_bytes()).unwrap();
+                stream.shutdown(Shutdown::Both).unwrap();
+            }
+        });
+        let item = Artifact {
+            id: "runtime".into(),
+            url: format!("http://{address}/start"),
+            bundled_path: None,
+            size_bytes: 9,
+            unpacked_limit_bytes: 9,
+            sha256: format!("{:x}", Sha256::digest(b"abcdefghi")),
+        };
+        let state = Arc::new(Mutex::new(Progress::default()));
+        let client = download_client(true).unwrap();
+        assert!(download(&client, &item, &root, &state, true).is_err());
+        assert_eq!(
+            fs::read(root.join(format!("{}.part", item.sha256))).unwrap(),
+            b"abc"
+        );
+        let verified = download(&client, &item, &root, &state, true).unwrap();
+        assert_eq!(fs::read(verified).unwrap(), b"abcdefghi");
+        handle.join().unwrap();
+        remove_staging(&root).unwrap();
+    }
+    #[test]
+    fn redirects_cannot_leave_secure_or_loopback_test_transport() {
+        let server = Server::http("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/start", server.server_addr());
+        let handle = thread::spawn(move || {
+            server
+                .recv()
+                .unwrap()
+                .respond(Response::empty(302).with_header(
+                    Header::from_bytes("Location", "http://example.com/insecure").unwrap(),
+                ))
+                .unwrap();
+        });
+        assert!(download_client(true).unwrap().get(url).send().is_err());
+        handle.join().unwrap();
     }
     #[test]
     fn rejects_traversal_and_oversized_extraction() {
@@ -1064,6 +1264,7 @@ mod tests {
             components: vec![Artifact {
                 id: "application".into(),
                 url,
+                bundled_path: None,
                 size_bytes: length,
                 unpacked_limit_bytes: 100,
                 sha256: digest,
@@ -1112,6 +1313,7 @@ mod tests {
             components: vec![Artifact {
                 id: "runtime".into(),
                 url: "http://127.0.0.1:1/file.zip".into(),
+                bundled_path: None,
                 size_bytes: 1,
                 unpacked_limit_bytes: u64::MAX / 2,
                 sha256: "0".repeat(64),

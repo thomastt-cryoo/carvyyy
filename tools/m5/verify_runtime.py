@@ -197,7 +197,13 @@ def main():
         process.wait(timeout=30)
         assert process.returncode == 0
         running.unlink()
-        process = subprocess.Popen(command, env=launch_env)
+        offline_env = launch_env | {
+            "HTTP_PROXY": "http://127.0.0.1:9",
+            "HTTPS_PROXY": "http://127.0.0.1:9",
+            "ALL_PROXY": "http://127.0.0.1:9",
+            "NO_PROXY": "127.0.0.1,localhost",
+        }
+        process = subprocess.Popen(command, env=offline_env)
         restart = time.monotonic()
         while time.monotonic() - restart < 300:
             if running.exists():
@@ -214,6 +220,7 @@ def main():
         reopen_metric = "reopen_seconds" if args.public else "offline_reopen_seconds"
         result[reopen_metric] = round(time.monotonic() - restart, 2)
         result["project_preserved"] = True
+        result["offline_relaunch_external_proxy_unavailable"] = True
         call("/api/launcher/shutdown", b"")
         process.wait(timeout=30)
         assert process.returncode == 0

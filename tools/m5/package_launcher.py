@@ -30,7 +30,9 @@ def main():
     document = json.loads(manifest.read_text())
     target = document["platform"]
     if args.public and any(
-        urlparse(item["url"]).scheme != "https" for item in document["components"]
+        urlparse(item["url"]).scheme != "https"
+        for item in document["components"]
+        if "bundled_path" not in item
     ):
         raise SystemExit("Public launcher components must use HTTPS.")
     staging = release / "launcher"
@@ -38,6 +40,7 @@ def main():
     if target == "windows-x86_64" and platform.system() == "Windows":
         shutil.copy2(args.binary, staging / "Photo Relief Studio.exe")
         shutil.copy2(manifest, staging / "release.json")
+        component_folder = staging
     elif target == "macos-aarch64" and platform.system() == "Darwin":
         bundle = staging / "Photo Relief Studio.app/Contents"
         executable = bundle / "MacOS"
@@ -45,6 +48,7 @@ def main():
         shutil.copy2(args.binary, executable / "Photo Relief Studio")
         (executable / "Photo Relief Studio").chmod(0o755)
         shutil.copy2(manifest, executable / "release.json")
+        component_folder = executable
         (bundle / "Info.plist").write_bytes(
             plistlib.dumps(
                 {
@@ -60,6 +64,19 @@ def main():
         )
     else:
         raise SystemExit("Build native launchers only on the matching supported architecture.")
+    for item in document["components"]:
+        if "bundled_path" not in item:
+            continue
+        name = item["bundled_path"]
+        if item["id"] != "application" or Path(name).name != name or item.get("url"):
+            raise SystemExit("Only a local application filename may be bundled.")
+        source = release / name
+        if (
+            source.stat().st_size != item["size_bytes"]
+            or hashlib.file_digest(source.open("rb"), "sha256").hexdigest() != item["sha256"]
+        ):
+            raise SystemExit("Bundled application failed size or SHA-256 verification.")
+        shutil.copy2(source, component_folder / name)
     repository = Path(__file__).resolve().parents[2]
     metadata = json.loads(
         subprocess.check_output(
