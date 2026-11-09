@@ -1,4 +1,10 @@
-# Connect the release download bucket
+# Superseded: Cloudflare R2 handoff
+
+The owner replaced Cloudflare R2 with GitHub Releases on November 10, 2026. **Do not configure R2 or follow the historical instructions below.** The active pipeline is documented in [GitHub distribution](../releases/GITHUB-DISTRIBUTION.md). The M6 controlled regression workflow no longer offers R2 deployment.
+
+The text below is retained as milestone history only.
+
+## Historical bucket instructions
 
 The customer ZIP is small. The launcher downloads the application, Python runtime and AI models from a separate Cloudflare R2 bucket. The bucket should contain release files only because the connected domain serves those files publicly.
 

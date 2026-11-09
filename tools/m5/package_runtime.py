@@ -43,6 +43,7 @@ def main():
     parser.add_argument("--model-cache", type=Path, required=True)
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--version", default="1.1.1-m5")
+    parser.add_argument("--bundle-application", action="store_true")
     args = parser.parse_args()
     version = args.version
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", version):
@@ -169,7 +170,10 @@ def main():
     ]:
         filename = f"{name}-{target}-{version}.zip"
         component = archive(folder, output / filename, name, version)
-        component["url"] = args.base_url.rstrip("/") + "/" + filename
+        if name == "application" and args.bundle_application:
+            component["bundled_path"] = filename
+        else:
+            component["url"] = args.base_url.rstrip("/") + "/" + filename
         components.append(component)
     manifest = {
         "schema_version": 2,

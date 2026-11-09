@@ -18,6 +18,8 @@ source = Path(os.environ["RELIEF_ACCEPTANCE_SOURCE"])
 output = Path(os.environ["RELIEF_ACCEPTANCE_OUTPUT"])
 result = {"external_sockets": "denied by acceptance guard", "source": source.name}
 with TestClient(app) as client:
+    assert [m['model_id'] for m in client.get('/api/models').json()['models']] == ['da2-small']
+    result['single_depth_model'] = 'da2-small'
     started = time.monotonic()
     response = client.post(
         "/api/projects/upload?model_id=da2-small",
@@ -52,6 +54,19 @@ with TestClient(app) as client:
     assert isolated.status_code == 200, isolated.text
     result["u2netp_offline"] = True
     result["mask_edit_and_preview"] = True
+    original = client.get(f'/api/sessions/{sid}/params').json()
+    response = client.put(
+        f'/api/sessions/{sid}/params', json=original | {'model_width_mm': 160}
+    )
+    assert response.status_code == 200, response.text
+    for action, width in [('undo', 150), ('redo', 160), ('undo', 150)]:
+        token = client.get(f'/api/sessions/{sid}/editor').json()['project_history']['token']
+        changed = client.post(
+            f'/api/projects/{sid}/history', json={'action': action, 'expected_token': token}
+        )
+        assert changed.status_code == 200, changed.text
+        assert changed.json()['params']['model_width_mm'] == width
+    result['project_undo_redo_offline'] = True
     for format in ("stl", "obj"):
         params = client.get(f"/api/sessions/{sid}/params").json() | {
             "resolution": 512,
