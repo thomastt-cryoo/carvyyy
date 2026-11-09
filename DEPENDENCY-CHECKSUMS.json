@@ -1,0 +1,25 @@
+{
+  "version": "1.1.2-gh-42722779581-1",
+  "assets": [
+    {
+      "name": "models-macos-aarch64-1.1.2-gh-42722779581-1.zip",
+      "bytes": 96326952,
+      "sha256": "51f9b7d2a8e24b2cb0f5f491c8e5616a7c0e5badeb8094e858f168118b339507"
+    },
+    {
+      "name": "models-windows-x86_64-1.1.2-gh-42722779581-1.zip",
+      "bytes": 96326977,
+      "sha256": "3bf515f2445c1421383ab76478661c075b226ad3be285acd0daf471c20dbb9ea"
+    },
+    {
+      "name": "runtime-macos-aarch64-1.1.2-gh-42722779581-1.zip",
+      "bytes": 259750381,
+      "sha256": "e6b09878571d9a4d6508d2a23a7e05e67f2219e670a7f6fe73e8ca947d8a60f0"
+    },
+    {
+      "name": "runtime-windows-x86_64-1.1.2-gh-42722779581-1.zip",
+      "bytes": 291305575,
+      "sha256": "b20403a5072e68a578966be1e8846dba89f0684a6bec7d3793b9e51f8a915bd5"
+    }
+  ]
+}
