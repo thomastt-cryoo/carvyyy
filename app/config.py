@@ -29,6 +29,7 @@ class Settings:
 
     # "auto" | "cpu" | "cuda" | "mps"  (auto precedence: cuda > mps > cpu)
     device_override: str = os.environ.get("P2R_DEVICE", "auto")
+    depth_runtime: str = os.environ.get("P2R_DEPTH_RUNTIME", "transformers")
 
     max_infer_px: int = _env_int("P2R_MAX_INFER_PX", 1024)
     max_upload_bytes: int = _env_int("P2R_MAX_UPLOAD_MB", 40) * 1024 * 1024

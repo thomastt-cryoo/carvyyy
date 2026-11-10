@@ -6,11 +6,11 @@ This replaces Cloudflare R2. No Cloudflare account, bucket, custom domain, hosti
 
 The platform-specific Etsy ZIP contains the native launcher, its SHA-256-pinned manifest, the small application archive, dependency notices and the customer guide. The packager refuses a ZIP at or above the internal 19,000,000-byte budget, below Etsy's 20 MB limit. The customer extracts the entire ZIP and opens the application normally. There is no GitHub account, Python installation, terminal command or manual model setup.
 
-Windows x64 requires Windows 11 on Intel/AMD x64. The unsigned Apple Silicon build requires macOS 15 or later. SmartScreen, Gatekeeper and managed-device restrictions can still apply. The guide explains the unsigned distribution route and Apple's Open Anyway procedure; signing and notarization are not prerequisites.
+Windows x64 requires Windows 11 on Intel/AMD x64. The unsigned Intel and Apple Silicon Mac builds require macOS 15 or later. SmartScreen, Gatekeeper and managed-device restrictions can still apply. The guide explains the unsigned distribution route and Apple's Open Anyway procedure; signing and notarization are not prerequisites.
 
 ## Public release contents and privacy boundary
 
-Only four third-party dependency archives are uploaded as public release assets: runtime and models for Windows x64 and macOS arm64. The depth model is pinned Depth Anything V2 Small. The model component also preserves U2NETP for optional offline background isolation. DA3 Mono Large and V2 Large are not customer model choices or bundled weights.
+Only six third-party dependency archives are uploaded as public release assets: runtime and models for Windows x64, macOS arm64 and macOS x86_64 (Intel). The depth model is pinned Depth Anything V2 Small. The model component also preserves U2NETP for optional offline background isolation. DA3 Mono Large and V2 Large are not customer model choices or bundled weights.
 
 The application archive, Etsy ZIP, customer projects, photographs and development credentials are not release assets. The publisher accepts a complete, version-matched allowlist and checks archive member roots before creating a draft. It fails if the input contains application ZIPs, unexpected members, duplicate assets or removed depth models. It compares GitHub's uploaded byte counts and SHA-256 digests before publication.
 
@@ -39,3 +39,7 @@ Windows/macOS runner checks are not equivalent to physical desktop or Finder/Gat
 If a build or upload fails, fix forward with a new run/version. Do not replace assets under an existing tag. Leave older immutable components published for customers reinstalling an older Etsy ZIP. A release that has published components but has not passed both qualification jobs is not a customer-ready installer release. Retrieve only the pair of successful `verified-etsy-*` artifacts for delivery.
 
 References: [GitHub immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases), [release asset API](https://docs.github.com/en/rest/releases/assets), [repository release immutability API](https://docs.github.com/en/rest/repos/repos#enable-immutable-releases).
+
+## Intel Mac runtime
+
+The Intel build runs the same pinned Small model in FP32 through ONNX Runtime 1.23.2, the last official release with a Python 3.12 Intel Mac wheel. It does not install PyTorch. The other platforms retain their existing PyTorch runtime. The build exports the pinned weights on a supported build host, preserves dynamic input shapes and compares square, portrait, landscape and wide/tall predictions with the original PyTorch predictions. The native Intel runner repeats parity checks before packaging, then runs fresh public installation and strict offline export qualification. The only selectable depth model remains Small. No UI or relief-processing defaults are changed.

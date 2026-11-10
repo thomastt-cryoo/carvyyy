@@ -18,6 +18,21 @@ ROOT = Path(__file__).resolve().parents[2]
 SMALL_REVISION = "5426e4f0f36572d16453bbda7a8389317b1bef99"
 
 
+def native_target(system: str | None = None, machine: str | None = None) -> str:
+    system = system or platform.system()
+    machine = (machine or platform.machine()).lower()
+    targets = {
+        ("Windows", "amd64"): "windows-x86_64",
+        ("Windows", "x86_64"): "windows-x86_64",
+        ("Darwin", "arm64"): "macos-aarch64",
+        ("Darwin", "aarch64"): "macos-aarch64",
+        ("Darwin", "x86_64"): "macos-x86_64",
+    }
+    if (system, machine) not in targets:
+        raise ValueError("Supported targets: Windows x64, Apple Silicon and Intel Mac.")
+    return targets[system, machine]
+
+
 def archive(source: Path, output: Path, prefix: str, version: str = "1.1.1-m5") -> dict:
     size = 0
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
@@ -44,18 +59,15 @@ def main():
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--version", default="1.1.1-m5")
     parser.add_argument("--bundle-application", action="store_true")
+    parser.add_argument("--onnx-model", type=Path)
     args = parser.parse_args()
     version = args.version
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,79}", version):
         raise SystemExit("Use a simple immutable release version.")
-    machine = platform.machine().lower()
-    target = {"Windows": "windows-x86_64", "Darwin": "macos-aarch64"}.get(platform.system())
-    if (
-        (target == "windows-x86_64" and machine not in ("amd64", "x86_64"))
-        or (target == "macos-aarch64" and machine not in ("arm64", "aarch64"))
-        or target is None
-    ):
-        raise SystemExit("This build supports Windows x64 and macOS arm64 only.")
+    target = native_target()
+    intel = target == "macos-x86_64"
+    if intel and (args.onnx_model is None or not (args.onnx_model / "da2-small.onnx").is_file()):
+        raise SystemExit("Intel packaging requires the verified Small ONNX export.")
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     work = output / "build"
@@ -76,10 +88,7 @@ def main():
             uv,
             "export",
             "--frozen",
-            "--extra",
-            "cpu",
-            "--extra",
-            "segmentation",
+            *(["--extra", "intel"] if intel else ["--extra", "cpu", "--extra", "segmentation"]),
             "--no-dev",
             "--no-emit-project",
             "--output-file",
@@ -104,6 +113,8 @@ def main():
             "unsafe-best-match",
             "--no-deps",
             "--require-hashes",
+            "--only-binary",
+            ":all:",
             "-r",
             str(requirements),
         ],
@@ -128,13 +139,16 @@ def main():
     # Dereference HF cache symlinks so the model component works on extracted systems.
     cache = args.model_cache.resolve() / "hub/models--depth-anything--Depth-Anything-V2-Small-hf"
     model = work / "models/hub/models--depth-anything--Depth-Anything-V2-Small-hf"
-    shutil.copytree(
-        cache / "snapshots" / SMALL_REVISION,
-        model / "snapshots" / SMALL_REVISION,
-        symlinks=False,
-    )
-    (model / "refs").mkdir()
-    (model / "refs/main").write_text(SMALL_REVISION)
+    if intel:
+        shutil.copytree(args.onnx_model, work / "models/depth", symlinks=False)
+    else:
+        shutil.copytree(
+            cache / "snapshots" / SMALL_REVISION,
+            model / "snapshots" / SMALL_REVISION,
+            symlinks=False,
+        )
+        (model / "refs").mkdir()
+        (model / "refs/main").write_text(SMALL_REVISION)
     build_env = os.environ | {
         "P2R_MODELS_DIR": str(args.model_cache.resolve()),
         "P2R_DATA_DIR": str(work / "build-data"),
@@ -190,6 +204,8 @@ def main():
         else "runtime/bin/python3.12",
         "arguments": ["-s", "-m", "app.packaged"],
     }
+    if intel:
+        manifest["inference_backend"] = "onnx"
     # Modules are found from the application directory supplied to the supervisor.
     data = (json.dumps(manifest, indent=2) + "\n").encode()
     (output / "release.json").write_bytes(data)

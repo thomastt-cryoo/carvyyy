@@ -2,14 +2,19 @@ version = 1
 revision = 5
 requires-python = "==3.12.*"
 resolution-markers = [
-    "extra != 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128'",
-    "sys_platform != 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128'",
-    "sys_platform == 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128'",
-    "extra != 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128'",
+    "extra != 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra == 'extra-12-photo2relief-intel' and extra != 'extra-12-photo2relief-segmentation'",
+    "extra != 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "sys_platform != 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "sys_platform == 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "extra != 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
 ]
 conflicts = [[
     { package = "photo2relief", extra = "cpu" },
     { package = "photo2relief", extra = "cu128" },
+    { package = "photo2relief", extra = "intel" },
+], [
+    { package = "photo2relief", extra = "intel" },
+    { package = "photo2relief", extra = "segmentation" },
 ]]
 
 [[package]]
@@ -71,6 +76,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, upload-time = "2022-10-25T02:36:22.414Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 25335, upload-time = "2022-10-25T02:36:20.889Z" },
+]
+
+[[package]]
+name = "coloredlogs"
+version = "15.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "humanfriendly" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cc/c7/eed8f27100517e8c0e6b923d5f0845d0cb99763da6fdee00478f91db7325/coloredlogs-15.0.1.tar.gz", hash = "sha256:7c991aa71a4577af2f82600d8f8f3a89f936baeaf9b50a9c197da014e5bf16b0", size = 278520, upload-time = "2021-06-11T10:22:45.202Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/06/3d6badcf13db419e25b07041d9c7b4a2c331d3f4e7134445ec5df57714cd/coloredlogs-15.0.1-py2.py3-none-any.whl", hash = "sha256:612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934", size = 46018, upload-time = "2021-06-11T10:22:42.561Z" },
 ]
 
 [[package]]
@@ -244,6 +261,18 @@ wheels = [
 ]
 
 [[package]]
+name = "humanfriendly"
+version = "10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyreadline3", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cc/3f/2c29224acb2e2df4d2046e4c73ee2662023c58ff5b113c4c1adac0886c43/humanfriendly-10.0.tar.gz", hash = "sha256:6b0b831ce8f15f7300721aa49829fc4e83921a9a301cc7f606be6686a2288ddc", size = 360702, upload-time = "2021-09-17T21:40:43.31Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/0f/310fb31e39e2d734ccaa2c0fb981ee41f7bd5056ce9bc29b2248bd569169/humanfriendly-10.0-py2.py3-none-any.whl", hash = "sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477", size = 86794, upload-time = "2021-09-17T21:40:39.897Z" },
+]
+
+[[package]]
 name = "idna"
 version = "3.18"
 source = { registry = "https://pypi.org/simple" }
@@ -311,6 +340,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "ml-dtypes"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/12/72/307d7c4bd0600601c7133fba5cb78af7db968152951c1cd473abb1cda782/ml_dtypes-0.6.0.tar.gz", hash = "sha256:5e60251d32ced5598972e4d5e06a2f044341f9291402551a3f6f0ec44f9299b0", size = 3032327, upload-time = "2026-08-13T14:14:40.215Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/6a/441eb053b078954f7fea284dfb288701884d0a1404d39babb858e1649023/ml_dtypes-0.6.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:5359c588cc62de6f78d7430f06b65853d884955494d86d6ad90b6dd64a3f3a08", size = 565447, upload-time = "2026-08-13T14:14:01.737Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/cf/87e8a6c57eed63a91782a0d229856ddf73e138ce004dd71e2799a9dcdb33/ml_dtypes-0.6.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:37da32aa97749251025666d62372775019594577b9c9e9cfda83bed48d778fdb", size = 360227, upload-time = "2026-08-13T14:14:02.938Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/f9/7d76c1eae866f5d4636401b31b6d6dd90e4b4ced1fa7cfdfcca9c60e4bd3/ml_dtypes-0.6.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3b4a480aa8fd54a1805b8ac10f3f91763926a74f73c0c364c10f9231854f4170", size = 409890, upload-time = "2026-08-13T14:14:04.248Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/db/9c61ec2760b5cbfb1c6558d5c991a6d8fd3271053c32db20506a9a90272b/ml_dtypes-0.6.0-cp312-cp312-win_amd64.whl", hash = "sha256:2a3e9d53925597fbffafd2a37048dadeddd0bdaba58058f6ae0869ed709a184d", size = 439333, upload-time = "2026-08-13T14:14:05.501Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/57/780ca3e5ab135b9fbdd8e5441abf5f801b30398371b691291e05ab9834c0/ml_dtypes-0.6.0-cp312-cp312-win_arm64.whl", hash = "sha256:6eaed129a4afe90694b8685e2f9b6294849f5eda4af9a15be83a4326eeebd775", size = 552268, upload-time = "2026-08-13T14:14:06.866Z" },
 ]
 
 [[package]]
@@ -512,9 +557,55 @@ wheels = [
 ]
 
 [[package]]
+name = "onnx"
+version = "1.19.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ml-dtypes" },
+    { name = "numpy" },
+    { name = "protobuf" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/27/2f/c619eb65769357e9b6de9212c9a821ab39cd484448e5d6b3fb5fb0a64c6d/onnx-1.19.1.tar.gz", hash = "sha256:737524d6eb3907d3499ea459c6f01c5a96278bb3a0f2ff8ae04786fb5d7f1ed5", size = 12033525, upload-time = "2025-10-10T04:01:34.342Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/07/f6c5b2cffef8c29e739616d1415aea22f7b7ef1f19c17f02b7cff71f5498/onnx-1.19.1-cp312-cp312-macosx_12_0_universal2.whl", hash = "sha256:3612193a89ddbce5c4e86150869b9258780a82fb8c4ca197723a4460178a6ce9", size = 18327840, upload-time = "2025-10-10T04:00:24.259Z" },
+    { url = "https://files.pythonhosted.org/packages/93/20/0568ebd52730287ae80cac8ac893a7301c793ea1630984e2519ee92b02a9/onnx-1.19.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:6c2fd2f744e7a3880ad0c262efa2edf6d965d0bd02b8f327ec516ad4cb0f2f15", size = 18042539, upload-time = "2025-10-10T04:00:27.693Z" },
+    { url = "https://files.pythonhosted.org/packages/14/fd/cd7a0fd10a04f8cc5ae436b63e0022e236fe51b9dbb8ee6317fd48568c72/onnx-1.19.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:485d3674d50d789e0ee72fa6f6e174ab81cb14c772d594f992141bd744729d8a", size = 18218271, upload-time = "2025-10-10T04:00:30.495Z" },
+    { url = "https://files.pythonhosted.org/packages/65/68/cc8b8c05469fe08384b446304ad7e6256131ca0463bf6962366eebec98c0/onnx-1.19.1-cp312-cp312-win32.whl", hash = "sha256:638bc56ff1a5718f7441e887aeb4e450f37a81c6eac482040381b140bd9ba601", size = 16345111, upload-time = "2025-10-10T04:00:34.982Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/5e/d1cb16693598a512c2cf9ffe0841d8d8fd2c83ae8e889efd554f5aa427cf/onnx-1.19.1-cp312-cp312-win_amd64.whl", hash = "sha256:bc7e2e4e163e679721e547958b5a7db875bf822cad371b7c1304aa4401a7c7a4", size = 16465621, upload-time = "2025-10-10T04:00:39.107Z" },
+    { url = "https://files.pythonhosted.org/packages/90/32/da116cc61fdef334782aa7f87a1738431dd1af1a5d1a44bd95d6d51ad260/onnx-1.19.1-cp312-cp312-win_arm64.whl", hash = "sha256:17c215b1c0f20fe93b4cbe62668247c1d2294b9bc7f6be0ca9ced28e980c07b7", size = 16437505, upload-time = "2025-10-10T04:00:42.255Z" },
+]
+
+[[package]]
+name = "onnxruntime"
+version = "1.23.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "coloredlogs" },
+    { name = "flatbuffers" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "protobuf" },
+    { name = "sympy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1b/9e/f748cd64161213adeef83d0cb16cb8ace1e62fa501033acdd9f9341fff57/onnxruntime-1.23.2-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:b8f029a6b98d3cf5be564d52802bb50a8489ab73409fa9db0bf583eabb7c2321", size = 17195929, upload-time = "2025-10-22T03:47:36.24Z" },
+    { url = "https://files.pythonhosted.org/packages/91/9d/a81aafd899b900101988ead7fb14974c8a58695338ab6a0f3d6b0100f30b/onnxruntime-1.23.2-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:218295a8acae83905f6f1aed8cacb8e3eb3bd7513a13fe4ba3b2664a19fc4a6b", size = 19157705, upload-time = "2025-10-22T03:46:40.415Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/35/4e40f2fba272a6698d62be2cd21ddc3675edfc1a4b9ddefcc4648f115315/onnxruntime-1.23.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:76ff670550dc23e58ea9bc53b5149b99a44e63b34b524f7b8547469aaa0dcb8c", size = 15226915, upload-time = "2025-10-22T03:46:27.773Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/88/9cc25d2bafe6bc0d4d3c1db3ade98196d5b355c0b273e6a5dc09c5d5d0d5/onnxruntime-1.23.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0f9b4ae77f8e3c9bee50c27bc1beede83f786fe1d52e99ac85aa8d65a01e9b77", size = 17382649, upload-time = "2025-10-22T03:47:02.782Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/b4/569d298f9fc4d286c11c45e85d9ffa9e877af12ace98af8cab52396e8f46/onnxruntime-1.23.2-cp312-cp312-win_amd64.whl", hash = "sha256:25de5214923ce941a3523739d34a520aac30f21e631de53bba9174dc9c004435", size = 13470528, upload-time = "2025-10-22T03:47:28.106Z" },
+]
+
+[[package]]
 name = "onnxruntime"
 version = "1.31.1"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "extra != 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "sys_platform != 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "sys_platform == 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "extra != 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+]
 dependencies = [
     { name = "flatbuffers" },
     { name = "numpy" },
@@ -531,10 +622,34 @@ wheels = [
 
 [[package]]
 name = "opencv-python-headless"
-version = "5.0.0.93"
+version = "4.13.0.92"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "extra == 'extra-12-photo2relief-intel' or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128')" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/42/2310883be3b8826ac58c3f2787b9358a2d46923d61f88fedf930bc59c60c/opencv_python_headless-4.13.0.92-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:1a7d040ac656c11b8c38677cc8cccdc149f98535089dbe5b081e80a4e5903209", size = 46247192, upload-time = "2026-02-05T07:01:35.187Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/1e/6f9e38005a6f7f22af785df42a43139d0e20f169eb5787ce8be37ee7fcc9/opencv_python_headless-4.13.0.92-cp37-abi3-macosx_14_0_x86_64.whl", hash = "sha256:3e0a6f0a37994ec6ce5f59e936be21d5d6384a4556f2d2da9c2f9c5dc948394c", size = 32568914, upload-time = "2026-02-05T07:01:51.989Z" },
+    { url = "https://files.pythonhosted.org/packages/21/76/9417a6aef9def70e467a5bf560579f816148a4c658b7d525581b356eda9e/opencv_python_headless-4.13.0.92-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5c8cfc8e87ed452b5cecb9419473ee5560a989859fe1d10d1ce11ae87b09a2cb", size = 33703709, upload-time = "2026-02-05T10:24:46.469Z" },
+    { url = "https://files.pythonhosted.org/packages/92/ce/bd17ff5772938267fd49716e94ca24f616ff4cb1ff4c6be13085108037be/opencv_python_headless-4.13.0.92-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:0525a3d2c0b46c611e2130b5fdebc94cf404845d8fa64d2f3a3b679572a5bd22", size = 56016764, upload-time = "2026-02-05T10:26:48.904Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/b4/b7bcbf7c874665825a8c8e1097e93ea25d1f1d210a3e20d4451d01da30aa/opencv_python_headless-4.13.0.92-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:eb60e36b237b1ebd40a912da5384b348df8ed534f6f644d8e0b4f103e272ba7d", size = 35010236, upload-time = "2026-02-05T10:28:11.031Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/33/b5db29a6c00eb8f50708110d8d453747ca125c8b805bc437b289dbdcc057/opencv_python_headless-4.13.0.92-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:0bd48544f77c68b2941392fcdf9bcd2b9cdf00e98cb8c29b2455d194763cf99e", size = 60391106, upload-time = "2026-02-05T10:30:14.236Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/c3/52cfea47cd33e53e8c0fbd6e7c800b457245c1fda7d61660b4ffe9596a7f/opencv_python_headless-4.13.0.92-cp37-abi3-win32.whl", hash = "sha256:a7cf08e5b191f4ebb530791acc0825a7986e0d0dee2a3c491184bd8599848a4b", size = 30812232, upload-time = "2026-02-05T07:02:29.594Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/90/b338326131ccb2aaa3c2c85d00f41822c0050139a4bfe723cfd95455bd2d/opencv_python_headless-4.13.0.92-cp37-abi3-win_amd64.whl", hash = "sha256:77a82fe35ddcec0f62c15f2ba8a12ecc2ed4207c17b0902c7a3151ae29f37fb6", size = 40070414, upload-time = "2026-02-05T07:02:26.448Z" },
+]
+
+[[package]]
+name = "opencv-python-headless"
+version = "5.0.0.93"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "extra != 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "sys_platform != 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "sys_platform == 'darwin' and extra == 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+    "extra != 'extra-12-photo2relief-cpu' and extra != 'extra-12-photo2relief-cu128' and extra != 'extra-12-photo2relief-intel'",
+]
+dependencies = [
+    { name = "numpy", marker = "extra == 'extra-12-photo2relief-cpu' or extra == 'extra-12-photo2relief-cu128' or extra != 'extra-12-photo2relief-intel' or extra == 'extra-12-photo2relief-segmentation'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1d/99/76b7c80252aa83c1af16393454aafd125a0287101afe8deb0a6821af0e30/opencv_python_headless-5.0.0.93.tar.gz", hash = "sha256:b82f9831daab90b725c7c1ee1b36cb5732c367096ac76d119e64e14eb70d5f3c", size = 81817738, upload-time = "2026-07-02T07:01:06.039Z" }
 wheels = [
@@ -565,7 +680,8 @@ dependencies = [
     { name = "fast-simplification" },
     { name = "fastapi" },
     { name = "numpy" },
-    { name = "opencv-python-headless" },
+    { name = "opencv-python-headless", version = "4.13.0.92", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-12-photo2relief-intel' or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128')" },
+    { name = "opencv-python-headless", version = "5.0.0.93", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'extra-12-photo2relief-cpu' or extra == 'extra-12-photo2relief-cu128' or extra != 'extra-12-photo2relief-intel' or extra == 'extra-12-photo2relief-segmentation'" },
     { name = "pillow" },
     { name = "pillow-heif" },
     { name = "psutil" },
@@ -579,14 +695,18 @@ dependencies = [
 
 [package.optional-dependencies]
 cpu = [
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-12-photo2relief-cpu') or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-12-photo2relief-cpu') or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128')" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-12-photo2relief-cpu') or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128') or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-intel') or (extra == 'extra-12-photo2relief-cu128' and extra == 'extra-12-photo2relief-intel') or (extra == 'extra-12-photo2relief-intel' and extra == 'extra-12-photo2relief-segmentation')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-12-photo2relief-cpu') or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-cu128') or (extra == 'extra-12-photo2relief-cpu' and extra == 'extra-12-photo2relief-intel') or (extra == 'extra-12-photo2relief-cu128' and extra == 'extra-12-photo2relief-intel') or (extra == 'extra-12-photo2relief-intel' and extra == 'extra-12-photo2relief-segmentation')" },
 ]
 cu128 = [
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
 ]
+intel = [
+    { name = "onnxruntime", version = "1.23.2", source = { registry = "https://pypi.org/simple" } },
+    { name = "opencv-python-headless", version = "4.13.0.92", source = { registry = "https://pypi.org/simple" } },
+]
 segmentation = [
-    { name = "onnxruntime" },
+    { name = "onnxruntime", version = "1.31.1", source = { registry = "https://pypi.org/simple" } },
 ]
 
 [package.dev-dependencies]
@@ -598,14 +718,19 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
+model-export = [
+    { name = "onnx" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "fast-simplification", specifier = ">=0.1.7" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "numpy", specifier = ">=2.0" },
+    { name = "onnxruntime", marker = "extra == 'intel'", specifier = "==1.23.2" },
     { name = "onnxruntime", marker = "extra == 'segmentation'", specifier = "==1.31.1" },
     { name = "opencv-python-headless", specifier = ">=4.10" },
+    { name = "opencv-python-headless", marker = "extra == 'intel'", specifier = "==4.13.0.92" },
     { name = "pillow", specifier = ">=11.0" },
     { name = "pillow-heif", specifier = ">=0.20" },
     { name = "psutil", specifier = ">=7.2.2" },
@@ -618,7 +743,7 @@ requires-dist = [
     { name = "trimesh", specifier = ">=4.5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
-provides-extras = ["cpu", "cu128", "segmentation"]
+provides-extras = ["cpu", "cu128", "intel", "segmentation"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -629,6 +754,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=6.0" },
     { name = "ruff", specifier = ">=0.7" },
 ]
+model-export = [{ name = "onnx", specifier = "==1.19.1" }]
 
 [[package]]
 name = "pillow"
@@ -757,6 +883,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
+]
+
+[[package]]
+name = "pyreadline3"
+version = "3.5.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/6d/f94028646d7bbe6d9d873c47ee7c246f2d29129d253f0d96cb6fcab70733/pyreadline3-3.5.6.tar.gz", hash = "sha256:61e53218b99656091ddb077df9e71f25850e72e030b6183b39c9b7e6e4f4a9bf", size = 100368, upload-time = "2026-05-14T17:55:04.471Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/5e/35c856e186b74678c24927847ad9895a51f1bc02a0c6126477a6c6040064/pyreadline3-3.5.6-py3-none-any.whl", hash = "sha256:8449b734232e42a5dcd74048e39b60db2839a4c38cf3ae2bf7707d58b5389c0d", size = 85243, upload-time = "2026-05-14T17:55:03.262Z" },
 ]
 
 [[package]]

@@ -26,6 +26,8 @@ struct Manifest {
     components: Vec<Artifact>,
     executable: String,
     arguments: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    inference_backend: Option<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -657,6 +659,12 @@ fn run(
     if !matches!(manifest.schema_version, 1 | 2) || manifest.platform != platform_id() {
         return Err("unsupported manifest schema or platform".into());
     }
+    if !matches!(
+        manifest.inference_backend.as_deref(),
+        None | Some("transformers" | "onnx")
+    ) {
+        return Err("unsupported inference runtime".into());
+    }
     safe_relative(&manifest.version)?;
     if manifest.components.is_empty() || manifest.components.len() > 16 {
         return Err("invalid component count".into());
@@ -801,6 +809,13 @@ fn run(
         .env("P2R_MODELS_DIR", installed.join("models"))
         .env("HF_HOME", installed.join("models"))
         .env("P2R_DEFAULT_MODEL_ID", "da2-small")
+        .env(
+            "P2R_DEPTH_RUNTIME",
+            manifest
+                .inference_backend
+                .as_deref()
+                .unwrap_or("transformers"),
+        )
         .env("P2R_DEVICE", "cpu")
         .env("PYTHONNOUSERSITE", "1")
         .env("PYTHONDONTWRITEBYTECODE", "1")
@@ -1271,6 +1286,7 @@ mod tests {
             }],
             executable: "application/backend".into(),
             arguments: vec![],
+            inference_backend: None,
         };
         let state = Arc::new(Mutex::new(Progress::default()));
         fs::create_dir(root.join("data")).unwrap();
@@ -1320,6 +1336,7 @@ mod tests {
             }],
             executable: "runtime/python".into(),
             arguments: vec![],
+            inference_backend: None,
         };
         let state = Arc::new(Mutex::new(Progress::default()));
         assert!(
@@ -1340,6 +1357,7 @@ mod tests {
             components: vec![],
             executable: "runtime/python".into(),
             arguments: vec![],
+            inference_backend: None,
         };
         let state = Arc::new(Mutex::new(Progress::default()));
         assert!(
