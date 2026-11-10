@@ -88,6 +88,7 @@ jobs:
           binary=bootstrapper/target/release/relief-bootstrap
           if [ "$RUNNER_OS" = Windows ]; then binary="$binary.exe"; fi
           uv run --no-sync python tools/m5/package_launcher.py --binary "$binary" --release data/github/release --guide docs/releases/CUSTOMER-GUIDE.md --public
+          if [ -f data/github/intel-parity.json ]; then cp data/github/intel-parity.json data/github/release/; fi
       - name: Stage only public dependencies
         shell: bash
         run: |
@@ -107,7 +108,6 @@ jobs:
             data/github/release/application-*.zip
             data/github/release/*.json
             data/github/release/*.sha256
-            data/github/intel-parity.json
           compression-level: 0
           if-no-files-found: error
   publish-dependencies:
