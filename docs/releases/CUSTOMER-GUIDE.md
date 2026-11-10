@@ -1,6 +1,6 @@
 # Start here — Photo Relief Studio
 
-1. Download the ZIP for your computer. Choose **Windows x64** for Windows 11 on a 64-bit Intel or AMD computer. Choose **macOS arm64** for an Apple Silicon Mac with macOS 15 or later.
+1. Download the ZIP for your computer. Choose **Windows x64** for Windows 11 on a 64-bit Intel or AMD computer. Choose **macOS arm64** for an Apple Silicon Mac, or **macOS x86_64 (Intel)** for an Intel Mac. Both Mac editions require macOS 15 or later. In Apple's **About This Mac**, Intel Macs list an Intel processor; Apple Silicon Macs list an Apple M-series chip. The Mac ZIP names include `aarch64` for Apple Silicon and `x86_64` for Intel.
 2. Extract the ZIP. On Windows, right-click the ZIP and choose **Extract All**, then open the extracted folder. On Mac, double-click the ZIP in Finder. Keep the extracted files together.
 3. Double-click **Photo Relief Studio.exe** on Windows or **Photo Relief Studio.app** on Mac. The studio opens in your default browser.
 4. Connect to the internet for first setup and have at least **4 GB free**. The application is included in your ZIP; setup automatically downloads the runtime and model components, then verifies and installs them. You do not need to visit a download website or sign in. Keep the setup page open. If setup stops, choose **Retry setup**. You can also reopen the same launcher to resume.
@@ -10,7 +10,7 @@
 
 The Windows launcher is unsigned. Microsoft Defender SmartScreen may say it does not recognize the application. Check that the ZIP came from your seller's official download and that the version and checksum match the seller's release information. If Windows offers a continue option and you trust the download, follow its prompt. Smart App Control or a managed device policy may block opening it. Contact the seller or your administrator if that happens. [Microsoft guidance](https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation)
 
-The Apple Silicon application is distributed without Developer ID signing or notarization. If macOS blocks it as an unidentified developer, first verify the download with the seller. After trying to open it once, go to **System Settings → Privacy & Security**, scroll to **Open Anyway**, and confirm **Open** if macOS offers those options. This exception applies to this app. If the option is missing or macOS reports damage or malware, contact the seller. [Apple's Open Anyway instructions](https://support.apple.com/102445)
+Both Mac applications are distributed without Developer ID signing or notarization. If macOS blocks it as an unidentified developer, first verify the download with the seller. After trying to open it once, go to **System Settings → Privacy & Security**, scroll to **Open Anyway**, and confirm **Open** if macOS offers those options. This exception applies to this app. If the option is missing or macOS reports damage or malware, contact the seller. [Apple's Open Anyway instructions](https://support.apple.com/102445)
 
 ## Reopen, update or keep a backup
 

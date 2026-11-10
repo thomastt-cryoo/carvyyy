@@ -14,14 +14,14 @@ def write_zip(path, member):
 
 def dependencies(folder):
     for kind in ("runtime", "models"):
-        for target in ("windows-x86_64", "macos-aarch64"):
+        for target in ("windows-x86_64", "macos-aarch64", "macos-x86_64"):
             write_zip(folder / f"{kind}-{target}-test1.zip", kind + "/dependency.txt")
 
 
 def test_publisher_accepts_only_complete_matching_dependency_set(tmp_path):
     dependencies(tmp_path)
     result = dependency_inventory(tmp_path, "test1")
-    assert len(result) == 4 and all(row["bytes"] > 0 and len(row["sha256"]) == 64 for row in result)
+    assert len(result) == 6 and all(row["bytes"] > 0 and len(row["sha256"]) == 64 for row in result)
     with pytest.raises(ValueError, match="unexpected"):
         dependency_inventory(tmp_path, "different-version")
 
@@ -45,5 +45,5 @@ def test_publisher_refuses_application_data_and_removed_models(tmp_path, filenam
 
 def test_publisher_refuses_incomplete_platforms(tmp_path):
     write_zip(tmp_path / "runtime-windows-x86_64-test1.zip", "runtime/python.exe")
-    with pytest.raises(ValueError, match="Both supported"):
+    with pytest.raises(ValueError, match="All supported"):
         dependency_inventory(tmp_path, "test1")

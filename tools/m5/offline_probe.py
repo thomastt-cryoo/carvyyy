@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -110,6 +111,9 @@ def main():
     env.update(
         P2R_DEVICE="cpu",
         P2R_DEFAULT_MODEL_ID="da2-small",
+        P2R_DEPTH_RUNTIME=json.loads((installed / "verified-manifest.json").read_bytes()).get(
+            "inference_backend", "transformers"
+        ),
         P2R_DATA_DIR=str(output / "data"),
         P2R_MODELS_DIR=str(installed / "models"),
         HF_HOME=str(installed / "models"),

@@ -244,6 +244,12 @@ class DA3Backend:
 
 
 def _make_backend(spec: ModelSpec) -> DepthBackend:
+    if settings.depth_runtime == "onnx":
+        if spec.model_id != "da2-small":
+            raise BackendUnavailableError("The Intel runtime supports Depth Anything V2 Small.")
+        from app.onnx_depth import OnnxDA2Backend
+
+        return OnnxDA2Backend(spec)
     if spec.backend == "da2":
         return TransformersDA2Backend(spec)
     if spec.backend == "da3":

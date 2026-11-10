@@ -13,16 +13,15 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-ASSET = re.compile(r"(runtime|models)-(windows-x86_64|macos-aarch64)-([A-Za-z0-9._-]+)\.zip")
+TARGETS = ("windows-x86_64", "macos-aarch64", "macos-x86_64")
+ASSET = re.compile(
+    r"(runtime|models)-(windows-x86_64|macos-aarch64|macos-x86_64)-([A-Za-z0-9._-]+)\.zip"
+)
 
 
 def dependency_inventory(folder: Path, version: str) -> list[dict]:
     paths = sorted(folder.rglob("*.zip"))
-    expected = {
-        (kind, target)
-        for kind in ("runtime", "models")
-        for target in ("windows-x86_64", "macos-aarch64")
-    }
+    expected = {(kind, target) for kind in ("runtime", "models") for target in TARGETS}
     found = set()
     result = []
     for path in paths:
@@ -54,7 +53,7 @@ def dependency_inventory(folder: Path, version: str) -> list[dict]:
             }
         )
     if found != expected:
-        raise ValueError("Both supported platforms must provide runtime and model archives")
+        raise ValueError("All supported platforms must provide runtime and model archives")
     return result
 
 

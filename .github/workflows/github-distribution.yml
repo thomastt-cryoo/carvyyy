@@ -1,7 +1,7 @@
 name: GitHub customer distribution
 on:
   push:
-    branches: [codex/github-release-distribution]
+    branches: [codex/github-release-distribution, codex/intel-mac-distribution]
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,12 +12,42 @@ env:
   RELEASE_VERSION: 1.1.2-gh-${{ github.run_id }}-${{ github.run_attempt }}
   PYTHONUTF8: '1'
 jobs:
+  prepare-intel-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HOME: ${{ github.workspace }}/data/github/models
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - name: Export the same pinned Small weights and verify depth parity
+        run: |
+          uv sync --frozen --extra cpu --extra segmentation --group model-export
+          uv run --no-sync python -m tools.releases.export_intel_model --output data/github/intel-model
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-intel-model
+          path: data/github/intel-model/
+          compression-level: 0
+          if-no-files-found: error
   build:
+    needs: prepare-intel-model
     if: github.repository == 'thomastt-cryoo/carvyyy'
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-15]
+        include:
+          - os: windows-latest
+            extra: cpu
+          - os: macos-15
+            extra: cpu
+          - os: macos-15-intel
+            extra: intel
     runs-on: ${{ matrix.os }}
     timeout-minutes: 35
     env:
@@ -30,25 +60,35 @@ jobs:
           python-version: '3.12'
           enable-cache: true
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/download-artifact@v4
+        if: matrix.extra == 'intel'
+        with:
+          name: verified-intel-model
+          path: data/github/intel-model
       - name: Test and prepare licensed dependencies
         shell: bash
         run: |
-          uv sync --frozen --extra cpu
+          uv sync --frozen --extra '${{ matrix.extra }}'
           uv run --no-sync ruff check .
           uv run --no-sync ruff format --check .
           uv run --no-sync pytest -m 'not slow'
-          uv run --no-sync python -c "from huggingface_hub import snapshot_download; snapshot_download('depth-anything/Depth-Anything-V2-Small-hf', revision='5426e4f0f36572d16453bbda7a8389317b1bef99')"
+          if [ '${{ matrix.extra }}' = intel ]; then
+            uv run --no-sync python -m tools.releases.verify_intel_model --models data/github/intel-model --references data/github/intel-model/references.npz --output data/github/intel-parity.json
+          else
+            uv run --no-sync python -c "from huggingface_hub import snapshot_download; snapshot_download('depth-anything/Depth-Anything-V2-Small-hf', revision='5426e4f0f36572d16453bbda7a8389317b1bef99')"
+          fi
       - name: Build components and bundled-application Etsy ZIP
         shell: bash
         run: |
           base="https://github.com/$GITHUB_REPOSITORY/releases/download/components-$RELEASE_VERSION"
-          uv run --no-sync python tools/m5/package_runtime.py --uv "$(command -v uv)" --output data/github/release --model-cache data/github/models --base-url "$base" --version "$RELEASE_VERSION" --bundle-application
+          uv run --no-sync python tools/m5/package_runtime.py --uv "$(command -v uv)" --output data/github/release --model-cache data/github/models --base-url "$base" --version "$RELEASE_VERSION" --bundle-application --onnx-model data/github/intel-model/depth
           export P2R_MANIFEST_SHA256="$(cat data/github/release/release.sha256)"
           cargo test --locked --manifest-path bootstrapper/Cargo.toml
           cargo build --release --locked --manifest-path bootstrapper/Cargo.toml
           binary=bootstrapper/target/release/relief-bootstrap
           if [ "$RUNNER_OS" = Windows ]; then binary="$binary.exe"; fi
           uv run --no-sync python tools/m5/package_launcher.py --binary "$binary" --release data/github/release --guide docs/releases/CUSTOMER-GUIDE.md --public
+          if [ -f data/github/intel-parity.json ]; then cp data/github/intel-parity.json data/github/release/; fi
       - name: Stage only public dependencies
         shell: bash
         run: |
@@ -100,7 +140,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-15]
+        include:
+          - os: windows-latest
+            extra: cpu
+            macho: none
+          - os: macos-15
+            extra: cpu
+            macho: arm64
+          - os: macos-15-intel
+            extra: intel
+            macho: x86_64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:
@@ -112,7 +161,7 @@ jobs:
         with:
           python-version: '3.12'
           enable-cache: true
-      - run: uv sync --frozen --extra cpu
+      - run: uv sync --frozen --extra '${{ matrix.extra }}'
       - uses: actions/download-artifact@v4
         with:
           name: etsy-candidate-${{ matrix.os }}
@@ -125,13 +174,13 @@ jobs:
         run: |
           $customerZip = Get-ChildItem 'data/github/release/Photo-Relief-Studio-*.zip'
           Expand-Archive -LiteralPath $customerZip.FullName -DestinationPath 'data/github/customer ZIP'
-      - name: Extract actual Apple Silicon customer ZIP
+      - name: Extract actual Mac customer ZIP and verify native architecture
         if: runner.os == 'macOS'
         shell: bash
         run: |
           ditto -x -k data/github/release/Photo-Relief-Studio-*.zip 'data/github/customer ZIP'
           test -x 'data/github/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio'
-          file 'data/github/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio' | grep -F arm64
+          file 'data/github/customer ZIP/Photo Relief Studio.app/Contents/MacOS/Photo Relief Studio' | grep -F '${{ matrix.macho }}'
       - name: Fresh public installation, offline use and cached repair
         shell: bash
         run: |

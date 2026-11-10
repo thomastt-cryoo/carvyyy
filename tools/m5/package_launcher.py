@@ -13,6 +13,8 @@ import zipfile
 from pathlib import Path
 from urllib.parse import urlparse
 
+from tools.m5.package_runtime import native_target
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -29,6 +31,8 @@ def main():
         raise SystemExit("Build the launcher with P2R_MANIFEST_SHA256 matching this manifest.")
     document = json.loads(manifest.read_text())
     target = document["platform"]
+    if target != native_target():
+        raise SystemExit("Build the launcher on the matching native CPU architecture.")
     if args.public and any(
         urlparse(item["url"]).scheme != "https"
         for item in document["components"]
@@ -41,7 +45,7 @@ def main():
         shutil.copy2(args.binary, staging / "Photo Relief Studio.exe")
         shutil.copy2(manifest, staging / "release.json")
         component_folder = staging
-    elif target == "macos-aarch64" and platform.system() == "Darwin":
+    elif target in ("macos-aarch64", "macos-x86_64") and platform.system() == "Darwin":
         bundle = staging / "Photo Relief Studio.app/Contents"
         executable = bundle / "MacOS"
         executable.mkdir(parents=True)

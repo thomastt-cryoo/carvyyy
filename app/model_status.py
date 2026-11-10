@@ -58,6 +58,12 @@ def availability(model_id: str) -> dict:
         if spec.backend == "da3"
         else importlib.util.find_spec("torch") is not None
     )
+    if model_id == "da2-small" and settings.depth_runtime == "onnx":
+        from app import onnx_depth
+
+        files = [onnx_depth.model_path()] if onnx_depth.model_path().is_file() else []
+        installed = onnx_depth.installed()
+        runtime = importlib.util.find_spec("onnxruntime") is not None
     if not model_use_allowed(model_id):
         state, reason = "restricted", "Requires separate commercial authorization."
     elif spec.backend == "da3" and sys.platform == "darwin":
