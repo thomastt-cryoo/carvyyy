@@ -167,6 +167,17 @@ def main():
             content_type=f"multipart/form-data; boundary={boundary}",
         )
         sid = document["id"]
+        expected_defaults = {
+            "model_width_mm": 259.1,
+            "relief_height_mm": 27.1,
+            "smoothing": 0.3,
+            "detail_blend": 1.0,
+        }
+        defaults = call("/api/models")["default_params"]
+        saved_params = call(f"/api/sessions/{sid}/params")
+        assert {key: defaults[key] for key in expected_defaults} == expected_defaults
+        assert {key: saved_params[key] for key in expected_defaults} == expected_defaults
+        result["default_settings"] = expected_defaults
         inference_start = time.monotonic()
         for _ in range(900):
             document = call("/api/projects/" + sid)
@@ -217,6 +228,7 @@ def main():
         base = info["app_url"].split("/?")[0]
         opener.open(info["app_url"]).read()
         assert call("/api/projects/" + sid)["id"] == sid
+        assert call(f"/api/sessions/{sid}/params") == params
         reopen_metric = "reopen_seconds" if args.public else "offline_reopen_seconds"
         result[reopen_metric] = round(time.monotonic() - restart, 2)
         result["project_preserved"] = True

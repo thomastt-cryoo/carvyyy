@@ -186,8 +186,10 @@ def test_get_params_returns_defaults_persisted_at_creation(portrait_jpeg_bytes: 
     res = client.get(f"/api/sessions/{session_id}/params")
     assert res.status_code == 200
     body = res.json()
-    assert body["model_width_mm"] == 150.0
-    assert body["relief_height_mm"] == 8.0
+    assert body["model_width_mm"] == 259.1
+    assert body["relief_height_mm"] == 27.1
+    assert body["smoothing"] == 0.3
+    assert body["detail_blend"] == 1.0
     from app.config import MODEL_REGISTRY
 
     assert body["depth_model"] in MODEL_REGISTRY
@@ -326,7 +328,10 @@ def test_models_endpoint_lists_registry() -> None:
         assert m["role"] and m["license"]
     # Canonical defaults for the UI's Reset button, keyed to this device's model.
     assert body["default_params"]["depth_model"] == body["default_model"]
-    assert body["default_params"]["model_width_mm"] == 150.0
+    assert body["default_params"]["model_width_mm"] == 259.1
+    assert body["default_params"]["relief_height_mm"] == 27.1
+    assert body["default_params"]["smoothing"] == 0.3
+    assert body["default_params"]["detail_blend"] == 1.0
 
 
 def test_status_endpoint_carries_session_identity_for_resume(portrait_jpeg_bytes: bytes) -> None:
@@ -418,7 +423,7 @@ def test_preview_mesh_uses_body_params_not_saved_ones(portrait_jpeg_bytes: bytes
     mesh = trimesh.load(io.BytesIO(res.content), file_type="glb").to_geometry()
     assert mesh.bounds[1][0] == pytest.approx(321.0, abs=0.01)
     # ...and the saved params were NOT clobbered by a preview call.
-    assert client.get(f"/api/sessions/{session_id}/params").json()["model_width_mm"] == 150.0
+    assert client.get(f"/api/sessions/{session_id}/params").json()["model_width_mm"] == 259.1
 
 
 # --- export / jobs -----------------------------------------------------------------------

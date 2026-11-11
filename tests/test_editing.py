@@ -294,7 +294,9 @@ def test_export_snapshot_roundtrip_after_import_mask_and_edit(document, format):
     np.testing.assert_allclose(mesh.extents[:2], [127, 127], atol=2e-5)
     assert mesh.bounds[0, 2] == 0
     # Frame reaches full stock height; masked center stays a continuous solid.
-    assert mesh.bounds[1, 2] == pytest.approx(11)
+    assert mesh.bounds[1, 2] == pytest.approx(
+        configured.base_thickness_mm + configured.relief_height_mm
+    )
     nearest = np.argmin(
         np.sum((mesh.vertices[:, :2] - [63.5, 63.5]) ** 2, axis=1)
         + np.where(mesh.vertices[:, 2] > 0, 0, 10000)
