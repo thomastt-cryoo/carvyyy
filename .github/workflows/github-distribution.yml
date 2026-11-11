@@ -1,7 +1,7 @@
 name: GitHub customer distribution
 on:
   push:
-    branches: [codex/github-release-distribution, codex/intel-mac-distribution]
+    branches: [codex/github-release-distribution, codex/intel-mac-distribution, codex/customer-default-settings]
   workflow_dispatch:
 permissions:
   contents: read
@@ -9,7 +9,7 @@ concurrency:
   group: github-distribution-${{ github.ref }}
   cancel-in-progress: false
 env:
-  RELEASE_VERSION: 1.1.2-gh-${{ github.run_id }}-${{ github.run_attempt }}
+  RELEASE_VERSION: 1.1.3-gh-${{ github.run_id }}-${{ github.run_attempt }}
   PYTHONUTF8: '1'
 jobs:
   prepare-intel-model:

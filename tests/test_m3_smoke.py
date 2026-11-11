@@ -65,7 +65,7 @@ def test_genuine_tiger_project_checkpoint_and_exports(monkeypatch, tmp_path):
         content = client.get(status["download_url"]).content
         mesh = trimesh.load(io.BytesIO(content), file_type=format, force="mesh")
         assert mesh.is_watertight and mesh.is_winding_consistent and mesh.volume > 0
-        np.testing.assert_allclose(mesh.extents[:2], [150, 150], atol=0.001)
+        np.testing.assert_allclose(mesh.extents[:2], [259.1, 259.1], atol=0.001)
     assert depth.session_depth_path(sid, "da2-small").read_bytes() == original
     assert client.delete(f"/api/projects/{sid}").status_code == 200
     assert client.post(f"/api/projects/{sid}/restore").json()["name"] == "Tiger study"

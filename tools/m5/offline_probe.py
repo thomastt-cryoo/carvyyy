@@ -21,6 +21,13 @@ result = {"external_sockets": "denied by acceptance guard", "source": source.nam
 with TestClient(app) as client:
     assert [m['model_id'] for m in client.get('/api/models').json()['models']] == ['da2-small']
     result['single_depth_model'] = 'da2-small'
+    expected_defaults = {
+        'model_width_mm': 259.1, 'relief_height_mm': 27.1,
+        'smoothing': 0.3, 'detail_blend': 1.0,
+    }
+    defaults = client.get('/api/models').json()['default_params']
+    assert {key: defaults[key] for key in expected_defaults} == expected_defaults
+    result['default_settings'] = expected_defaults
     started = time.monotonic()
     response = client.post(
         "/api/projects/upload?model_id=da2-small",
@@ -28,6 +35,8 @@ with TestClient(app) as client:
     )
     assert response.status_code == 200, response.text
     sid = response.json()["id"]
+    saved = client.get(f'/api/sessions/{sid}/params').json()
+    assert {key: saved[key] for key in expected_defaults} == expected_defaults
     for _ in range(1200):
         document = client.get("/api/projects/" + sid).json()
         if document["status"] in ("ready", "error"):
@@ -60,7 +69,7 @@ with TestClient(app) as client:
         f'/api/sessions/{sid}/params', json=original | {'model_width_mm': 160}
     )
     assert response.status_code == 200, response.text
-    for action, width in [('undo', 150), ('redo', 160), ('undo', 150)]:
+    for action, width in [('undo', 259.1), ('redo', 160), ('undo', 259.1)]:
         token = client.get(f'/api/sessions/{sid}/editor').json()['project_history']['token']
         changed = client.post(
             f'/api/projects/{sid}/history', json={'action': action, 'expected_token': token}
@@ -85,8 +94,11 @@ with TestClient(app) as client:
         data = client.get(status["download_url"]).content
         mesh = trimesh.load(io.BytesIO(data), file_type=format, force="mesh")
         assert mesh.is_watertight and mesh.volume > 0
-        assert abs(float(mesh.extents[0]) - 150) < 0.001
-        result[format] = {"bytes": len(data), "triangles": len(mesh.faces), "watertight": True}
+        assert abs(float(mesh.extents[0]) - 259.1) < 0.001
+        result[format] = {
+            "bytes": len(data), "triangles": len(mesh.faces), "watertight": True,
+            "width_mm": float(mesh.extents[0]),
+        }
     assert client.get("/api/projects/" + sid).json()["id"] == sid
     result["project_saved"] = True
 output.write_text(json.dumps(result, indent=2))

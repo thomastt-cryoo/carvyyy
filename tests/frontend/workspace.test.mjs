@@ -12,8 +12,8 @@ import {
 } from "../../static/core.js";
 
 const defaults = {
-  model_width_mm: 150,
-  relief_height_mm: 8,
+  model_width_mm: 259.1,
+  relief_height_mm: 27.1,
   base_thickness_mm: 3,
   border_frame_mm: 0,
   depth_model: "da2-small",
@@ -23,9 +23,9 @@ const defaults = {
   depth_ceiling: 1,
   flatten_background: false,
   background_threshold: 0.15,
-  smoothing: 2.5,
+  smoothing: 0.3,
   edge_preserve: true,
-  detail_blend: 0.12,
+  detail_blend: 1,
   edge_taper_mm: 0,
   resolution: 1024,
   decimate_ratio: 0,
