@@ -126,13 +126,6 @@ export const FIELDS = [
     tip: "Use bilateral filtering to retain boundaries. Turn off for Gaussian smoothing.",
   },
   {
-    id: "depth_model",
-    label: "Depth model",
-    type: "model",
-    group: "model",
-    tip: "Only installed, supported and permitted models can be selected.",
-  },
-  {
     id: "resolution",
     label: "Mesh resolution",
     type: "select",
@@ -170,7 +163,7 @@ export function changeParam(params, id, value) {
   else if (field.type === "select") {
     value = id === "resolution" ? Number(value) : value;
     if (!field.options.includes(value)) throw new Error("Unsupported option");
-  } else if (field.type !== "model") {
+  } else {
     value = Number(value);
     if (!Number.isFinite(value)) throw new Error("Enter a number");
     value = Math.max(field.min, Math.min(field.max, value));
@@ -197,12 +190,6 @@ export function chooseModel(models, preferred) {
   );
 }
 
-export function modelTransition(current, selected, depthSource, ready) {
-  return {
-    changed: current !== selected,
-    ready: depthSource === "imported" ? ready : current === selected && ready,
-  };
-}
 export function createScope() {
   let generation = 0,
     id = null;

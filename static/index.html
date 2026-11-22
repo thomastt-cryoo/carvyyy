@@ -374,7 +374,7 @@
               </select>
             </div>
             <p class="hint">
-              Shaping settings, not a new AI model. Your painted edits are kept.
+              Presets change the shape and keep your painted edits.
             </p>
             <button id="undo-preset" class="text-button" hidden>
               Undo preset change
@@ -405,7 +405,7 @@
               ><span data-icon="chevron"></span>
             </button>
             <div class="advanced" id="advanced-settings">
-              <h3>Size, shaping &amp; model</h3>
+              <h3>Size &amp; shaping</h3>
               <h3>Size & backing</h3>
               <fieldset id="geometry-fields" class="fields"></fieldset>
               <h3>Depth shaping</h3>
@@ -421,12 +421,6 @@
                 restore the original surface. Inspect fine details before
                 export.
               </p>
-              <h3>Depth model</h3>
-              <div class="field">
-                <label for="depth_model">Model</label
-                ><select id="depth_model"></select>
-                <p id="model-status" class="hint"></p>
-              </div>
               <button id="reset-adjustments" class="text-button">
                 Restore adjustment defaults
               </button>
@@ -844,6 +838,6 @@
         >All original parameter explanations</a
       >
     </dialog>
-    <script type="module" src="/workspace.js?v=preview-color-1"></script>
+    <script type="module" src="/workspace.js?v=single-model-1"></script>
   </body>
 </html>

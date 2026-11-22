@@ -6,8 +6,7 @@ import {
   createScope,
   serialQueue,
   savedPreset,
-  modelTransition,
-} from "./core.js?v=m4.2";
+} from "./core.js?v=single-model-1";
 import { renderIcons, icon } from "./icons.js";
 import { createViewer } from "./viewer.js?v=preview-color-1";
 import { createPainting } from "./painting.js";
@@ -254,7 +253,7 @@ function buildField(field, target) {
     numeric.onchange = () => apply(numeric.value);
   }
 }
-for (const field of FIELDS.filter((f) => f.type !== "model"))
+for (const field of FIELDS)
   buildField(
     field,
     $(field.group === "export" ? "export-fields" : `${field.group}-fields`),
@@ -393,10 +392,7 @@ function syncParams() {
   if (!state.params) return;
   for (const field of FIELDS) {
     const input = $(field.id);
-    if (!input) continue;
-    input.disabled =
-      state.compare || state.replaying ||
-      (field.id === "depth_model" && (state.saving || !state.ready));
+    input.disabled = state.compare || state.replaying;
     if (field.type === "checkbox") input.checked = state.params[field.id];
     else input.value = state.params[field.id];
     const number = $(`${field.id}-number`);
@@ -421,10 +417,6 @@ function syncParams() {
     $("physical-size").textContent = text;
     $("export-dimensions").textContent = text;
   }
-  const model = state.models.find(
-    (m) => m.model_id === state.params.depth_model,
-  );
-  $("model-status").textContent = model?.setup_reason || "";
   if (state.editor)
     $("preset").value = savedPreset(state.project, state.params, state.editor);
 }
@@ -1400,28 +1392,6 @@ $("reset-adjustments").onclick = async () => {
   syncParams();
   saveParams().catch(() => {});
 };
-$("depth_model").onchange = async (event) => {
-  const model = state.models.find((m) => m.model_id === event.target.value);
-  if (!model?.selectable) {
-    syncParams();
-    return;
-  }
-  const transition = modelTransition(
-    state.params.depth_model,
-    model.model_id,
-    state.editor.depth_source,
-    state.ready,
-  );
-  if (!transition.changed) {
-    syncParams();
-    return;
-  }
-  state.params = { ...state.params, depth_model: model.model_id };
-  paramVersion++;
-  state.ready = transition.ready;
-  syncProject();
-  saveParams().catch(() => {});
-};
 $("export-quality").onchange = () => {
   state.params = changeParam(
     state.params,
@@ -2116,16 +2086,9 @@ function renderModels() {
   const labels = {
     "da2-small": "Depth Anything V2 Small",
   };
-  $("depth_model").replaceChildren();
   $("setup-models").replaceChildren();
   for (const model of state.models.filter(model => model.model_id === "da2-small")) {
     const label = labels[model.model_id] || model.model_id;
-    const option = new Option(
-      `${label}${model.selectable ? "" : ` · ${model.setup_state.replaceAll("_", " ")}`}`,
-      model.model_id,
-    );
-    option.disabled = !model.selectable;
-    $("depth_model").append(option);
     const row = document.createElement("div");
     row.className = "setup-model";
     const strong = document.createElement("strong"),
@@ -2138,7 +2101,6 @@ function renderModels() {
     row.append(strong, status, reason);
     $("setup-models").append(row);
   }
-  syncParams();
 }
 async function init() {
   try {

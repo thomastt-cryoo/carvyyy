@@ -8,7 +8,6 @@ import {
   serialQueue,
   savedPreset,
   QUALITY,
-  modelTransition,
 } from "../../static/core.js";
 
 const defaults = {
@@ -31,11 +30,10 @@ const defaults = {
   decimate_ratio: 0,
   output_format: "stl",
 };
-test("all original fields retain exact ranges, including full flatten threshold", () => {
-  assert.equal(FIELDS.length, 18);
+test("editable fields retain their ranges and exclude the automatic depth model", () => {
   assert.deepEqual(
     FIELDS.map((f) => f.id).sort(),
-    Object.keys(defaults).sort(),
+    Object.keys(defaults).filter((id) => id !== "depth_model").sort(),
   );
   assert.equal(
     changeParam(defaults, "background_threshold", 0.95).background_threshold,
@@ -118,20 +116,6 @@ test("correcting a rejected import clears only that failure and preserves unrela
   await assert.rejects(queue.flush(), (error) => error === failedWrite);
 });
 
-test("reselecting an active model keeps previews ready; imported sources survive model changes", () => {
-  assert.deepEqual(modelTransition("small", "small", "ai", true), {
-    changed: false,
-    ready: true,
-  });
-  assert.deepEqual(modelTransition("small", "large", "ai", true), {
-    changed: true,
-    ready: false,
-  });
-  assert.deepEqual(modelTransition("small", "large", "imported", true), {
-    changed: true,
-    ready: true,
-  });
-});
 test("a preset label reflects real backend settings and becomes Custom after a manual adjustment", () => {
   const editor = { sculpt_strength: 0.25, texture_guard: 0.85 };
   const params = {
