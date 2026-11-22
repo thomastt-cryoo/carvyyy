@@ -1,0 +1,35 @@
+{
+  "version": "1.1.5-gh-44975558442-1",
+  "assets": [
+    {
+      "name": "models-macos-aarch64-1.1.5-gh-44975558442-1.zip",
+      "bytes": 96326952,
+      "sha256": "49726e3ea7d61aaa2e47974d99e7b2ffdc80100d006f0eb4ca09edd3a38ab255"
+    },
+    {
+      "name": "models-macos-x86_64-1.1.5-gh-44975558442-1.zip",
+      "bytes": 96075920,
+      "sha256": "b660d4cfb1dcef266fc148f95c8b556ed92b050b8716b1a86176ccea12c6cde6"
+    },
+    {
+      "name": "models-windows-x86_64-1.1.5-gh-44975558442-1.zip",
+      "bytes": 96326977,
+      "sha256": "92c8ee300904b0de4a30b95de14ba857b8d38725c58d742d81287aea8cf5e1dc"
+    },
+    {
+      "name": "runtime-macos-aarch64-1.1.5-gh-44975558442-1.zip",
+      "bytes": 260009760,
+      "sha256": "6b46f07ff951971d142e0c6dbcf0535df59b85c6de34403a016174e7f7591bc7"
+    },
+    {
+      "name": "runtime-macos-x86_64-1.1.5-gh-44975558442-1.zip",
+      "bytes": 168982874,
+      "sha256": "ac5f893e7fda452b84009817080e4ab115595a2b7063a20b100379d383e7787d"
+    },
+    {
+      "name": "runtime-windows-x86_64-1.1.5-gh-44975558442-1.zip",
+      "bytes": 291559761,
+      "sha256": "dde52f8e3fb3cf0117dda63540f11508d74ab07c0cbbd2977cdc4806b88f90ec"
+    }
+  ]
+}
