@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { OrbitControls } from "/vendor/three/OrbitControls.js";
 import { GLTFLoader } from "/vendor/three/GLTFLoader.js";
 
+const PREVIEW_WHITE = 0xb8b4ad;
+const PREVIEW_TAN = 0xa9835a;
+
 export function createViewer(element) {
   let renderer,
     scene,
@@ -17,7 +20,7 @@ export function createViewer(element) {
     keyLight,
     light = { direction: 315, angle: 35, intensity: 1.8 };
   const material = new THREE.MeshStandardMaterial({
-    color: 0xb8b4ad,
+    color: PREVIEW_WHITE,
     roughness: 0.85,
     metalness: 0,
   });
@@ -159,6 +162,9 @@ export function createViewer(element) {
   return {
     load,
     lighting,
+    color(value) {
+      material.color.setHex(value === "tan" ? PREVIEW_TAN : PREVIEW_WHITE);
+    },
     cancelLoad: () => {
       serial++;
     },

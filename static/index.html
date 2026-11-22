@@ -9,7 +9,7 @@
     />
     <title>Photo Relief Studio</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/workspace.css?v=canvas-history-1" />
+    <link rel="stylesheet" href="/workspace.css?v=preview-color-1" />
     <script type="importmap">
       { "imports": { "three": "/vendor/three/three.module.js" } }
     </script>
@@ -168,7 +168,7 @@
           <div
             class="preview-controls"
             id="preview-controls"
-            aria-label="Preview quality and lighting"
+            aria-label="Preview quality, color and lighting"
           >
             <span id="preview-quality" role="status">Preview: loading</span>
             <button id="inspect-export" class="button compact">
@@ -177,6 +177,19 @@
             <button id="return-preview" class="text-button" hidden>
               Return to live preview
             </button>
+            <div
+              class="segmented preview-color"
+              id="preview-color"
+              role="group"
+              aria-label="Relief preview color"
+            >
+              <button type="button" data-preview-color="white" aria-pressed="true">
+                White
+              </button>
+              <button type="button" data-preview-color="tan" aria-pressed="false">
+                Warm tan
+              </button>
+            </div>
             <label class="preview-light">
               Light direction
               <input
@@ -831,6 +844,6 @@
         >All original parameter explanations</a
       >
     </dialog>
-    <script type="module" src="/workspace.js?v=canvas-history-1"></script>
+    <script type="module" src="/workspace.js?v=preview-color-1"></script>
   </body>
 </html>

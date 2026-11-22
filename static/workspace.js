@@ -9,7 +9,7 @@ import {
   modelTransition,
 } from "./core.js?v=m4.2";
 import { renderIcons, icon } from "./icons.js";
-import { createViewer } from "./viewer.js?v=m4.1";
+import { createViewer } from "./viewer.js?v=preview-color-1";
 import { createPainting } from "./painting.js";
 
 const $ = (id) => document.getElementById(id);
@@ -967,6 +967,26 @@ async function refreshPreview(resolution = 512) {
     if (current()) $("preview-busy").hidden = true;
   }
 }
+const previewColorButtons = $("preview-color").querySelectorAll("button");
+function setPreviewColor(value) {
+  viewer.color(value);
+  for (const button of previewColorButtons) {
+    button.setAttribute("aria-pressed", String(button.dataset.previewColor === value));
+  }
+}
+for (const button of previewColorButtons) {
+  button.onclick = () => {
+    const color = button.dataset.previewColor;
+    setPreviewColor(color);
+    try {
+      localStorage.setItem("p2r_preview_color", color);
+    } catch {}
+  };
+}
+try {
+  setPreviewColor(localStorage.getItem("p2r_preview_color") === "tan" ? "tan" : "white");
+} catch {}
+
 for (const [id, key] of [
   ["light-direction", "direction"],
   ["light-angle", "angle"],
